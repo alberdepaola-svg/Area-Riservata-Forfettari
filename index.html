@@ -642,10 +642,44 @@ html, body { height: 100%; font-family: var(--sans); }
         </div>
       </div>
 
+      <!-- Soglia forfettario -->
+      <div class="card fade-in" id="card-soglia">
+        <div class="card-header">
+          <h3>Soglia regime forfettario</h3>
+          <span id="soglia-pct-label" style="font-size:0.82rem;"></span>
+        </div>
+        <div style="padding:1.2rem 1.4rem;">
+          <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:1rem;margin-bottom:1.2rem;">
+            <div>
+              <div style="font-size:0.72rem;font-weight:600;text-transform:uppercase;letter-spacing:0.06em;color:var(--text-mid);margin-bottom:0.3rem;">Fatturato anno corrente</div>
+              <div style="font-size:1.4rem;font-weight:700;color:var(--text);letter-spacing:-0.02em;" id="soglia-fatturato">—</div>
+            </div>
+            <div>
+              <div style="font-size:0.72rem;font-weight:600;text-transform:uppercase;letter-spacing:0.06em;color:var(--text-mid);margin-bottom:0.3rem;">Residuo max fatturabile</div>
+              <div style="font-size:1.4rem;font-weight:700;letter-spacing:-0.02em;" id="soglia-residuo">—</div>
+            </div>
+            <div>
+              <div style="font-size:0.72rem;font-weight:600;text-transform:uppercase;letter-spacing:0.06em;color:var(--text-mid);margin-bottom:0.3rem;">Limite regime forfettario</div>
+              <div style="font-size:1.4rem;font-weight:700;color:var(--text-mid);letter-spacing:-0.02em;">€ 85.000</div>
+            </div>
+          </div>
+          <div style="position:relative;">
+            <div style="height:12px;background:#F3F4F6;border-radius:6px;overflow:hidden;">
+              <div id="soglia-bar" style="height:100%;width:0%;border-radius:6px;transition:width 0.8s ease;background:#2563EB;"></div>
+            </div>
+            <div style="display:flex;justify-content:space-between;margin-top:0.4rem;">
+              <span style="font-size:0.72rem;color:var(--text-light);">€ 0</span>
+              <span style="font-size:0.72rem;color:var(--text-light);">€ 85.000 — limite forfettario</span>
+            </div>
+          </div>
+          <div id="soglia-alert" style="margin-top:1rem;display:none;"></div>
+        </div>
+      </div>
+
       <!-- Grafico — full width -->
       <div class="card fade-in">
         <div class="card-header">
-          <h3>Andamento del fatturato mensile</h3>
+          <h3>Fatturato vs Incassato</h3>
           <span id="chart-legend" style="font-size:0.78rem;color:var(--text-light);font-family:var(--mono);"></span>
         </div>
         <div style="padding:1.2rem 1.4rem 0.8rem;">
@@ -903,14 +937,51 @@ function renderDashboard() {
   el('kpi-imposta-sub').textContent = 'aliquota ' + aliquota + '%';
   el('kpi-f24').textContent = f24Aperti;
 
+  // ── Soglia forfettario ──
+  var SOGLIA = 85000;
+  var residuo = Math.max(0, SOGLIA - fatturato);
+  var pct = Math.min(100, Math.round((fatturato / SOGLIA) * 100));
+
+  el('soglia-fatturato').textContent = fmt(fatturato);
+  el('soglia-residuo').textContent = fmt(residuo);
+  el('soglia-residuo').style.color = pct >= 90 ? '#DC2626' : pct >= 75 ? '#EA580C' : '#059669';
+
+  el('soglia-pct-label').textContent = pct + '% della soglia utilizzato';
+
+  var bar = el('soglia-bar');
+  if (bar) {
+    bar.style.width = pct + '%';
+    bar.style.background = pct >= 90 ? '#DC2626' : pct >= 75 ? '#EA580C' : '#2563EB';
+  }
+
+  var alertEl = el('soglia-alert');
+  if (alertEl) {
+    if (pct >= 100) {
+      alertEl.style.display = 'block';
+      alertEl.innerHTML = '<div style="background:#FEF2F2;border:1px solid #FECACA;border-radius:8px;padding:0.8rem 1rem;font-size:0.85rem;color:#991B1B;font-weight:500;">⚠️ Hai superato la soglia di € 85.000. Contatta lo studio immediatamente per valutare il passaggio al regime ordinario.</div>';
+    } else if (pct >= 90) {
+      alertEl.style.display = 'block';
+      alertEl.innerHTML = '<div style="background:#FEF2F2;border:1px solid #FECACA;border-radius:8px;padding:0.8rem 1rem;font-size:0.85rem;color:#991B1B;font-weight:500;">⚠️ Attenzione: hai raggiunto il ' + pct + '% della soglia. Residuo fatturabile: ' + fmt(residuo) + '. Contatta lo studio.</div>';
+    } else if (pct >= 75) {
+      alertEl.style.display = 'block';
+      alertEl.innerHTML = '<div style="background:#FFF7ED;border:1px solid #FED7AA;border-radius:8px;padding:0.8rem 1rem;font-size:0.85rem;color:#9A3412;font-weight:500;">Attenzione: hai utilizzato il ' + pct + '% della soglia forfettaria. Residuo: ' + fmt(residuo) + '.</div>';
+    } else {
+      alertEl.style.display = 'none';
+    }
+  }
+
   var mesi = ['Gen','Feb','Mar','Apr','Mag','Giu','Lug','Ago','Set','Ott','Nov','Dic'];
   var datiAnno = Array(12).fill(0);
+  var datiIncassati = Array(12).fill(0);
   fattureData.filter(function(f) { return f.tipo === 'emessa' && new Date(f.data_emissione).getFullYear() === anno; }).forEach(function(f) {
-    datiAnno[new Date(f.data_emissione).getMonth()] += parseFloat(f.importo || 0);
+    var m = new Date(f.data_emissione).getMonth();
+    datiAnno[m] += parseFloat(f.importo || 0);
+    if (f.pagata) datiIncassati[m] += parseFloat(f.importo || 0);
   });
 
+  var totIncassatoGrafico = datiIncassati.reduce(function(a,b){return a+b;},0);
   var legEl = el('chart-legend');
-  if (legEl) legEl.textContent = anno + ': ' + fmt(fatturato);
+  if (legEl) legEl.textContent = 'Fatturato: ' + fmt(fatturato) + '  ·  Incassato: ' + fmt(totIncassatoGrafico);
 
   if (typeof Chart !== 'undefined') {
     var ctx = el('chart-fatturato').getContext('2d');
@@ -920,18 +991,69 @@ function renderDashboard() {
       data: {
         labels: mesi,
         datasets: [
-          { label: String(anno), data: datiAnno, borderColor: '#2563EB', backgroundColor: 'rgba(37,99,235,0.07)', borderWidth: 2.5, pointBackgroundColor: '#2563EB', pointRadius: 4, pointHoverRadius: 6, fill: true, tension: 0.4 }
+          {
+            label: 'Fatturato ' + anno,
+            data: datiAnno,
+            borderColor: '#2563EB',
+            backgroundColor: 'rgba(37,99,235,0.06)',
+            borderWidth: 2.5,
+            pointBackgroundColor: '#2563EB',
+            pointRadius: 4,
+            pointHoverRadius: 6,
+            fill: true,
+            tension: 0.4
+          },
+          {
+            label: 'Incassato ' + anno,
+            data: datiIncassati,
+            borderColor: '#059669',
+            backgroundColor: 'rgba(5,150,105,0.06)',
+            borderWidth: 2.5,
+            pointBackgroundColor: '#059669',
+            pointRadius: 4,
+            pointHoverRadius: 6,
+            fill: true,
+            tension: 0.4
+          }
         ]
       },
       options: {
         responsive: true,
         interaction: { mode: 'index', intersect: false },
         plugins: {
-          legend: { display: false },
+          legend: {
+            display: true,
+            position: 'top',
+            align: 'start',
+            labels: {
+              usePointStyle: true,
+              pointStyle: 'circle',
+              font: { family: 'Inter', size: 12 },
+              color: '#6b7280',
+              padding: 20
+            }
+          },
           tooltip: {
-            backgroundColor: '#1a1d23', borderColor: '#e5e7eb', borderWidth: 1,
-            titleColor: '#9ca3af', bodyColor: '#ffffff', padding: 12,
-            callbacks: { label: function(c) { return ' \u20ac ' + c.parsed.y.toLocaleString('it-IT', {minimumFractionDigits:2}); } }
+            backgroundColor: '#1a1d23',
+            borderColor: '#e5e7eb',
+            borderWidth: 1,
+            titleColor: '#9ca3af',
+            bodyColor: '#ffffff',
+            padding: 12,
+            callbacks: {
+              label: function(c) {
+                return ' ' + c.dataset.label + ': \u20ac ' + c.parsed.y.toLocaleString('it-IT', {minimumFractionDigits:2});
+              },
+              afterBody: function(items) {
+                if (items.length === 2) {
+                  var fat = items[0].parsed.y;
+                  var inc = items[1].parsed.y;
+                  var gap = fat - inc;
+                  if (gap > 0) return ['', 'Da incassare: \u20ac ' + gap.toLocaleString('it-IT', {minimumFractionDigits:2})];
+                }
+                return [];
+              }
+            }
           }
         },
         scales: {
