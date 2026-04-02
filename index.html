@@ -975,9 +975,19 @@ function renderDashboard() {
       var scad = new Date(f.scadenza);
       var giorni = Math.ceil((scad - oggi) / (1000*60*60*24));
       var cls = giorni <= 15 ? 'badge-red' : 'badge-orange';
-      return '<tr><td><span class="badge ' + cls + '">' + fmtDate(f.scadenza) + '</span></td><td style="font-size:0.82rem;color:var(--text-mid)">' + (f.tipo||'\u2014') + '</td><td class="amount">' + fmt(f.importo) + '</td></tr>';
+      var codice = f.codice_tributo || (f.descrizione ? f.descrizione.split(' ')[1] : '') || '\u2014';
+      return '<tr>' +
+        '<td><span class="badge ' + cls + '">' + fmtDate(f.scadenza) + '</span></td>' +
+        '<td class="mono" style="color:var(--text-mid);font-size:0.78rem">' + codice + '</td>' +
+        '<td style="font-size:0.82rem;color:var(--text-mid)">' + (f.tipo||'\u2014') + '</td>' +
+        '<td class="amount">' + fmt(f.importo) + '</td>' +
+        '<td><button class="toggle-f24" data-id="' + f.id + '" data-pagato="false" style="font-family:Inter,sans-serif;font-size:0.72rem;font-weight:600;padding:0.25rem 0.7rem;border-radius:20px;border:1px solid #FED7AA;background:#FFF7ED;color:#9A3412;cursor:pointer;">Segna pagato</button></td>' +
+        '</tr>';
     }).join('');
-    f24b.innerHTML = '<table class="data-table"><thead><tr><th>Scadenza</th><th>Tipo</th><th>Importo</th></tr></thead><tbody>' + f24rows + '</tbody></table>';
+    f24b.innerHTML = '<table class="data-table"><thead><tr><th>Scadenza</th><th>Cod. Tributo</th><th>Tipo</th><th>Importo</th><th></th></tr></thead><tbody>' + f24rows + '</tbody></table>';
+    document.querySelectorAll('.toggle-f24').forEach(function(b) {
+      b.addEventListener('click', function() { togglePagato(this.dataset.id, this.dataset.pagato === 'true'); });
+    });
   }
 }
 
@@ -1025,6 +1035,16 @@ function filterFatture(tipo, btn) {
   renderFatture();
 }
 
+async function togglePagato(id, currentVal) {
+  var nuovoStato = !currentVal;
+  var res = await sb.from('f24').update({ pagato: nuovoStato }).eq('id', id);
+  if (res.error) { alert('Errore: ' + res.error.message); return; }
+  var idx = f24Data.findIndex(function(f) { return f.id === id; });
+  if (idx !== -1) f24Data[idx].pagato = nuovoStato;
+  renderF24();
+  renderDashboard();
+}
+
 function renderF24() {
   var list = f24Data;
   if (currentF24Filter === 'da_pagare') list = list.filter(function(f) { return !f.pagato; });
@@ -1036,15 +1056,24 @@ function renderF24() {
     var scad = new Date(f.scadenza);
     var giorni = Math.ceil((scad - oggi) / (1000*60*60*24));
     var urgente = !f.pagato && giorni <= 15;
+    var codice = f.codice_tributo || (f.descrizione ? f.descrizione.split(' ')[1] : '') || '\u2014';
+    var pagColor = f.pagato ? '#065F46' : '#9A3412';
+    var pagBg    = f.pagato ? '#ECFDF5' : '#FFF7ED';
+    var pagBorder= f.pagato ? '#6EE7B7' : '#FED7AA';
+    var pagLabel = f.pagato ? 'Pagato' : 'Segna pagato';
     return '<tr>' +
       '<td><span class="badge ' + (f.pagato?'badge-green':urgente?'badge-red':'badge-orange') + '">' + fmtDate(f.scadenza) + '</span></td>' +
+      '<td class="mono" style="font-size:0.78rem;color:var(--text-mid)">' + codice + '</td>' +
       '<td style="font-size:0.82rem">' + (f.tipo||'\u2014') + '</td>' +
       '<td class="mono">' + (f.anno||'\u2014') + '</td>' +
       '<td class="amount">' + fmt(f.importo) + '</td>' +
-      '<td><span class="badge ' + (f.pagato?'badge-green':'badge-red') + '">' + (f.pagato?'Pagato':'Da pagare') + '</span></td>' +
+      '<td><button class="toggle-f24-btn" data-id="' + f.id + '" data-pagato="' + f.pagato + '" style="font-family:Inter,sans-serif;font-size:0.72rem;font-weight:600;padding:0.25rem 0.7rem;border-radius:20px;border:1px solid ' + pagBorder + ';background:' + pagBg + ';color:' + pagColor + ';cursor:pointer;">' + pagLabel + '</button></td>' +
       '</tr>';
   }).join('');
-  f24El.innerHTML = '<table class="data-table"><thead><tr><th>Scadenza</th><th>Tipo</th><th>Anno</th><th>Importo</th><th>Stato</th></tr></thead><tbody>' + rows + '</tbody></table>';
+  f24El.innerHTML = '<table class="data-table"><thead><tr><th>Scadenza</th><th>Cod. Tributo</th><th>Tipo</th><th>Anno</th><th>Importo</th><th>Stato</th></tr></thead><tbody>' + rows + '</tbody></table>';
+  document.querySelectorAll('.toggle-f24-btn').forEach(function(b) {
+    b.addEventListener('click', function() { togglePagato(this.dataset.id, this.dataset.pagato === 'true'); });
+  });
 }
 
 function filterF24(tipo, btn) {
