@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Area Riservata — Studio De Paola</title>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;1,300;1,400&family=Raleway:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
 <style>
 :root {
@@ -714,10 +715,10 @@ html, body { height: 100%; font-family: var(--sans); background: var(--light); c
 
   <!-- Nav -->
   <div class="nav-tabs">
-    <button class="nav-tab active" onclick="showSection('dashboard')">📊 Dashboard</button>
-    <button class="nav-tab" onclick="showSection('fatture')">🧾 Fatture</button>
-    <button class="nav-tab" onclick="showSection('f24')">📅 F24</button>
-    <button class="nav-tab" onclick="showSection('profilo')">👤 Profilo</button>
+    <button class="nav-tab active" onclick="showSection('dashboard')">Dashboard</button>
+    <button class="nav-tab" onclick="showSection('fatture')">Fatture</button>
+    <button class="nav-tab" onclick="showSection('f24')">F24</button>
+    <button class="nav-tab" onclick="showSection('profilo')">Profilo</button>
   </div>
 
   <!-- Content -->
@@ -725,58 +726,75 @@ html, body { height: 100%; font-family: var(--sans); background: var(--light); c
 
     <!-- ── DASHBOARD ── -->
     <div class="section-page active" id="section-dashboard">
-      <div class="page-header fade-in">
-        <h2 id="dashboard-welcome">Benvenuto</h2>
-        <p id="dashboard-year">Anno fiscale in corso</p>
+
+      <!-- Welcome + anno -->
+      <div class="page-header fade-in" style="display:flex;justify-content:space-between;align-items:flex-end;">
+        <div>
+          <h2 id="dashboard-welcome">Benvenuto</h2>
+          <p id="dashboard-year">Anno fiscale in corso</p>
+        </div>
+        <div style="display:flex;gap:0.5rem;align-items:center;">
+          <button class="filter-btn active" id="yr-btn-curr" onclick="switchYear(0,this)">2026</button>
+          <button class="filter-btn" id="yr-btn-prev" onclick="switchYear(1,this)">2025</button>
+        </div>
       </div>
 
-      <!-- KPI -->
+      <!-- KPI strip -->
       <div class="kpi-grid fade-in">
         <div class="kpi-card blue">
-          <div class="kpi-icon">💰</div>
-          <div class="kpi-label">Fatturato anno corrente</div>
+          <div class="kpi-label">Fatturato</div>
           <div class="kpi-value" id="kpi-fatturato">—</div>
-          <div class="kpi-sub" id="kpi-fatturato-sub">fatture emesse</div>
+          <div class="kpi-sub" id="kpi-fatturato-sub"></div>
         </div>
         <div class="kpi-card green">
-          <div class="kpi-icon">📈</div>
           <div class="kpi-label">Reddito imponibile</div>
           <div class="kpi-value" id="kpi-reddito">—</div>
-          <div class="kpi-sub" id="kpi-reddito-sub">dopo coefficiente</div>
+          <div class="kpi-sub" id="kpi-reddito-sub"></div>
         </div>
         <div class="kpi-card gold">
-          <div class="kpi-icon">🏛</div>
-          <div class="kpi-label">Imposta stimata</div>
+          <div class="kpi-label">Imposta sostitutiva stimata</div>
           <div class="kpi-value" id="kpi-imposta">—</div>
-          <div class="kpi-sub" id="kpi-imposta-sub">imposta sostitutiva</div>
+          <div class="kpi-sub" id="kpi-imposta-sub"></div>
         </div>
         <div class="kpi-card red">
-          <div class="kpi-icon">📅</div>
           <div class="kpi-label">F24 da pagare</div>
           <div class="kpi-value" id="kpi-f24">—</div>
           <div class="kpi-sub">scadenze aperte</div>
         </div>
       </div>
 
-      <!-- Ultime fatture + F24 imminenti -->
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;">
-        <div class="card fade-in">
-          <div class="card-header">
-            <h3>🧾 Ultime fatture emesse</h3>
-          </div>
-          <div id="dash-fatture-body">
-            <div class="loading-spinner"><div class="spinner"></div> Caricamento...</div>
-          </div>
+      <!-- Grafico andamento -->
+      <div class="card fade-in" style="margin-bottom:1rem;">
+        <div class="card-header">
+          <h3>Andamento del fatturato</h3>
+          <span id="chart-legend" style="font-size:0.72rem;color:rgba(255,255,255,0.4);font-family:'DM Mono',monospace;"></span>
         </div>
-        <div class="card fade-in">
-          <div class="card-header">
-            <h3>📅 F24 in scadenza</h3>
-          </div>
-          <div id="dash-f24-body">
-            <div class="loading-spinner"><div class="spinner"></div> Caricamento...</div>
-          </div>
+        <div style="padding:1.2rem 1.3rem 0.5rem;">
+          <canvas id="chart-fatturato" height="90"></canvas>
         </div>
       </div>
+
+      <!-- Fatture da incassare -->
+      <div class="card fade-in">
+        <div class="card-header">
+          <h3>Fatture da incassare</h3>
+          <span id="dash-da-incassare-count" style="font-size:0.78rem;color:rgba(184,150,62,0.7);font-family:'DM Mono',monospace;"></span>
+        </div>
+        <div id="dash-fatture-body">
+          <div class="loading-spinner"><div class="spinner"></div> Caricamento...</div>
+        </div>
+      </div>
+
+      <!-- F24 in scadenza -->
+      <div class="card fade-in">
+        <div class="card-header">
+          <h3>Prossime scadenze F24</h3>
+        </div>
+        <div id="dash-f24-body">
+          <div class="loading-spinner"><div class="spinner"></div> Caricamento...</div>
+        </div>
+      </div>
+
     </div>
 
     <!-- ── FATTURE ── -->
@@ -871,7 +889,8 @@ html, body { height: 100%; font-family: var(--sans); background: var(--light); c
 // CONFIG — modifica questi valori
 // ══════════════════════════════════════════════════════
 const SUPABASE_URL = 'https://znjhrwrwgpzmfwewdbnm.supabase.co';
-const SUPABASE_KEY = 'sb_publishable_TMbin3rxRij58V_Wquk5_Q_z375MFUz';
+const SUPABASE_KEY = 'sb_publishable_TMbin3rxRij58V_Wquk5_Q_z375MFUz
+';
 
 // ══════════════════════════════════════════════════════
 // INIT SUPABASE
@@ -968,7 +987,7 @@ async function initApp() {
     document.getElementById('user-name-top').textContent = nome;
     document.getElementById('user-avatar').textContent =
       (clienteData.nome[0] + clienteData.cognome[0]).toUpperCase();
-    document.getElementById('dashboard-welcome').textContent = `Ciao, ${clienteData.nome} 👋`;
+    document.getElementById('dashboard-welcome').textContent = `Benvenuto, ${clienteData.nome}`;
   }
 
   document.getElementById('dashboard-year').textContent =
@@ -1013,8 +1032,19 @@ async function loadDocumenti() {
 // ══════════════════════════════════════════════════════
 // DASHBOARD
 // ══════════════════════════════════════════════════════
+let chartInstance = null;
+let dashboardYear = new Date().getFullYear();
+
+function switchYear(offset, btn) {
+  dashboardYear = new Date().getFullYear() - offset;
+  document.querySelectorAll('#section-dashboard .filter-btn')
+    .forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  renderDashboard();
+}
+
 function renderDashboard() {
-  const anno = new Date().getFullYear();
+  const anno = dashboardYear;
   const emesse = fattureData.filter(f => f.tipo === 'emessa' && f.anno === anno);
   const fatturato = emesse.reduce((s, f) => s + parseFloat(f.importo || 0), 0);
   const coeff = clienteData?.coefficiente_redd || 0.78;
@@ -1031,29 +1061,121 @@ function renderDashboard() {
   document.getElementById('kpi-imposta-sub').textContent = `aliquota ${aliquota}%`;
   document.getElementById('kpi-f24').textContent = f24Aperti;
 
-  // Ultime 5 fatture emesse
-  const ultFatture = fattureData.filter(f => f.tipo === 'emessa').slice(0, 5);
+  // ── Grafico mensile ──
+  const mesi = ['Gen','Feb','Mar','Apr','Mag','Giu','Lug','Ago','Set','Ott','Nov','Dic'];
+  const datiAnno = Array(12).fill(0);
+  const datiPrev = Array(12).fill(0);
+  const annoPrev = anno - 1;
+
+  fattureData.filter(f => f.tipo === 'emessa').forEach(f => {
+    const d = new Date(f.data_emissione);
+    const y = d.getFullYear();
+    const m = d.getMonth();
+    if (y === anno)     datiAnno[m] += parseFloat(f.importo || 0);
+    if (y === annoPrev) datiPrev[m] += parseFloat(f.importo || 0);
+  });
+
+  const totPrev = datiPrev.reduce((a,b) => a+b, 0);
+  document.getElementById('chart-legend').textContent =
+    `${anno}: ${fmt(fatturato).replace('€ ','')} €  ·  ${annoPrev}: ${fmt(totPrev).replace('€ ','')} €`;
+
+  const ctx = document.getElementById('chart-fatturato').getContext('2d');
+  if (chartInstance) chartInstance.destroy();
+  chartInstance = new Chart(ctx, {
+    type: 'line',
+    data: {
+      labels: mesi,
+      datasets: [
+        {
+          label: String(anno),
+          data: datiAnno,
+          borderColor: '#b8963e',
+          backgroundColor: 'rgba(184,150,62,0.08)',
+          borderWidth: 2,
+          pointBackgroundColor: '#b8963e',
+          pointRadius: 4,
+          pointHoverRadius: 6,
+          fill: true,
+          tension: 0.35,
+        },
+        {
+          label: String(annoPrev),
+          data: datiPrev,
+          borderColor: 'rgba(255,255,255,0.2)',
+          backgroundColor: 'transparent',
+          borderWidth: 1.5,
+          borderDash: [4, 4],
+          pointBackgroundColor: 'rgba(255,255,255,0.3)',
+          pointRadius: 3,
+          fill: false,
+          tension: 0.35,
+        }
+      ]
+    },
+    options: {
+      responsive: true,
+      interaction: { mode: 'index', intersect: false },
+      plugins: {
+        legend: { display: false },
+        tooltip: {
+          backgroundColor: '#0d1b2a',
+          borderColor: 'rgba(184,150,62,0.3)',
+          borderWidth: 1,
+          titleColor: 'rgba(255,255,255,0.6)',
+          bodyColor: '#d4af6a',
+          padding: 10,
+          callbacks: {
+            label: ctx => ` € ${ctx.parsed.y.toLocaleString('it-IT', {minimumFractionDigits:2})}`
+          }
+        }
+      },
+      scales: {
+        x: {
+          grid: { color: 'rgba(255,255,255,0.04)' },
+          ticks: { color: 'rgba(255,255,255,0.35)', font: { family: 'Raleway', size: 11 } }
+        },
+        y: {
+          grid: { color: 'rgba(255,255,255,0.04)' },
+          ticks: {
+            color: 'rgba(255,255,255,0.35)',
+            font: { family: 'Raleway', size: 11 },
+            callback: v => '€ ' + v.toLocaleString('it-IT')
+          }
+        }
+      }
+    }
+  });
+
+  // ── Fatture da incassare ──
+  const daIncassare = fattureData.filter(f => f.tipo === 'emessa' && !f.pagata);
+  const totDaInc = daIncassare.reduce((s,f) => s + parseFloat(f.importo || 0), 0);
+  document.getElementById('dash-da-incassare-count').textContent =
+    `${daIncassare.length} fatture · ${fmt(totDaInc)}`;
+
   const fb = document.getElementById('dash-fatture-body');
-  if (ultFatture.length === 0) {
-    fb.innerHTML = emptyState('Nessuna fattura emessa');
+  if (daIncassare.length === 0) {
+    fb.innerHTML = emptyState('Tutte le fatture risultano incassate');
   } else {
+    const list5 = daIncassare.slice(0, 6);
     fb.innerHTML = `<table class="data-table">
-      <thead><tr><th>Numero</th><th>Data</th><th>Importo</th></tr></thead>
-      <tbody>${ultFatture.map(f => `
+      <thead><tr><th>Numero</th><th>Data</th><th>Cliente</th><th>Importo</th></tr></thead>
+      <tbody>${list5.map(f => `
         <tr>
           <td class="mono">${f.numero || '—'}</td>
           <td>${fmtDate(f.data_emissione)}</td>
+          <td style="font-size:0.82rem;color:rgba(255,255,255,0.6);">${f.cedente_nome || '—'}</td>
           <td class="amount">${fmt(f.importo)}</td>
-        </tr>`).join('')}</tbody>
+        </tr>`).join('')}
+      </tbody>
     </table>`;
   }
 
-  // F24 prossimi
+  // ── F24 in scadenza ──
   const oggi = new Date();
   const prossimi = f24Data.filter(f => !f.pagato).slice(0, 5);
   const f24b = document.getElementById('dash-f24-body');
   if (prossimi.length === 0) {
-    f24b.innerHTML = emptyState('Nessun F24 in scadenza 🎉');
+    f24b.innerHTML = emptyState('Nessuna scadenza F24 aperta');
   } else {
     f24b.innerHTML = `<table class="data-table">
       <thead><tr><th>Scadenza</th><th>Tipo</th><th>Importo</th></tr></thead>
@@ -1063,12 +1185,38 @@ function renderDashboard() {
         const urgente = giorni <= 15;
         return `<tr>
           <td><span class="badge ${urgente ? 'badge-red' : 'badge-orange'}">${fmtDate(f.scadenza)}</span></td>
-          <td style="font-size:0.8rem">${f.tipo?.replace(/_/g,' ') || '—'}</td>
+          <td style="font-size:0.8rem;color:rgba(255,255,255,0.6)">${f.tipo?.replace(/_/g,' ') || '—'}</td>
           <td class="amount">${fmt(f.importo)}</td>
         </tr>`;
       }).join('')}</tbody>
     </table>`;
   }
+}
+
+// ══════════════════════════════════════════════════════
+// TOGGLE PAGATA
+// ══════════════════════════════════════════════════════
+async function togglePagata(id, currentVal) {
+  const nuovoStato = !currentVal;
+  const btn = document.getElementById(`btn-pagata-${id}`);
+  if (btn) { btn.textContent = '...'; btn.disabled = true; }
+
+  const { error } = await sb.from('fatture')
+    .update({ pagata: nuovoStato })
+    .eq('id', id);
+
+  if (error) {
+    alert('Errore: ' + error.message);
+    if (btn) { btn.textContent = currentVal ? 'Pagata' : 'In attesa'; btn.disabled = false; }
+    return;
+  }
+
+  // Aggiorna dati locali senza ricaricare tutto
+  const idx = fattureData.findIndex(f => f.id === id);
+  if (idx !== -1) fattureData[idx].pagata = nuovoStato;
+
+  renderFatture();
+  renderDashboard();
 }
 
 // ══════════════════════════════════════════════════════
@@ -1089,23 +1237,44 @@ function renderFatture() {
   el.innerHTML = `<table class="data-table">
     <thead><tr>
       <th>Numero</th><th>Data</th><th>Tipo</th>
-      <th>Cedente / Cliente</th><th>Importo</th><th>Stato</th>
+      <th>Controparte</th><th>Importo</th><th>Stato</th>
     </tr></thead>
-    <tbody>${list.map(f => `
+    <tbody>${list.map(f => {
+      const controparte = f.cessionario_nome || f.cedente_nome || '—';
+      return `
       <tr>
         <td class="mono">${f.numero || '—'}</td>
         <td>${fmtDate(f.data_emissione)}</td>
         <td><span class="badge ${f.tipo === 'emessa' ? 'badge-blue' : 'badge-gold'}">
-          ${f.tipo === 'emessa' ? '↑ Emessa' : '↓ Ricevuta'}
+          ${f.tipo === 'emessa' ? 'Emessa' : 'Ricevuta'}
         </span></td>
-        <td style="font-size:0.82rem;max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">
-          ${f.cedente_nome || f.descrizione?.substring(0,40) || '—'}
+        <td style="font-size:0.82rem;max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:rgba(255,255,255,0.7)">
+          ${controparte}
         </td>
         <td class="amount">${fmt(f.importo)}</td>
-        <td><span class="badge ${f.pagata ? 'badge-green' : 'badge-orange'}">
-          ${f.pagata ? '✓ Pagata' : '⏳ Attesa'}
-        </span></td>
-      </tr>`).join('')}
+        <td>
+          <button
+            id="btn-pagata-${f.id}"
+            onclick="togglePagata('${f.id}', ${f.pagata})"
+            style="
+              font-family:'Raleway',sans-serif;
+              font-size:0.68rem;
+              font-weight:600;
+              letter-spacing:0.08em;
+              text-transform:uppercase;
+              padding:0.25rem 0.7rem;
+              border:1px solid ${f.pagata ? 'rgba(52,211,153,0.4)' : 'rgba(234,88,12,0.4)'};
+              background:${f.pagata ? 'rgba(52,211,153,0.1)' : 'rgba(234,88,12,0.1)'};
+              color:${f.pagata ? '#34D399' : '#FB923C'};
+              cursor:pointer;
+              transition:all 0.2s;
+            "
+            onmouseover="this.style.opacity='0.7'"
+            onmouseout="this.style.opacity='1'"
+          >${f.pagata ? 'Pagata' : 'In attesa'}</button>
+        </td>
+      </tr>`;
+    }).join('')}
     </tbody>
   </table>`;
 }
