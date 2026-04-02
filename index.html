@@ -956,9 +956,9 @@ function renderDashboard() {
   } else {
     var tbody = daIncassare.slice(0,6).map(function(f) {
       var cp = f.cessionario_nome || f.cedente_nome || '\u2014';
-      return '<tr><td style="font-weight:500">' + cp + '</td><td style="color:var(--text-mid)">' + fmtDate(f.data_emissione) + '</td><td class="amount">' + fmt(f.importo) + '</td><td><button class="incassa-btn" data-id="' + f.id + '" data-pagata="' + f.pagata + '" style="background:#1a1d23;color:#fff;border:none;padding:0.3rem 0.8rem;border-radius:5px;font-size:0.75rem;font-weight:600;cursor:pointer;">Incassa</button></td></tr>';
+      return '<tr><td class="mono" style="color:var(--text-mid);font-size:0.78rem">' + (f.numero||'\u2014') + '</td><td style="font-weight:500">' + cp + '</td><td style="color:var(--text-mid)">' + fmtDate(f.data_emissione) + '</td><td class="amount">' + fmt(f.importo) + '</td><td><button class="incassa-btn" data-id="' + f.id + '" data-pagata="' + f.pagata + '" style="background:#1a1d23;color:#fff;border:none;padding:0.3rem 0.8rem;border-radius:5px;font-size:0.75rem;font-weight:600;cursor:pointer;">Incassa</button></td></tr>';
     }).join('');
-    fb.innerHTML = banner + '<table class="data-table"><thead><tr><th>Cliente</th><th>Data</th><th>Importo</th><th></th></tr></thead><tbody>' + tbody + '</tbody></table>';
+    fb.innerHTML = banner + '<table class="data-table"><thead><tr><th>N°</th><th>Cliente</th><th>Data</th><th>Importo</th><th></th></tr></thead><tbody>' + tbody + '</tbody></table>';
     document.querySelectorAll('.incassa-btn').forEach(function(b) {
       b.addEventListener('click', function() { togglePagata(this.dataset.id, this.dataset.pagata === 'true'); });
     });
