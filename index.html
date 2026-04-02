@@ -610,15 +610,9 @@ html, body { height: 100%; font-family: var(--sans); }
 
     <!-- DASHBOARD -->
     <div class="section-page active" id="section-dashboard">
-      <div class="page-header fade-in" style="display:flex;justify-content:space-between;align-items:flex-end;margin-bottom:1.2rem;">
-        <div>
-          <h2 id="dashboard-welcome">Benvenuto</h2>
-          <p id="dashboard-year"></p>
-        </div>
-        <div style="display:flex;gap:0.4rem;">
-          <button class="filter-btn active" id="yr-btn-curr" onclick="switchYear(0,this)">2026</button>
-          <button class="filter-btn" id="yr-btn-prev" onclick="switchYear(1,this)">2025</button>
-        </div>
+      <div class="page-header fade-in" style="margin-bottom:1.2rem;">
+        <h2 id="dashboard-welcome">Benvenuto</h2>
+        <p id="dashboard-year"></p>
       </div>
 
       <!-- KPI -->
@@ -645,46 +639,50 @@ html, body { height: 100%; font-family: var(--sans); }
         </div>
       </div>
 
-      <!-- Grafico -->
+      <!-- Grafico — full width -->
       <div class="card fade-in">
         <div class="card-header">
           <h3>Andamento del fatturato mensile</h3>
           <span id="chart-legend" style="font-size:0.78rem;color:var(--text-light);font-family:var(--mono);"></span>
         </div>
         <div style="padding:1.2rem 1.4rem 0.8rem;">
-          <canvas id="chart-fatturato" height="80"></canvas>
+          <canvas id="chart-fatturato" height="75"></canvas>
         </div>
       </div>
 
-      <!-- Fatture da incassare -->
-      <div class="card fade-in">
-        <div class="card-header">
-          <h3>Fatture da incassare</h3>
-          <span id="dash-da-incassare-count" style="font-size:0.8rem;color:var(--text-mid);"></span>
+      <!-- Due colonne -->
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;">
+
+        <!-- Colonna sinistra: Fatture da incassare -->
+        <div class="card fade-in">
+          <div class="card-header">
+            <h3>Fatture da incassare</h3>
+            <span id="dash-da-incassare-count" style="font-size:0.78rem;color:var(--text-mid);"></span>
+          </div>
+          <div id="dash-fatture-body">
+            <div class="loading-spinner"><div class="spinner"></div> Caricamento...</div>
+          </div>
         </div>
-        <div id="dash-fatture-body">
-          <div class="loading-spinner"><div class="spinner"></div> Caricamento...</div>
+
+        <!-- Colonna destra: Incassi per mese -->
+        <div class="card fade-in">
+          <div class="card-header">
+            <h3>Incassi per mese</h3>
+            <span id="incassi-tot" style="font-size:0.85rem;font-weight:600;color:var(--text);"></span>
+          </div>
+          <div style="padding:0;">
+            <table class="data-table">
+              <thead><tr><th>Mese</th><th>Incassato</th><th style="width:35%"></th></tr></thead>
+              <tbody id="dash-incassi-mese">
+                <tr><td colspan="3" style="text-align:center;color:var(--text-light);padding:2rem">Caricamento...</td></tr>
+              </tbody>
+            </table>
+          </div>
         </div>
+
       </div>
 
-
-      <!-- Incassi mese per mese -->
-      <div class="card fade-in">
-        <div class="card-header">
-          <h3>Incassi per mese</h3>
-          <span id="incassi-tot" style="font-size:0.85rem;font-weight:600;color:var(--text);"></span>
-        </div>
-        <div style="padding:0;">
-          <table class="data-table">
-            <thead><tr><th>Mese</th><th>Incassato</th><th style="width:35%">Andamento</th></tr></thead>
-            <tbody id="dash-incassi-mese">
-              <tr><td colspan="3" style="text-align:center;color:var(--text-light);padding:2rem">Caricamento...</td></tr>
-            </tbody>
-          </table>
-        </div>
-      </div>
-
-      <!-- F24 -->
+      <!-- F24 — full width -->
       <div class="card fade-in">
         <div class="card-header">
           <h3>Prossime scadenze F24</h3>
@@ -863,15 +861,12 @@ async function loadF24() {
 }
 
 function switchYear(offset, btn) {
-  dashboardYear = new Date().getFullYear() - offset;
-  document.querySelectorAll('#section-dashboard .filter-btn').forEach(function(b) { b.classList.remove('active'); });
-  btn.classList.add('active');
+  dashboardYear = new Date().getFullYear();
   renderDashboard();
 }
 
 function renderDashboard() {
   var anno = dashboardYear;
-  var annoPrev = anno - 1;
   var emesse = fattureData.filter(function(f) { return f.tipo === 'emessa' && f.anno === anno; });
   var fatturato = emesse.reduce(function(s, f) { return s + parseFloat(f.importo || 0); }, 0);
   var coeff = (clienteData && clienteData.coefficiente_redd) ? clienteData.coefficiente_redd : 0.78;
@@ -890,17 +885,12 @@ function renderDashboard() {
 
   var mesi = ['Gen','Feb','Mar','Apr','Mag','Giu','Lug','Ago','Set','Ott','Nov','Dic'];
   var datiAnno = Array(12).fill(0);
-  var datiPrev = Array(12).fill(0);
-  fattureData.filter(function(f) { return f.tipo === 'emessa'; }).forEach(function(f) {
-    var d = new Date(f.data_emissione);
-    var y = d.getFullYear();
-    var m = d.getMonth();
-    if (y === anno) datiAnno[m] += parseFloat(f.importo || 0);
-    if (y === annoPrev) datiPrev[m] += parseFloat(f.importo || 0);
+  fattureData.filter(function(f) { return f.tipo === 'emessa' && new Date(f.data_emissione).getFullYear() === anno; }).forEach(function(f) {
+    datiAnno[new Date(f.data_emissione).getMonth()] += parseFloat(f.importo || 0);
   });
-  var totPrev = datiPrev.reduce(function(a,b){return a+b;}, 0);
+
   var legEl = el('chart-legend');
-  if (legEl) legEl.textContent = anno + ': ' + fmt(fatturato) + '  \u00b7  ' + annoPrev + ': ' + fmt(totPrev);
+  if (legEl) legEl.textContent = anno + ': ' + fmt(fatturato);
 
   if (typeof Chart !== 'undefined') {
     var ctx = el('chart-fatturato').getContext('2d');
@@ -910,19 +900,18 @@ function renderDashboard() {
       data: {
         labels: mesi,
         datasets: [
-          { label: String(anno), data: datiAnno, borderColor: '#2563EB', backgroundColor: 'rgba(37,99,235,0.07)', borderWidth: 2.5, pointBackgroundColor: '#2563EB', pointRadius: 4, pointHoverRadius: 6, fill: true, tension: 0.4 },
-          { label: String(annoPrev), data: datiPrev, borderColor: '#F97316', backgroundColor: 'transparent', borderWidth: 2, borderDash: [5,4], pointBackgroundColor: '#F97316', pointRadius: 3, fill: false, tension: 0.4 }
+          { label: String(anno), data: datiAnno, borderColor: '#2563EB', backgroundColor: 'rgba(37,99,235,0.07)', borderWidth: 2.5, pointBackgroundColor: '#2563EB', pointRadius: 4, pointHoverRadius: 6, fill: true, tension: 0.4 }
         ]
       },
       options: {
         responsive: true,
         interaction: { mode: 'index', intersect: false },
         plugins: {
-          legend: { display: true, position: 'top', align: 'start', labels: { usePointStyle: true, pointStyle: 'circle', font: { family: 'Inter', size: 12 }, color: '#6b7280', padding: 20 } },
+          legend: { display: false },
           tooltip: {
             backgroundColor: '#1a1d23', borderColor: '#e5e7eb', borderWidth: 1,
             titleColor: '#9ca3af', bodyColor: '#ffffff', padding: 12,
-            callbacks: { label: function(c) { return ' ' + c.dataset.label + ': \u20ac ' + c.parsed.y.toLocaleString('it-IT', {minimumFractionDigits:2}); } }
+            callbacks: { label: function(c) { return ' \u20ac ' + c.parsed.y.toLocaleString('it-IT', {minimumFractionDigits:2}); } }
           }
         },
         scales: {
