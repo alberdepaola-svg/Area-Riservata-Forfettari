@@ -350,18 +350,21 @@ html, body { height: 100%; font-family: var(--sans); }
   overflow: hidden;
 }
 .card-header {
-  padding: 1rem 1.4rem;
+  padding: 0.85rem 1.4rem;
   border-bottom: 1px solid var(--border);
   display: flex;
   align-items: center;
   justify-content: space-between;
+  background: var(--navy);
+  border-radius: var(--radius) var(--radius) 0 0;
 }
 .card-header h3 {
-  font-size: 0.95rem;
+  font-size: 0.88rem;
   font-weight: 600;
-  color: var(--text);
+  color: #ffffff;
+  letter-spacing: 0.01em;
 }
-.card-body { padding: 1.4rem; }
+.card-header span { color: rgba(255,255,255,0.6) !important; }
 
 /* KPI */
 .kpi-grid {
@@ -691,6 +694,23 @@ html, body { height: 100%; font-family: var(--sans); }
           <div class="loading-spinner"><div class="spinner"></div> Caricamento...</div>
         </div>
       </div>
+
+      <!-- Fatturato per cliente -->
+      <div class="card fade-in">
+        <div class="card-header">
+          <h3>Fatturato per cliente</h3>
+          <span id="fatturato-clienti-tot" style="font-size:0.82rem;"></span>
+        </div>
+        <div style="padding:0;">
+          <table class="data-table">
+            <thead><tr><th>Cliente</th><th>Fatturato</th><th>Incidenza</th><th style="width:30%"></th></tr></thead>
+            <tbody id="dash-clienti-body">
+              <tr><td colspan="4" style="text-align:center;color:var(--text-light);padding:2rem">Caricamento...</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
     </div>
 
     <!-- FATTURE -->
@@ -964,7 +984,35 @@ function renderDashboard() {
     });
   }
 
-  // F24
+  // Fatturato per cliente
+  var clientiMap = {};
+  fattureData.filter(function(f) { return f.tipo === 'emessa' && f.anno === anno; }).forEach(function(f) {
+    var nome = f.cessionario_nome || f.cedente_nome || 'Sconosciuto';
+    if (!clientiMap[nome]) clientiMap[nome] = 0;
+    clientiMap[nome] += parseFloat(f.importo || 0);
+  });
+  var clientiList = Object.keys(clientiMap).map(function(nome) {
+    return { nome: nome, totale: clientiMap[nome] };
+  }).sort(function(a,b) { return b.totale - a.totale; });
+  var totClienti = clientiList.reduce(function(s,c) { return s + c.totale; }, 0);
+  var clientiEl = el('dash-clienti-body');
+  var totEl2 = el('fatturato-clienti-tot');
+  if (totEl2) totEl2.textContent = clientiList.length + ' clienti';
+  if (clientiEl) {
+    if (clientiList.length === 0) {
+      clientiEl.innerHTML = '<tr><td colspan="4" style="text-align:center;color:var(--text-light);padding:2rem">Nessun dato disponibile</td></tr>';
+    } else {
+      clientiEl.innerHTML = clientiList.map(function(c) {
+        var pct = totClienti > 0 ? Math.round((c.totale / totClienti) * 100) : 0;
+        return '<tr>' +
+          '<td style="font-weight:500">' + c.nome + '</td>' +
+          '<td class="amount">' + fmt(c.totale) + '</td>' +
+          '<td style="font-weight:600;color:var(--blue)">' + pct + '%</td>' +
+          '<td><div style="height:8px;border-radius:4px;background:#EFF6FF;overflow:hidden"><div style="height:100%;width:' + pct + '%;background:#2563EB;border-radius:4px;transition:width 0.6s ease"></div></div></td>' +
+          '</tr>';
+      }).join('');
+    }
+  }
   var oggi = new Date();
   var prossimi = f24Data.filter(function(f) { return !f.pagato; }).slice(0,5);
   var f24b = el('dash-f24-body');
@@ -981,7 +1029,7 @@ function renderDashboard() {
         '<td class="mono" style="color:var(--text-mid);font-size:0.78rem">' + codice + '</td>' +
         '<td style="font-size:0.82rem;color:var(--text-mid)">' + (f.tipo||'\u2014') + '</td>' +
         '<td class="amount">' + fmt(f.importo) + '</td>' +
-        '<td><button class="toggle-f24" data-id="' + f.id + '" data-pagato="false" style="font-family:Inter,sans-serif;font-size:0.72rem;font-weight:600;padding:0.25rem 0.7rem;border-radius:20px;border:1px solid #FED7AA;background:#FFF7ED;color:#9A3412;cursor:pointer;">Segna pagato</button></td>' +
+        '<td><button class="toggle-f24" data-id="' + f.id + '" data-pagato="false" style="font-family:Inter,sans-serif;font-size:0.75rem;font-weight:600;padding:0.35rem 1rem;border-radius:6px;border:none;background:#1a1d23;color:#fff;cursor:pointer;box-shadow:0 1px 3px rgba(0,0,0,0.15);">Segna pagato</button></td>' +
         '</tr>';
     }).join('');
     f24b.innerHTML = '<table class="data-table"><thead><tr><th>Scadenza</th><th>Cod. Tributo</th><th>Tipo</th><th>Importo</th><th></th></tr></thead><tbody>' + f24rows + '</tbody></table>';
@@ -1057,17 +1105,17 @@ function renderF24() {
     var giorni = Math.ceil((scad - oggi) / (1000*60*60*24));
     var urgente = !f.pagato && giorni <= 15;
     var codice = f.codice_tributo || (f.descrizione ? f.descrizione.split(' ')[1] : '') || '\u2014';
-    var pagColor = f.pagato ? '#065F46' : '#9A3412';
-    var pagBg    = f.pagato ? '#ECFDF5' : '#FFF7ED';
-    var pagBorder= f.pagato ? '#6EE7B7' : '#FED7AA';
     var pagLabel = f.pagato ? 'Pagato' : 'Segna pagato';
+    var pagStyle = f.pagato
+      ? 'font-family:Inter,sans-serif;font-size:0.75rem;font-weight:600;padding:0.35rem 1rem;border-radius:6px;border:none;background:#ECFDF5;color:#065F46;cursor:pointer;'
+      : 'font-family:Inter,sans-serif;font-size:0.75rem;font-weight:600;padding:0.35rem 1rem;border-radius:6px;border:none;background:#1a1d23;color:#fff;cursor:pointer;box-shadow:0 1px 3px rgba(0,0,0,0.15);';
     return '<tr>' +
       '<td><span class="badge ' + (f.pagato?'badge-green':urgente?'badge-red':'badge-orange') + '">' + fmtDate(f.scadenza) + '</span></td>' +
       '<td class="mono" style="font-size:0.78rem;color:var(--text-mid)">' + codice + '</td>' +
       '<td style="font-size:0.82rem">' + (f.tipo||'\u2014') + '</td>' +
       '<td class="mono">' + (f.anno||'\u2014') + '</td>' +
       '<td class="amount">' + fmt(f.importo) + '</td>' +
-      '<td><button class="toggle-f24-btn" data-id="' + f.id + '" data-pagato="' + f.pagato + '" style="font-family:Inter,sans-serif;font-size:0.72rem;font-weight:600;padding:0.25rem 0.7rem;border-radius:20px;border:1px solid ' + pagBorder + ';background:' + pagBg + ';color:' + pagColor + ';cursor:pointer;">' + pagLabel + '</button></td>' +
+      '<td><button class="toggle-f24-btn" data-id="' + f.id + '" data-pagato="' + f.pagato + '" style="' + pagStyle + '">' + pagLabel + '</button></td>' +
       '</tr>';
   }).join('');
   f24El.innerHTML = '<table class="data-table"><thead><tr><th>Scadenza</th><th>Cod. Tributo</th><th>Tipo</th><th>Anno</th><th>Importo</th><th>Stato</th></tr></thead><tbody>' + rows + '</tbody></table>';
