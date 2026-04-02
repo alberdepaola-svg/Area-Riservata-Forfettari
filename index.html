@@ -1003,7 +1003,7 @@ function renderDashboard() {
     fb.innerHTML = bannerHtml + emptyState('Tutte le fatture risultano incassate');
   } else {
     fb.innerHTML = bannerHtml + '<table class="data-table"><thead><tr><th>Cliente</th><th>Data</th><th>Importo</th><th></th></tr></thead><tbody>' +
-      list5.map(f => '<tr><td style="font-weight:500">' + (f.cessionario_nome || f.cedente_nome || '—') + '</td><td style="color:var(--text-mid)">' + fmtDate(f.data_emissione) + '</td><td class="amount">' + fmt(f.importo) + '</td><td><button onclick="togglePagata('' + f.id + '',' + f.pagata + ')" style="background:#1a1d23;color:#fff;border:none;padding:0.3rem 0.8rem;border-radius:5px;font-size:0.75rem;font-weight:600;cursor:pointer;font-family:Inter,sans-serif;">Incassa</button></td></tr>').join('') +
+      list5.map(f => '<tr><td style="font-weight:500">' + (f.cessionario_nome || f.cedente_nome || '—') + '</td><td style="color:var(--text-mid)">' + fmtDate(f.data_emissione) + '</td><td class="amount">' + fmt(f.importo) + '</td><td><button onclick="togglePagata('${f.id}', ${f.pagata})">Incassa</button></button></td></tr>').join('') +
       '</tbody></table>';
   }
 
