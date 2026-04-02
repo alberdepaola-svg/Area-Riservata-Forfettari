@@ -1,0 +1,1185 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Area Riservata — Studio De Paola</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,400&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root {
+  --navy: #0B1A2E;
+  --navy2: #152642;
+  --blue: #1A56DB;
+  --blue-h: #1344B8;
+  --blue-l: #EBF1FD;
+  --gold: #C9A84C;
+  --gold-l: #FDF8EE;
+  --green: #059669;
+  --green-l: #ECFDF5;
+  --red: #DC2626;
+  --red-l: #FEF2F2;
+  --orange: #EA580C;
+  --orange-l: #FFF7ED;
+  --mid: #4A5568;
+  --light: #F4F7FC;
+  --border: #E2E8F0;
+  --white: #ffffff;
+  --display: 'Syne', sans-serif;
+  --sans: 'DM Sans', sans-serif;
+  --mono: 'DM Mono', monospace;
+  --shadow: 0 4px 24px rgba(11,26,46,0.10);
+  --shadow-sm: 0 2px 8px rgba(11,26,46,0.07);
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html, body { height: 100%; font-family: var(--sans); background: var(--light); color: var(--navy); }
+
+/* ── Utility ── */
+.hidden { display: none !important; }
+.fade-in { animation: fadeIn 0.35s ease both; }
+@keyframes fadeIn { from { opacity:0; transform:translateY(10px); } to { opacity:1; transform:none; } }
+
+/* ════════════════════════════════════════
+   LOGIN PAGE
+════════════════════════════════════════ */
+#login-page {
+  min-height: 100vh;
+  display: flex;
+  align-items: stretch;
+}
+.login-left {
+  width: 420px;
+  flex-shrink: 0;
+  background: var(--navy);
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  padding: 3rem 2.5rem;
+  position: relative;
+  overflow: hidden;
+}
+.login-left::before {
+  content: '';
+  position: absolute;
+  top: -80px; right: -80px;
+  width: 300px; height: 300px;
+  background: radial-gradient(circle, rgba(26,86,219,0.3) 0%, transparent 70%);
+  pointer-events: none;
+}
+.login-left::after {
+  content: '';
+  position: absolute;
+  bottom: -60px; left: -60px;
+  width: 250px; height: 250px;
+  background: radial-gradient(circle, rgba(201,168,76,0.2) 0%, transparent 70%);
+  pointer-events: none;
+}
+.login-brand { position: relative; z-index: 1; }
+.login-brand .studio-label {
+  font-family: var(--mono);
+  font-size: 0.7rem;
+  color: var(--gold);
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  margin-bottom: 0.6rem;
+}
+.login-brand h1 {
+  font-family: var(--display);
+  font-size: 1.5rem;
+  font-weight: 800;
+  color: var(--white);
+  line-height: 1.2;
+}
+.login-brand h1 span { color: var(--gold); }
+.login-brand p {
+  font-size: 0.85rem;
+  color: rgba(255,255,255,0.5);
+  margin-top: 0.5rem;
+}
+.login-features { position: relative; z-index: 1; }
+.login-feature {
+  display: flex;
+  align-items: center;
+  gap: 0.8rem;
+  margin-bottom: 1rem;
+  padding: 0.8rem 1rem;
+  background: rgba(255,255,255,0.05);
+  border-radius: 8px;
+  border: 1px solid rgba(255,255,255,0.08);
+}
+.login-feature .lf-icon { font-size: 1.2rem; flex-shrink: 0; }
+.login-feature .lf-text { font-size: 0.82rem; color: rgba(255,255,255,0.7); line-height: 1.4; }
+.login-feature .lf-text strong { color: var(--white); display: block; font-size: 0.85rem; }
+.login-footer {
+  font-family: var(--mono);
+  font-size: 0.68rem;
+  color: rgba(255,255,255,0.25);
+  position: relative; z-index: 1;
+}
+
+.login-right {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem;
+  background: var(--light);
+}
+.login-card {
+  background: var(--white);
+  border-radius: 16px;
+  padding: 2.5rem;
+  width: 100%;
+  max-width: 400px;
+  box-shadow: var(--shadow);
+  border: 1px solid var(--border);
+}
+.login-card h2 {
+  font-family: var(--display);
+  font-size: 1.4rem;
+  font-weight: 700;
+  color: var(--navy);
+  margin-bottom: 0.3rem;
+}
+.login-card .login-sub {
+  font-size: 0.85rem;
+  color: var(--mid);
+  margin-bottom: 2rem;
+}
+.form-group { margin-bottom: 1.2rem; }
+.form-group label {
+  display: block;
+  font-size: 0.78rem;
+  font-weight: 500;
+  color: var(--mid);
+  margin-bottom: 0.4rem;
+  letter-spacing: 0.02em;
+}
+.form-group input {
+  width: 100%;
+  padding: 0.7rem 0.9rem;
+  border: 1.5px solid var(--border);
+  border-radius: 8px;
+  font-family: var(--sans);
+  font-size: 0.92rem;
+  color: var(--navy);
+  outline: none;
+  transition: border-color 0.2s, box-shadow 0.2s;
+  background: var(--light);
+}
+.form-group input:focus {
+  border-color: var(--blue);
+  background: var(--white);
+  box-shadow: 0 0 0 3px rgba(26,86,219,0.1);
+}
+.btn-login {
+  width: 100%;
+  padding: 0.8rem;
+  background: var(--navy);
+  color: var(--white);
+  border: none;
+  border-radius: 8px;
+  font-family: var(--display);
+  font-size: 0.95rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background 0.2s, transform 0.15s;
+  margin-top: 0.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+}
+.btn-login:hover { background: var(--blue); transform: translateY(-1px); }
+.btn-login:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+.login-error {
+  background: var(--red-l);
+  border: 1px solid #FECACA;
+  color: var(--red);
+  border-radius: 8px;
+  padding: 0.7rem 1rem;
+  font-size: 0.83rem;
+  margin-bottom: 1rem;
+  display: none;
+}
+
+/* ════════════════════════════════════════
+   APP SHELL
+════════════════════════════════════════ */
+#app { display: none; min-height: 100vh; flex-direction: column; }
+
+/* ── Topbar ── */
+.topbar {
+  background: var(--navy);
+  height: 3.5rem;
+  display: flex;
+  align-items: center;
+  padding: 0 1.5rem;
+  gap: 1rem;
+  border-bottom: 2px solid var(--gold);
+  position: sticky; top: 0; z-index: 100;
+}
+.topbar-brand {
+  font-family: var(--display);
+  font-weight: 700;
+  font-size: 0.9rem;
+  color: var(--white);
+  flex-shrink: 0;
+}
+.topbar-brand span { color: var(--gold); }
+.topbar-spacer { flex: 1; }
+.topbar-user {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+}
+.topbar-user .user-name {
+  font-size: 0.82rem;
+  color: rgba(255,255,255,0.8);
+}
+.topbar-user .user-avatar {
+  width: 2rem; height: 2rem;
+  background: var(--blue);
+  border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-family: var(--display);
+  font-weight: 700;
+  font-size: 0.75rem;
+  color: var(--white);
+  flex-shrink: 0;
+}
+.btn-logout {
+  background: rgba(255,255,255,0.08);
+  border: 1px solid rgba(255,255,255,0.15);
+  color: rgba(255,255,255,0.7);
+  padding: 0.3rem 0.8rem;
+  border-radius: 6px;
+  font-size: 0.78rem;
+  cursor: pointer;
+  font-family: var(--sans);
+  transition: all 0.2s;
+}
+.btn-logout:hover { background: rgba(255,255,255,0.15); color: var(--white); }
+
+/* ── Nav tabs ── */
+.nav-tabs {
+  background: var(--white);
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  padding: 0 1.5rem;
+  gap: 0;
+  overflow-x: auto;
+}
+.nav-tab {
+  padding: 0.85rem 1.2rem;
+  font-size: 0.85rem;
+  font-weight: 500;
+  color: var(--mid);
+  cursor: pointer;
+  border-bottom: 2.5px solid transparent;
+  transition: all 0.2s;
+  white-space: nowrap;
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  background: none;
+  border-top: none;
+  border-left: none;
+  border-right: none;
+  font-family: var(--sans);
+}
+.nav-tab:hover { color: var(--navy); }
+.nav-tab.active {
+  color: var(--blue);
+  border-bottom-color: var(--blue);
+  font-weight: 600;
+}
+
+/* ── Main content ── */
+.main-content {
+  flex: 1;
+  padding: 2rem 1.5rem;
+  max-width: 1100px;
+  margin: 0 auto;
+  width: 100%;
+}
+
+/* ── Section pages ── */
+.section-page { display: none; }
+.section-page.active { display: block; }
+
+/* ── Page header ── */
+.page-header {
+  margin-bottom: 1.5rem;
+}
+.page-header h2 {
+  font-family: var(--display);
+  font-size: 1.3rem;
+  font-weight: 700;
+  color: var(--navy);
+  margin-bottom: 0.2rem;
+}
+.page-header p { font-size: 0.85rem; color: var(--mid); }
+
+/* ── KPI Cards ── */
+.kpi-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+}
+.kpi-card {
+  background: var(--white);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 1.2rem 1.3rem;
+  box-shadow: var(--shadow-sm);
+  position: relative;
+  overflow: hidden;
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+.kpi-card:hover { transform: translateY(-2px); box-shadow: var(--shadow); }
+.kpi-card::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 3px;
+}
+.kpi-card.blue::before  { background: var(--blue); }
+.kpi-card.green::before { background: var(--green); }
+.kpi-card.gold::before  { background: var(--gold); }
+.kpi-card.red::before   { background: var(--red); }
+.kpi-label {
+  font-size: 0.72rem;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+  color: var(--mid);
+  margin-bottom: 0.5rem;
+}
+.kpi-value {
+  font-family: var(--display);
+  font-size: 1.6rem;
+  font-weight: 800;
+  color: var(--navy);
+  line-height: 1;
+  margin-bottom: 0.3rem;
+}
+.kpi-sub { font-size: 0.75rem; color: var(--mid); }
+.kpi-icon {
+  position: absolute;
+  top: 1rem; right: 1rem;
+  font-size: 1.4rem;
+  opacity: 0.15;
+}
+
+/* ── Cards ── */
+.card {
+  background: var(--white);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  box-shadow: var(--shadow-sm);
+  margin-bottom: 1.2rem;
+  overflow: hidden;
+}
+.card-header {
+  padding: 1rem 1.3rem;
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.card-header h3 {
+  font-family: var(--display);
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: var(--navy);
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+.card-body { padding: 1.3rem; }
+
+/* ── Table ── */
+.data-table { width: 100%; border-collapse: collapse; font-size: 0.85rem; }
+.data-table th {
+  text-align: left;
+  padding: 0.6rem 0.8rem;
+  font-size: 0.72rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--mid);
+  border-bottom: 1px solid var(--border);
+  background: var(--light);
+}
+.data-table td {
+  padding: 0.8rem;
+  border-bottom: 1px solid var(--border);
+  color: var(--navy);
+  vertical-align: middle;
+}
+.data-table tr:last-child td { border-bottom: none; }
+.data-table tr:hover td { background: var(--light); }
+.data-table .mono { font-family: var(--mono); font-size: 0.8rem; }
+.data-table .amount {
+  font-family: var(--display);
+  font-weight: 700;
+  font-size: 0.95rem;
+}
+
+/* ── Badges ── */
+.badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.2rem 0.6rem;
+  border-radius: 20px;
+  font-size: 0.72rem;
+  font-weight: 600;
+  gap: 0.3rem;
+}
+.badge-green  { background: var(--green-l); color: var(--green); }
+.badge-red    { background: var(--red-l); color: var(--red); }
+.badge-blue   { background: var(--blue-l); color: var(--blue); }
+.badge-gold   { background: var(--gold-l); color: #92400E; }
+.badge-orange { background: var(--orange-l); color: var(--orange); }
+
+/* ── Empty state ── */
+.empty-state {
+  text-align: center;
+  padding: 3rem 2rem;
+  color: var(--mid);
+}
+.empty-state .es-icon { font-size: 2.5rem; margin-bottom: 0.8rem; opacity: 0.4; }
+.empty-state p { font-size: 0.88rem; }
+
+/* ── Calcolo reddito ── */
+.calcolo-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+}
+.calc-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.7rem 0;
+  border-bottom: 1px solid var(--border);
+  font-size: 0.88rem;
+}
+.calc-row:last-child { border-bottom: none; }
+.calc-row .cr-label { color: var(--mid); }
+.calc-row .cr-value {
+  font-family: var(--mono);
+  font-weight: 500;
+  color: var(--navy);
+}
+.calc-row.total .cr-label { font-weight: 700; color: var(--navy); }
+.calc-row.total .cr-value {
+  font-family: var(--display);
+  font-size: 1.1rem;
+  font-weight: 800;
+  color: var(--blue);
+}
+
+/* ── Profilo ── */
+.profilo-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+}
+.profilo-field { display: flex; flex-direction: column; gap: 0.2rem; }
+.profilo-field .pf-label {
+  font-size: 0.72rem;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--mid);
+}
+.profilo-field .pf-value {
+  font-size: 0.92rem;
+  color: var(--navy);
+  font-weight: 500;
+}
+
+/* ── Loading ── */
+.loading-spinner {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 3rem;
+  gap: 0.8rem;
+  color: var(--mid);
+  font-size: 0.88rem;
+}
+.spinner {
+  width: 1.2rem; height: 1.2rem;
+  border: 2px solid var(--border);
+  border-top-color: var(--blue);
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* ── Filter bar ── */
+.filter-bar {
+  display: flex;
+  gap: 0.5rem;
+  margin-bottom: 0.8rem;
+  flex-wrap: wrap;
+}
+.filter-btn {
+  padding: 0.35rem 0.8rem;
+  border-radius: 20px;
+  font-size: 0.78rem;
+  font-weight: 500;
+  cursor: pointer;
+  border: 1.5px solid var(--border);
+  background: var(--white);
+  color: var(--mid);
+  font-family: var(--sans);
+  transition: all 0.15s;
+}
+.filter-btn:hover { border-color: var(--blue); color: var(--blue); }
+.filter-btn.active { background: var(--blue); color: var(--white); border-color: var(--blue); }
+
+/* ── Responsive ── */
+@media (max-width: 768px) {
+  .login-left { display: none; }
+  .kpi-grid { grid-template-columns: 1fr 1fr; }
+  .calcolo-grid { grid-template-columns: 1fr; }
+  .profilo-grid { grid-template-columns: 1fr; }
+}
+@media (max-width: 480px) {
+  .kpi-grid { grid-template-columns: 1fr; }
+}
+</style>
+</head>
+<body>
+
+<!-- ══════════════════════════════════════
+     LOGIN PAGE
+══════════════════════════════════════ -->
+<div id="login-page">
+  <div class="login-left">
+    <div class="login-brand">
+      <div class="studio-label">Studio Commercialista</div>
+      <h1>De <span>Paola</span></h1>
+      <p>Area riservata clienti forfettari</p>
+    </div>
+    <div class="login-features">
+      <div class="login-feature">
+        <span class="lf-icon">📊</span>
+        <div class="lf-text">
+          <strong>Dashboard personale</strong>
+          Fatturato, reddito e imposte sempre aggiornati
+        </div>
+      </div>
+      <div class="login-feature">
+        <span class="lf-icon">🧾</span>
+        <div class="lf-text">
+          <strong>Le tue fatture</strong>
+          Tutte le fatture emesse e ricevute in un posto
+        </div>
+      </div>
+      <div class="login-feature">
+        <span class="lf-icon">📅</span>
+        <div class="lf-text">
+          <strong>Scadenzario F24</strong>
+          Non perdere mai una scadenza fiscale
+        </div>
+      </div>
+      <div class="login-feature">
+        <span class="lf-icon">📁</span>
+        <div class="lf-text">
+          <strong>Documenti</strong>
+          CU, dichiarazioni e tutti i tuoi documenti
+        </div>
+      </div>
+    </div>
+    <div class="login-footer">
+      studiocommercialistadepaola.it &nbsp;·&nbsp; Roma
+    </div>
+  </div>
+  <div class="login-right">
+    <div class="login-card fade-in">
+      <h2>Accedi</h2>
+      <p class="login-sub">Inserisci le credenziali fornite dallo studio</p>
+      <div class="login-error" id="login-error"></div>
+      <div class="form-group">
+        <label>Email</label>
+        <input type="email" id="login-email" placeholder="tua@email.com" autocomplete="email" />
+      </div>
+      <div class="form-group">
+        <label>Password</label>
+        <input type="password" id="login-password" placeholder="••••••••" autocomplete="current-password" />
+      </div>
+      <button class="btn-login" id="btn-login" onclick="doLogin()">
+        <span id="login-btn-text">Accedi</span>
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════
+     APP
+══════════════════════════════════════ -->
+<div id="app">
+  <!-- Topbar -->
+  <div class="topbar">
+    <div class="topbar-brand">Studio <span>De Paola</span></div>
+    <div class="topbar-spacer"></div>
+    <div class="topbar-user">
+      <div class="user-avatar" id="user-avatar">?</div>
+      <span class="user-name" id="user-name-top"></span>
+      <button class="btn-logout" onclick="doLogout()">Esci</button>
+    </div>
+  </div>
+
+  <!-- Nav -->
+  <div class="nav-tabs">
+    <button class="nav-tab active" onclick="showSection('dashboard')">📊 Dashboard</button>
+    <button class="nav-tab" onclick="showSection('fatture')">🧾 Fatture</button>
+    <button class="nav-tab" onclick="showSection('f24')">📅 F24</button>
+    <button class="nav-tab" onclick="showSection('documenti')">📁 Documenti</button>
+    <button class="nav-tab" onclick="showSection('profilo')">👤 Profilo</button>
+  </div>
+
+  <!-- Content -->
+  <div class="main-content">
+
+    <!-- ── DASHBOARD ── -->
+    <div class="section-page active" id="section-dashboard">
+      <div class="page-header fade-in">
+        <h2 id="dashboard-welcome">Benvenuto</h2>
+        <p id="dashboard-year">Anno fiscale in corso</p>
+      </div>
+
+      <!-- KPI -->
+      <div class="kpi-grid fade-in">
+        <div class="kpi-card blue">
+          <div class="kpi-icon">💰</div>
+          <div class="kpi-label">Fatturato anno corrente</div>
+          <div class="kpi-value" id="kpi-fatturato">—</div>
+          <div class="kpi-sub" id="kpi-fatturato-sub">fatture emesse</div>
+        </div>
+        <div class="kpi-card green">
+          <div class="kpi-icon">📈</div>
+          <div class="kpi-label">Reddito imponibile</div>
+          <div class="kpi-value" id="kpi-reddito">—</div>
+          <div class="kpi-sub" id="kpi-reddito-sub">dopo coefficiente</div>
+        </div>
+        <div class="kpi-card gold">
+          <div class="kpi-icon">🏛</div>
+          <div class="kpi-label">Imposta stimata</div>
+          <div class="kpi-value" id="kpi-imposta">—</div>
+          <div class="kpi-sub" id="kpi-imposta-sub">imposta sostitutiva</div>
+        </div>
+        <div class="kpi-card red">
+          <div class="kpi-icon">📅</div>
+          <div class="kpi-label">F24 da pagare</div>
+          <div class="kpi-value" id="kpi-f24">—</div>
+          <div class="kpi-sub">scadenze aperte</div>
+        </div>
+      </div>
+
+      <!-- Ultime fatture + F24 imminenti -->
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;">
+        <div class="card fade-in">
+          <div class="card-header">
+            <h3>🧾 Ultime fatture emesse</h3>
+          </div>
+          <div id="dash-fatture-body">
+            <div class="loading-spinner"><div class="spinner"></div> Caricamento...</div>
+          </div>
+        </div>
+        <div class="card fade-in">
+          <div class="card-header">
+            <h3>📅 F24 in scadenza</h3>
+          </div>
+          <div id="dash-f24-body">
+            <div class="loading-spinner"><div class="spinner"></div> Caricamento...</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── FATTURE ── -->
+    <div class="section-page" id="section-fatture">
+      <div class="page-header fade-in">
+        <h2>Le mie fatture</h2>
+        <p>Tutte le fatture emesse e ricevute</p>
+      </div>
+      <div class="filter-bar">
+        <button class="filter-btn active" onclick="filterFatture('tutte',this)">Tutte</button>
+        <button class="filter-btn" onclick="filterFatture('emessa',this)">Emesse</button>
+        <button class="filter-btn" onclick="filterFatture('ricevuta',this)">Ricevute</button>
+      </div>
+      <div class="card fade-in">
+        <div id="fatture-body">
+          <div class="loading-spinner"><div class="spinner"></div> Caricamento...</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── F24 ── -->
+    <div class="section-page" id="section-f24">
+      <div class="page-header fade-in">
+        <h2>Scadenzario F24</h2>
+        <p>Tutte le tue scadenze fiscali</p>
+      </div>
+      <div class="filter-bar">
+        <button class="filter-btn active" onclick="filterF24('tutti',this)">Tutti</button>
+        <button class="filter-btn" onclick="filterF24('da_pagare',this)">Da pagare</button>
+        <button class="filter-btn" onclick="filterF24('pagati',this)">Pagati</button>
+      </div>
+      <div class="card fade-in">
+        <div id="f24-body">
+          <div class="loading-spinner"><div class="spinner"></div> Caricamento...</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── DOCUMENTI ── -->
+    <div class="section-page" id="section-documenti">
+      <div class="page-header fade-in">
+        <h2>Documenti</h2>
+        <p>CU, dichiarazioni e tutti i tuoi documenti</p>
+      </div>
+      <div class="card fade-in">
+        <div id="documenti-body">
+          <div class="loading-spinner"><div class="spinner"></div> Caricamento...</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── PROFILO ── -->
+    <div class="section-page" id="section-profilo">
+      <div class="page-header fade-in">
+        <h2>Il mio profilo</h2>
+        <p>I tuoi dati fiscali e di contatto</p>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;">
+        <div class="card fade-in">
+          <div class="card-header"><h3>👤 Dati anagrafici</h3></div>
+          <div class="card-body">
+            <div class="profilo-grid" id="profilo-anagrafica">
+              <div class="loading-spinner"><div class="spinner"></div></div>
+            </div>
+          </div>
+        </div>
+        <div class="card fade-in">
+          <div class="card-header"><h3>🏛 Dati fiscali</h3></div>
+          <div class="card-body">
+            <div id="profilo-fiscale">
+              <div class="loading-spinner"><div class="spinner"></div></div>
+            </div>
+          </div>
+        </div>
+        <div class="card fade-in" style="grid-column:1/-1;">
+          <div class="card-header"><h3>📊 Calcolo reddito forfettario</h3></div>
+          <div class="card-body">
+            <div class="calcolo-grid">
+              <div id="calcolo-sinistra"></div>
+              <div id="calcolo-destra"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- /main-content -->
+</div><!-- /app -->
+
+<script>
+// ══════════════════════════════════════════════════════
+// CONFIG — modifica questi valori
+// ══════════════════════════════════════════════════════
+const SUPABASE_URL = 'https://znjhrwrwgpzmfwewdbnm.supabase.co';
+const SUPABASE_KEY = 'sb_publishable_TMbin3rxRij58V_Wquk5_Q_z375MFUz';
+
+// ══════════════════════════════════════════════════════
+// INIT SUPABASE
+// ══════════════════════════════════════════════════════
+const { createClient } = supabase;
+const sb = createClient(SUPABASE_URL, SUPABASE_KEY);
+
+// ══════════════════════════════════════════════════════
+// STATE
+// ══════════════════════════════════════════════════════
+let currentUser = null;
+let clienteData = null;
+let fattureData = [];
+let f24Data = [];
+let docsData = [];
+let currentFattureFilter = 'tutte';
+let currentF24Filter = 'tutti';
+
+// ══════════════════════════════════════════════════════
+// AUTH
+// ══════════════════════════════════════════════════════
+async function doLogin() {
+  const email = document.getElementById('login-email').value.trim();
+  const pwd   = document.getElementById('login-password').value;
+  const errEl = document.getElementById('login-error');
+  const btn   = document.getElementById('btn-login');
+  const txt   = document.getElementById('login-btn-text');
+
+  errEl.style.display = 'none';
+  btn.disabled = true;
+  txt.textContent = 'Accesso in corso...';
+
+  const { data, error } = await sb.auth.signInWithPassword({ email, password: pwd });
+
+  if (error) {
+    errEl.textContent = 'Email o password non corretti. Contatta lo studio se hai problemi di accesso.';
+    errEl.style.display = 'block';
+    btn.disabled = false;
+    txt.textContent = 'Accedi';
+    return;
+  }
+
+  currentUser = data.user;
+  await initApp();
+}
+
+async function doLogout() {
+  await sb.auth.signOut();
+  currentUser = null;
+  clienteData = null;
+  document.getElementById('login-page').style.display = 'flex';
+  document.getElementById('app').style.display = 'none';
+  document.getElementById('login-email').value = '';
+  document.getElementById('login-password').value = '';
+  document.getElementById('btn-login').disabled = false;
+  document.getElementById('login-btn-text').textContent = 'Accedi';
+}
+
+// Check session on load
+window.addEventListener('load', async () => {
+  const { data } = await sb.auth.getSession();
+  if (data.session) {
+    currentUser = data.session.user;
+    await initApp();
+  }
+});
+
+// Enter key on login
+document.addEventListener('keydown', e => {
+  if (e.key === 'Enter' && document.getElementById('login-page').style.display !== 'none') {
+    doLogin();
+  }
+});
+
+// ══════════════════════════════════════════════════════
+// APP INIT
+// ══════════════════════════════════════════════════════
+async function initApp() {
+  document.getElementById('login-page').style.display = 'none';
+  document.getElementById('app').style.display = 'flex';
+  document.getElementById('app').style.flexDirection = 'column';
+
+  // Carica dati cliente
+  const { data: cliente } = await sb
+    .from('clienti')
+    .select('*')
+    .eq('email', currentUser.email)
+    .single();
+
+  clienteData = cliente;
+
+  if (clienteData) {
+    const nome = `${clienteData.nome} ${clienteData.cognome}`;
+    document.getElementById('user-name-top').textContent = nome;
+    document.getElementById('user-avatar').textContent =
+      (clienteData.nome[0] + clienteData.cognome[0]).toUpperCase();
+    document.getElementById('dashboard-welcome').textContent = `Ciao, ${clienteData.nome} 👋`;
+  }
+
+  document.getElementById('dashboard-year').textContent =
+    `Anno fiscale ${new Date().getFullYear()}`;
+
+  // Carica tutti i dati
+  await Promise.all([loadFatture(), loadF24(), loadDocumenti()]);
+  renderDashboard();
+  renderProfilo();
+}
+
+// ══════════════════════════════════════════════════════
+// DATA LOADING
+// ══════════════════════════════════════════════════════
+async function loadFatture() {
+  const { data } = await sb
+    .from('fatture')
+    .select('*')
+    .order('data_emissione', { ascending: false });
+  fattureData = data || [];
+  renderFatture();
+}
+
+async function loadF24() {
+  const { data } = await sb
+    .from('f24')
+    .select('*')
+    .order('scadenza', { ascending: true });
+  f24Data = data || [];
+  renderF24();
+}
+
+async function loadDocumenti() {
+  const { data } = await sb
+    .from('documenti')
+    .select('*')
+    .order('created_at', { ascending: false });
+  docsData = data || [];
+  renderDocumenti();
+}
+
+// ══════════════════════════════════════════════════════
+// DASHBOARD
+// ══════════════════════════════════════════════════════
+function renderDashboard() {
+  const anno = new Date().getFullYear();
+  const emesse = fattureData.filter(f => f.tipo === 'emessa' && f.anno === anno);
+  const fatturato = emesse.reduce((s, f) => s + parseFloat(f.importo || 0), 0);
+  const coeff = clienteData?.coefficiente_redd || 0.78;
+  const aliquota = clienteData?.aliquota_imposta || 15;
+  const reddito = fatturato * coeff;
+  const imposta = reddito * aliquota / 100;
+  const f24Aperti = f24Data.filter(f => !f.pagato).length;
+
+  document.getElementById('kpi-fatturato').textContent = fmt(fatturato);
+  document.getElementById('kpi-fatturato-sub').textContent = `${emesse.length} fatture emesse`;
+  document.getElementById('kpi-reddito').textContent = fmt(reddito);
+  document.getElementById('kpi-reddito-sub').textContent = `coeff. ${(coeff*100).toFixed(0)}%`;
+  document.getElementById('kpi-imposta').textContent = fmt(imposta);
+  document.getElementById('kpi-imposta-sub').textContent = `aliquota ${aliquota}%`;
+  document.getElementById('kpi-f24').textContent = f24Aperti;
+
+  // Ultime 5 fatture emesse
+  const ultFatture = fattureData.filter(f => f.tipo === 'emessa').slice(0, 5);
+  const fb = document.getElementById('dash-fatture-body');
+  if (ultFatture.length === 0) {
+    fb.innerHTML = emptyState('Nessuna fattura emessa');
+  } else {
+    fb.innerHTML = `<table class="data-table">
+      <thead><tr><th>Numero</th><th>Data</th><th>Importo</th></tr></thead>
+      <tbody>${ultFatture.map(f => `
+        <tr>
+          <td class="mono">${f.numero || '—'}</td>
+          <td>${fmtDate(f.data_emissione)}</td>
+          <td class="amount">${fmt(f.importo)}</td>
+        </tr>`).join('')}</tbody>
+    </table>`;
+  }
+
+  // F24 prossimi
+  const oggi = new Date();
+  const prossimi = f24Data.filter(f => !f.pagato).slice(0, 5);
+  const f24b = document.getElementById('dash-f24-body');
+  if (prossimi.length === 0) {
+    f24b.innerHTML = emptyState('Nessun F24 in scadenza 🎉');
+  } else {
+    f24b.innerHTML = `<table class="data-table">
+      <thead><tr><th>Scadenza</th><th>Tipo</th><th>Importo</th></tr></thead>
+      <tbody>${prossimi.map(f => {
+        const scad = new Date(f.scadenza);
+        const giorni = Math.ceil((scad - oggi) / (1000*60*60*24));
+        const urgente = giorni <= 15;
+        return `<tr>
+          <td><span class="badge ${urgente ? 'badge-red' : 'badge-orange'}">${fmtDate(f.scadenza)}</span></td>
+          <td style="font-size:0.8rem">${f.tipo?.replace(/_/g,' ') || '—'}</td>
+          <td class="amount">${fmt(f.importo)}</td>
+        </tr>`;
+      }).join('')}</tbody>
+    </table>`;
+  }
+}
+
+// ══════════════════════════════════════════════════════
+// FATTURE
+// ══════════════════════════════════════════════════════
+function renderFatture() {
+  let list = fattureData;
+  if (currentFattureFilter !== 'tutte') {
+    list = list.filter(f => f.tipo === currentFattureFilter);
+  }
+
+  const el = document.getElementById('fatture-body');
+  if (list.length === 0) {
+    el.innerHTML = emptyState('Nessuna fattura trovata');
+    return;
+  }
+
+  el.innerHTML = `<table class="data-table">
+    <thead><tr>
+      <th>Numero</th><th>Data</th><th>Tipo</th>
+      <th>Cedente / Cliente</th><th>Importo</th><th>Stato</th>
+    </tr></thead>
+    <tbody>${list.map(f => `
+      <tr>
+        <td class="mono">${f.numero || '—'}</td>
+        <td>${fmtDate(f.data_emissione)}</td>
+        <td><span class="badge ${f.tipo === 'emessa' ? 'badge-blue' : 'badge-gold'}">
+          ${f.tipo === 'emessa' ? '↑ Emessa' : '↓ Ricevuta'}
+        </span></td>
+        <td style="font-size:0.82rem;max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">
+          ${f.cedente_nome || f.descrizione?.substring(0,40) || '—'}
+        </td>
+        <td class="amount">${fmt(f.importo)}</td>
+        <td><span class="badge ${f.pagata ? 'badge-green' : 'badge-orange'}">
+          ${f.pagata ? '✓ Pagata' : '⏳ Attesa'}
+        </span></td>
+      </tr>`).join('')}
+    </tbody>
+  </table>`;
+}
+
+function filterFatture(tipo, btn) {
+  currentFattureFilter = tipo;
+  document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  renderFatture();
+}
+
+// ══════════════════════════════════════════════════════
+// F24
+// ══════════════════════════════════════════════════════
+function renderF24() {
+  let list = f24Data;
+  if (currentF24Filter === 'da_pagare') list = list.filter(f => !f.pagato);
+  if (currentF24Filter === 'pagati') list = list.filter(f => f.pagato);
+
+  const el = document.getElementById('f24-body');
+  if (list.length === 0) {
+    el.innerHTML = emptyState('Nessun F24 trovato');
+    return;
+  }
+
+  const oggi = new Date();
+  el.innerHTML = `<table class="data-table">
+    <thead><tr>
+      <th>Scadenza</th><th>Tipo versamento</th><th>Anno</th>
+      <th>Importo</th><th>Note</th><th>Stato</th>
+    </tr></thead>
+    <tbody>${list.map(f => {
+      const scad = new Date(f.scadenza);
+      const giorni = Math.ceil((scad - oggi) / (1000*60*60*24));
+      const urgente = !f.pagato && giorni <= 15;
+      return `<tr>
+        <td><span class="badge ${f.pagato ? 'badge-green' : urgente ? 'badge-red' : 'badge-orange'}">
+          ${fmtDate(f.scadenza)}
+        </span></td>
+        <td style="font-size:0.82rem">${f.tipo?.replace(/_/g,' ') || '—'}</td>
+        <td class="mono">${f.anno || '—'}</td>
+        <td class="amount">${fmt(f.importo)}</td>
+        <td style="font-size:0.78rem;color:var(--mid)">${f.descrizione || '—'}</td>
+        <td><span class="badge ${f.pagato ? 'badge-green' : 'badge-red'}">
+          ${f.pagato ? '✓ Pagato' : '✗ Da pagare'}
+        </span></td>
+      </tr>`;
+    }).join('')}
+    </tbody>
+  </table>`;
+}
+
+function filterF24(tipo, btn) {
+  currentF24Filter = tipo;
+  document.querySelectorAll('#section-f24 .filter-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  renderF24();
+}
+
+// ══════════════════════════════════════════════════════
+// DOCUMENTI
+// ══════════════════════════════════════════════════════
+function renderDocumenti() {
+  const el = document.getElementById('documenti-body');
+  if (docsData.length === 0) {
+    el.innerHTML = emptyState('Nessun documento disponibile. Lo studio caricherà presto i tuoi documenti.');
+    return;
+  }
+  el.innerHTML = `<table class="data-table">
+    <thead><tr><th>Titolo</th><th>Categoria</th><th>Anno</th><th>Download</th></tr></thead>
+    <tbody>${docsData.map(d => `
+      <tr>
+        <td>${d.titolo}</td>
+        <td><span class="badge badge-blue">${d.categoria || '—'}</span></td>
+        <td class="mono">${d.anno || '—'}</td>
+        <td>${d.url ? `<a href="${d.url}" target="_blank" style="color:var(--blue);font-size:0.82rem;text-decoration:none">⬇ Scarica</a>` : '—'}</td>
+      </tr>`).join('')}
+    </tbody>
+  </table>`;
+}
+
+// ══════════════════════════════════════════════════════
+// PROFILO
+// ══════════════════════════════════════════════════════
+function renderProfilo() {
+  if (!clienteData) return;
+  const c = clienteData;
+
+  document.getElementById('profilo-anagrafica').innerHTML = `
+    <div class="profilo-field"><span class="pf-label">Nome</span><span class="pf-value">${c.nome} ${c.cognome}</span></div>
+    <div class="profilo-field"><span class="pf-label">Email</span><span class="pf-value">${c.email}</span></div>
+    <div class="profilo-field"><span class="pf-label">Codice Fiscale</span><span class="pf-value mono">${c.codice_fiscale || '—'}</span></div>
+    <div class="profilo-field"><span class="pf-label">Partita IVA</span><span class="pf-value mono">${c.partita_iva || '—'}</span></div>
+  `;
+
+  document.getElementById('profilo-fiscale').innerHTML = `
+    <div style="display:flex;flex-direction:column;gap:0.8rem;">
+      <div class="profilo-field"><span class="pf-label">Codice ATECO</span><span class="pf-value mono">${c.codice_ateco || '—'}</span></div>
+      <div class="profilo-field"><span class="pf-label">Coefficiente redditività</span><span class="pf-value">${((c.coefficiente_redd || 0.78)*100).toFixed(0)}%</span></div>
+      <div class="profilo-field"><span class="pf-label">Aliquota imposta sostitutiva</span><span class="pf-value">${c.aliquota_imposta || 15}%</span></div>
+      <div class="profilo-field"><span class="pf-label">Anno apertura P.IVA</span><span class="pf-value">${c.anno_apertura_piva || '—'}</span></div>
+    </div>
+  `;
+
+  // Calcolo reddito
+  const anno = new Date().getFullYear();
+  const emesse = fattureData.filter(f => f.tipo === 'emessa' && f.anno === anno);
+  const fatturato = emesse.reduce((s, f) => s + parseFloat(f.importo || 0), 0);
+  const coeff = c.coefficiente_redd || 0.78;
+  const aliquota = c.aliquota_imposta || 15;
+  const reddito = fatturato * coeff;
+  const imposta = reddito * aliquota / 100;
+
+  document.getElementById('calcolo-sinistra').innerHTML = `
+    <div class="calc-row"><span class="cr-label">Fatturato ${anno}</span><span class="cr-value">${fmt(fatturato)}</span></div>
+    <div class="calc-row"><span class="cr-label">× Coefficiente redditività (${(coeff*100).toFixed(0)}%)</span><span class="cr-value">−</span></div>
+    <div class="calc-row total"><span class="cr-label">= Reddito imponibile</span><span class="cr-value">${fmt(reddito)}</span></div>
+  `;
+  document.getElementById('calcolo-destra').innerHTML = `
+    <div class="calc-row"><span class="cr-label">Reddito imponibile</span><span class="cr-value">${fmt(reddito)}</span></div>
+    <div class="calc-row"><span class="cr-label">× Aliquota imposta (${aliquota}%)</span><span class="cr-value">−</span></div>
+    <div class="calc-row total"><span class="cr-label">= Imposta sostitutiva stimata</span><span class="cr-value">${fmt(imposta)}</span></div>
+  `;
+}
+
+// ══════════════════════════════════════════════════════
+// NAV
+// ══════════════════════════════════════════════════════
+function showSection(id) {
+  document.querySelectorAll('.section-page').forEach(el => el.classList.remove('active'));
+  document.querySelectorAll('.nav-tab').forEach(el => el.classList.remove('active'));
+  document.getElementById(`section-${id}`).classList.add('active');
+  event.currentTarget.classList.add('active');
+}
+
+// ══════════════════════════════════════════════════════
+// HELPERS
+// ══════════════════════════════════════════════════════
+function fmt(n) {
+  if (n === null || n === undefined) return '—';
+  return '€ ' + parseFloat(n).toLocaleString('it-IT', {minimumFractionDigits:2, maximumFractionDigits:2});
+}
+function fmtDate(d) {
+  if (!d) return '—';
+  return new Date(d).toLocaleDateString('it-IT', {day:'2-digit', month:'2-digit', year:'numeric'});
+}
+function emptyState(msg) {
+  return `<div class="empty-state"><div class="es-icon">📭</div><p>${msg}</p></div>`;
+}
+</script>
+</body>
+</html>
