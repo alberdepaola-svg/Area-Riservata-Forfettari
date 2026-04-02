@@ -1261,21 +1261,7 @@ function renderFatture() {
           <button
             id="btn-pagata-${f.id}"
             onclick="togglePagata('${f.id}', ${f.pagata})"
-            style="
-              font-family:'Raleway',sans-serif;
-              font-size:0.68rem;
-              font-weight:600;
-              letter-spacing:0.08em;
-              text-transform:uppercase;
-              padding:0.25rem 0.7rem;
-              border:1px solid ${f.pagata ? 'rgba(52,211,153,0.4)' : 'rgba(234,88,12,0.4)'};
-              background:${f.pagata ? 'rgba(52,211,153,0.1)' : 'rgba(234,88,12,0.1)'};
-              color:${f.pagata ? '#34D399' : '#FB923C'};
-              cursor:pointer;
-              transition:all 0.2s;
-            "
-            onmouseover="this.style.opacity='0.7'"
-            onmouseout="this.style.opacity='1'"
+            style="font-family:Raleway,sans-serif;font-size:0.68rem;font-weight:600;letter-spacing:0.08em;text-transform:uppercase;padding:0.25rem 0.7rem;border:1px solid ${f.pagata ? 'rgba(52,211,153,0.4)' : 'rgba(234,88,12,0.4)'};background:${f.pagata ? 'rgba(52,211,153,0.1)' : 'rgba(234,88,12,0.1)'};color:${f.pagata ? '#34D399' : '#FB923C'};cursor:pointer;"
           >${f.pagata ? 'Pagata' : 'In attesa'}</button>
         </td>
       </tr>`;
