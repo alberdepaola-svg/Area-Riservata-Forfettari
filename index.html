@@ -5,7 +5,6 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Area Riservata — Studio De Paola</title>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;1,300;1,400&family=Raleway:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
 <style>
 :root {
@@ -1081,6 +1080,13 @@ function renderDashboard() {
 
   const ctx = document.getElementById('chart-fatturato').getContext('2d');
   if (chartInstance) chartInstance.destroy();
+
+  if (typeof Chart === 'undefined') {
+    document.getElementById('chart-fatturato').parentElement.innerHTML =
+      '<p style="color:rgba(255,255,255,0.3);font-size:0.8rem;padding:1rem 0;">Grafico non disponibile — ricarica la pagina.</p>';
+    return;
+  }
+
   chartInstance = new Chart(ctx, {
     type: 'line',
     data: {
@@ -1422,8 +1428,9 @@ function fmtDate(d) {
   return new Date(d).toLocaleDateString('it-IT', {day:'2-digit', month:'2-digit', year:'numeric'});
 }
 function emptyState(msg) {
-  return `<div class="empty-state"><div class="es-icon">📭</div><p>${msg}</p></div>`;
+  return `<div class="empty-state"><p>${msg}</p></div>`;
 }
 </script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 </body>
 </html>
