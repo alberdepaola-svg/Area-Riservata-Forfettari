@@ -764,389 +764,341 @@ html, body { height: 100%; font-family: var(--sans); }
 </div>
 
 <script>
-// CONFIG
 const SUPABASE_URL = 'https://znjhrwrwgpzmfwewdbnm.supabase.co';
 const SUPABASE_KEY = 'sb_publishable_TMbin3rxRij58V_Wquk5_Q_z375MFUz';
 
 const { createClient } = supabase;
 const sb = createClient(SUPABASE_URL, SUPABASE_KEY);
 
-// STATE
-let currentUser = null;
-let clienteData = null;
-let fattureData = [];
-let f24Data = [];
-let docsData = [];
-let currentFattureFilter = 'tutte';
-let currentF24Filter = 'tutti';
+let currentUser = null, clienteData = null;
+let fattureData = [], f24Data = [];
+let currentFattureFilter = 'tutte', currentF24Filter = 'tutti';
 let chartInstance = null;
 let dashboardYear = new Date().getFullYear();
 
-// AUTH
+function fmt(n) {
+  if (n === null || n === undefined) return '\u2014';
+  return '\u20ac\u00a0' + parseFloat(n).toLocaleString('it-IT', {minimumFractionDigits:2, maximumFractionDigits:2});
+}
+function fmtDate(d) {
+  if (!d) return '\u2014';
+  return new Date(d).toLocaleDateString('it-IT', {day:'2-digit', month:'2-digit', year:'numeric'});
+}
+function emptyState(msg) {
+  return '<div class="empty-state"><p>' + msg + '</p></div>';
+}
+function el(id) { return document.getElementById(id); }
+
 async function doLogin() {
-  const email = document.getElementById('login-email').value.trim();
-  const pwd   = document.getElementById('login-password').value;
-  const errEl = document.getElementById('login-error');
-  const btn   = document.getElementById('btn-login');
-  const txt   = document.getElementById('login-btn-text');
+  var email = el('login-email').value.trim();
+  var pwd = el('login-password').value;
+  var errEl = el('login-error');
+  var btn = el('btn-login');
+  var txt = el('login-btn-text');
   errEl.style.display = 'none';
   btn.disabled = true;
   txt.textContent = 'Accesso in corso...';
-  const { data, error } = await sb.auth.signInWithPassword({ email, password: pwd });
-  if (error) {
+  var res = await sb.auth.signInWithPassword({ email: email, password: pwd });
+  if (res.error) {
     errEl.textContent = 'Email o password non corretti. Contatta lo studio.';
     errEl.style.display = 'block';
     btn.disabled = false;
     txt.textContent = 'Accedi';
     return;
   }
-  currentUser = data.user;
+  currentUser = res.data.user;
   await initApp();
 }
 
 async function doLogout() {
   await sb.auth.signOut();
   currentUser = null; clienteData = null;
-  document.getElementById('login-page').style.display = 'flex';
-  document.getElementById('app').style.display = 'none';
-  document.getElementById('login-email').value = '';
-  document.getElementById('login-password').value = '';
-  document.getElementById('btn-login').disabled = false;
-  document.getElementById('login-btn-text').textContent = 'Accedi';
+  el('login-page').style.display = 'flex';
+  el('app').style.display = 'none';
+  el('login-email').value = '';
+  el('login-password').value = '';
+  el('btn-login').disabled = false;
+  el('login-btn-text').textContent = 'Accedi';
 }
 
-window.addEventListener('load', async () => {
-  const { data } = await sb.auth.getSession();
-  if (data.session) { currentUser = data.session.user; await initApp(); }
+window.addEventListener('load', async function() {
+  var res = await sb.auth.getSession();
+  if (res.data.session) { currentUser = res.data.session.user; await initApp(); }
 });
 
-document.addEventListener('keydown', e => {
-  if (e.key === 'Enter' && document.getElementById('login-page').style.display !== 'none') doLogin();
+document.addEventListener('keydown', function(e) {
+  if (e.key === 'Enter' && el('login-page').style.display !== 'none') doLogin();
 });
 
-// APP INIT
 async function initApp() {
-  document.getElementById('login-page').style.display = 'none';
-  document.getElementById('app').style.display = 'flex';
-  document.getElementById('app').style.flexDirection = 'column';
-  const { data: cliente } = await sb.from('clienti').select('*').eq('email', currentUser.email).single();
-  clienteData = cliente;
+  el('login-page').style.display = 'none';
+  el('app').style.display = 'flex';
+  el('app').style.flexDirection = 'column';
+  var res = await sb.from('clienti').select('*').eq('email', currentUser.email).single();
+  clienteData = res.data;
   if (clienteData) {
-    document.getElementById('user-name-top').textContent = clienteData.nome + ' ' + clienteData.cognome;
-    document.getElementById('user-avatar').textContent = (clienteData.nome[0] + clienteData.cognome[0]).toUpperCase();
-    document.getElementById('dashboard-welcome').textContent = 'Benvenuto, ' + clienteData.nome;
+    el('user-name-top').textContent = clienteData.nome + ' ' + clienteData.cognome;
+    el('user-avatar').textContent = (clienteData.nome[0] + clienteData.cognome[0]).toUpperCase();
+    el('dashboard-welcome').textContent = 'Benvenuto, ' + clienteData.nome;
   }
-  document.getElementById('dashboard-year').textContent = 'Anno fiscale ' + new Date().getFullYear();
+  el('dashboard-year').textContent = 'Anno fiscale ' + new Date().getFullYear();
   await Promise.all([loadFatture(), loadF24()]);
   renderDashboard();
   renderProfilo();
 }
 
-// DATA
 async function loadFatture() {
-  const { data } = await sb.from('fatture').select('*').order('data_emissione', { ascending: false });
-  fattureData = data || [];
+  var res = await sb.from('fatture').select('*').order('data_emissione', { ascending: false });
+  fattureData = res.data || [];
   renderFatture();
 }
 async function loadF24() {
-  const { data } = await sb.from('f24').select('*').order('scadenza', { ascending: true });
-  f24Data = data || [];
+  var res = await sb.from('f24').select('*').order('scadenza', { ascending: true });
+  f24Data = res.data || [];
   renderF24();
 }
 
-// DASHBOARD
 function switchYear(offset, btn) {
   dashboardYear = new Date().getFullYear() - offset;
-  document.querySelectorAll('#section-dashboard .filter-btn').forEach(b => b.classList.remove('active'));
+  document.querySelectorAll('#section-dashboard .filter-btn').forEach(function(b) { b.classList.remove('active'); });
   btn.classList.add('active');
   renderDashboard();
 }
 
 function renderDashboard() {
-  const anno = dashboardYear;
-  const annoPrev = anno - 1;
-  const emesse = fattureData.filter(f => f.tipo === 'emessa' && f.anno === anno);
-  const fatturato = emesse.reduce((s, f) => s + parseFloat(f.importo || 0), 0);
-  const coeff = clienteData?.coefficiente_redd || 0.78;
-  const aliquota = clienteData?.aliquota_imposta || 15;
-  const reddito = fatturato * coeff;
-  const imposta = reddito * aliquota / 100;
-  const f24Aperti = f24Data.filter(f => !f.pagato).length;
+  var anno = dashboardYear;
+  var annoPrev = anno - 1;
+  var emesse = fattureData.filter(function(f) { return f.tipo === 'emessa' && f.anno === anno; });
+  var fatturato = emesse.reduce(function(s, f) { return s + parseFloat(f.importo || 0); }, 0);
+  var coeff = (clienteData && clienteData.coefficiente_redd) ? clienteData.coefficiente_redd : 0.78;
+  var aliquota = (clienteData && clienteData.aliquota_imposta) ? clienteData.aliquota_imposta : 15;
+  var reddito = fatturato * coeff;
+  var imposta = reddito * aliquota / 100;
+  var f24Aperti = f24Data.filter(function(f) { return !f.pagato; }).length;
 
-  document.getElementById('kpi-fatturato').textContent = fmt(fatturato);
-  document.getElementById('kpi-fatturato-sub').textContent = emesse.length + ' fatture emesse';
-  document.getElementById('kpi-reddito').textContent = fmt(reddito);
-  document.getElementById('kpi-reddito-sub').textContent = 'coeff. ' + (coeff*100).toFixed(0) + '%';
-  document.getElementById('kpi-imposta').textContent = fmt(imposta);
-  document.getElementById('kpi-imposta-sub').textContent = 'aliquota ' + aliquota + '%';
-  document.getElementById('kpi-f24').textContent = f24Aperti;
+  el('kpi-fatturato').textContent = fmt(fatturato);
+  el('kpi-fatturato-sub').textContent = emesse.length + ' fatture emesse';
+  el('kpi-reddito').textContent = fmt(reddito);
+  el('kpi-reddito-sub').textContent = 'coeff. ' + (coeff*100).toFixed(0) + '%';
+  el('kpi-imposta').textContent = fmt(imposta);
+  el('kpi-imposta-sub').textContent = 'aliquota ' + aliquota + '%';
+  el('kpi-f24').textContent = f24Aperti;
 
-  // Grafico mensile
-  const mesi = ['Gen','Feb','Mar','Apr','Mag','Giu','Lug','Ago','Set','Ott','Nov','Dic'];
-  const datiAnno = Array(12).fill(0);
-  const datiPrev = Array(12).fill(0);
-  fattureData.filter(f => f.tipo === 'emessa').forEach(f => {
-    const d = new Date(f.data_emissione);
-    const y = d.getFullYear();
-    const m = d.getMonth();
-    if (y === anno)     datiAnno[m] += parseFloat(f.importo || 0);
+  var mesi = ['Gen','Feb','Mar','Apr','Mag','Giu','Lug','Ago','Set','Ott','Nov','Dic'];
+  var datiAnno = Array(12).fill(0);
+  var datiPrev = Array(12).fill(0);
+  fattureData.filter(function(f) { return f.tipo === 'emessa'; }).forEach(function(f) {
+    var d = new Date(f.data_emissione);
+    var y = d.getFullYear();
+    var m = d.getMonth();
+    if (y === anno) datiAnno[m] += parseFloat(f.importo || 0);
     if (y === annoPrev) datiPrev[m] += parseFloat(f.importo || 0);
   });
-
-  const totPrev = datiPrev.reduce((a,b) => a+b, 0);
-  const legEl = document.getElementById('chart-legend');
-  if (legEl) legEl.textContent = anno + ': ' + fmt(fatturato) + '  ·  ' + annoPrev + ': ' + fmt(totPrev);
+  var totPrev = datiPrev.reduce(function(a,b){return a+b;}, 0);
+  var legEl = el('chart-legend');
+  if (legEl) legEl.textContent = anno + ': ' + fmt(fatturato) + '  \u00b7  ' + annoPrev + ': ' + fmt(totPrev);
 
   if (typeof Chart !== 'undefined') {
-    const ctx = document.getElementById('chart-fatturato').getContext('2d');
+    var ctx = el('chart-fatturato').getContext('2d');
     if (chartInstance) chartInstance.destroy();
     chartInstance = new Chart(ctx, {
       type: 'line',
       data: {
         labels: mesi,
         datasets: [
-          {
-            label: String(anno),
-            data: datiAnno,
-            borderColor: '#2563EB',
-            backgroundColor: 'rgba(37,99,235,0.07)',
-            borderWidth: 2.5,
-            pointBackgroundColor: '#2563EB',
-            pointRadius: 4,
-            pointHoverRadius: 6,
-            fill: true,
-            tension: 0.4,
-          },
-          {
-            label: String(annoPrev),
-            data: datiPrev,
-            borderColor: '#F97316',
-            backgroundColor: 'transparent',
-            borderWidth: 2,
-            borderDash: [5, 4],
-            pointBackgroundColor: '#F97316',
-            pointRadius: 3,
-            fill: false,
-            tension: 0.4,
-          }
+          { label: String(anno), data: datiAnno, borderColor: '#2563EB', backgroundColor: 'rgba(37,99,235,0.07)', borderWidth: 2.5, pointBackgroundColor: '#2563EB', pointRadius: 4, pointHoverRadius: 6, fill: true, tension: 0.4 },
+          { label: String(annoPrev), data: datiPrev, borderColor: '#F97316', backgroundColor: 'transparent', borderWidth: 2, borderDash: [5,4], pointBackgroundColor: '#F97316', pointRadius: 3, fill: false, tension: 0.4 }
         ]
       },
       options: {
         responsive: true,
         interaction: { mode: 'index', intersect: false },
         plugins: {
-          legend: {
-            display: true,
-            position: 'top',
-            align: 'start',
-            labels: {
-              usePointStyle: true,
-              pointStyle: 'circle',
-              font: { family: 'Inter', size: 12 },
-              color: '#6b7280',
-              padding: 20
-            }
-          },
+          legend: { display: true, position: 'top', align: 'start', labels: { usePointStyle: true, pointStyle: 'circle', font: { family: 'Inter', size: 12 }, color: '#6b7280', padding: 20 } },
           tooltip: {
-            backgroundColor: '#1a1d23',
-            borderColor: '#e5e7eb',
-            borderWidth: 1,
-            titleColor: '#9ca3af',
-            bodyColor: '#ffffff',
-            padding: 12,
-            callbacks: {
-              label: function(ctx) {
-                return ' ' + ctx.dataset.label + ': ' + ctx.parsed.y.toLocaleString('it-IT', {minimumFractionDigits:2}) + ' \u20ac';
-              }
-            }
+            backgroundColor: '#1a1d23', borderColor: '#e5e7eb', borderWidth: 1,
+            titleColor: '#9ca3af', bodyColor: '#ffffff', padding: 12,
+            callbacks: { label: function(c) { return ' ' + c.dataset.label + ': \u20ac ' + c.parsed.y.toLocaleString('it-IT', {minimumFractionDigits:2}); } }
           }
         },
         scales: {
-          x: {
-            grid: { color: '#f3f4f6' },
-            ticks: { color: '#9ca3af', font: { family: 'Inter', size: 11 } }
-          },
-          y: {
-            grid: { color: '#f3f4f6' },
-            ticks: {
-              color: '#9ca3af',
-              font: { family: 'Inter', size: 11 },
-              callback: function(v) { return '\u20ac ' + v.toLocaleString('it-IT'); }
-            }
-          }
+          x: { grid: { color: '#f3f4f6' }, ticks: { color: '#9ca3af', font: { family: 'Inter', size: 11 } } },
+          y: { grid: { color: '#f3f4f6' }, ticks: { color: '#9ca3af', font: { family: 'Inter', size: 11 }, callback: function(v) { return '\u20ac ' + v.toLocaleString('it-IT'); } } }
         }
       }
     });
   }
 
-  // Incassi mese per mese — tabella
-  const mesiNomi = ['Gennaio','Febbraio','Marzo','Aprile','Maggio','Giugno','Luglio','Agosto','Settembre','Ottobre','Novembre','Dicembre'];
-  const incassiMese = Array(12).fill(0);
-  fattureData.filter(f => f.tipo === 'emessa' && f.anno === anno && f.pagata).forEach(f => {
-    const m = new Date(f.data_emissione).getMonth();
-    incassiMese[m] += parseFloat(f.importo || 0);
+  // Incassi mese per mese
+  var mesiNomi = ['Gennaio','Febbraio','Marzo','Aprile','Maggio','Giugno','Luglio','Agosto','Settembre','Ottobre','Novembre','Dicembre'];
+  var incassiMese = Array(12).fill(0);
+  fattureData.filter(function(f) { return f.tipo === 'emessa' && f.anno === anno && f.pagata; }).forEach(function(f) {
+    incassiMese[new Date(f.data_emissione).getMonth()] += parseFloat(f.importo || 0);
   });
-  const totIncassato = incassiMese.reduce((a,b) => a+b, 0);
-  const daIncassare = fattureData.filter(f => f.tipo === 'emessa' && f.anno === anno && !f.pagata);
-  const totDaIncassare = daIncassare.reduce((s,f) => s + parseFloat(f.importo || 0), 0);
-
-  // Banner riepilogo
-  let bannerHtml = '';
-  if (daIncassare.length > 0) {
-    bannerHtml = '<div class="info-banner">Ci sono <strong>' + daIncassare.length + ' fatture</strong> da incassare per un totale di <strong>' + fmt(totDaIncassare) + '</strong></div>';
-  }
-
-  // Fatture da incassare
-  const fb = document.getElementById('dash-fatture-body');
-  const list5 = daIncassare.slice(0, 6);
-  if (daIncassare.length === 0) {
-    fb.innerHTML = bannerHtml + emptyState('Tutte le fatture risultano incassate');
-  } else {
-    fb.innerHTML = bannerHtml + '<table class="data-table"><thead><tr><th>Cliente</th><th>Data</th><th>Importo</th><th></th></tr></thead><tbody>' +
-      list5.map(f => '<tr><td style="font-weight:500">' + (f.cessionario_nome || f.cedente_nome || '—') + '</td><td style="color:var(--text-mid)">' + fmtDate(f.data_emissione) + '</td><td class="amount">' + fmt(f.importo) + '</td><td><button onclick="togglePagata('${f.id}', ${f.pagata})">Incassa</button></button></td></tr>').join('') +
-      '</tbody></table>';
-  }
-
-  // Tabella incassi per mese
-  const incassiEl = document.getElementById('dash-incassi-mese');
+  var totIncassato = incassiMese.reduce(function(a,b){return a+b;}, 0);
+  var maxVal = Math.max.apply(null, incassiMese.concat([1]));
+  var incassiEl = el('dash-incassi-mese');
   if (incassiEl) {
-    const righe = mesiNomi.map((m, i) => {
-      const v = incassiMese[i];
-      if (v === 0) return '';
-      return '<tr><td style="color:var(--text-mid)">' + m + '</td><td class="amount">' + fmt(v) + '</td><td><div style="height:6px;border-radius:3px;background:#EFF6FF;overflow:hidden"><div style="height:100%;width:' + Math.round((v/Math.max(...incassiMese,1))*100) + '%;background:#2563EB;border-radius:3px;"></div></div></td></tr>';
-    }).filter(Boolean).join('');
-    incassiEl.innerHTML = righe || '<tr><td colspan="3" style="text-align:center;color:var(--text-light);padding:1.5rem">Nessun incasso registrato per ' + anno + '</td></tr>';
-    const totEl = document.getElementById('incassi-tot');
+    var righe = '';
+    for (var i=0; i<12; i++) {
+      if (incassiMese[i] > 0) {
+        var pct = Math.round((incassiMese[i]/maxVal)*100);
+        righe += '<tr><td style="color:var(--text-mid)">' + mesiNomi[i] + '</td><td class="amount">' + fmt(incassiMese[i]) + '</td><td><div style="height:6px;border-radius:3px;background:#EFF6FF;overflow:hidden"><div style="height:100%;width:' + pct + '%;background:#2563EB;border-radius:3px"></div></div></td></tr>';
+      }
+    }
+    incassiEl.innerHTML = righe || '<tr><td colspan="3" style="text-align:center;color:var(--text-light);padding:2rem">Nessun incasso registrato per ' + anno + '</td></tr>';
+    var totEl = el('incassi-tot');
     if (totEl) totEl.textContent = fmt(totIncassato);
   }
 
+  // Fatture da incassare
+  var daIncassare = fattureData.filter(function(f) { return f.tipo === 'emessa' && f.anno === anno && !f.pagata; });
+  var totDaInc = daIncassare.reduce(function(s,f){ return s + parseFloat(f.importo||0); }, 0);
+  var countEl = el('dash-da-incassare-count');
+  if (countEl) countEl.textContent = daIncassare.length + ' fatture \u00b7 ' + fmt(totDaInc);
+  var fb = el('dash-fatture-body');
+  var banner = daIncassare.length > 0 ? '<div class="info-banner">Ci sono <strong>' + daIncassare.length + ' fatture</strong> da incassare per un totale di <strong>' + fmt(totDaInc) + '</strong></div>' : '';
+  if (daIncassare.length === 0) {
+    fb.innerHTML = banner + emptyState('Tutte le fatture risultano incassate');
+  } else {
+    var tbody = daIncassare.slice(0,6).map(function(f) {
+      var cp = f.cessionario_nome || f.cedente_nome || '\u2014';
+      return '<tr><td style="font-weight:500">' + cp + '</td><td style="color:var(--text-mid)">' + fmtDate(f.data_emissione) + '</td><td class="amount">' + fmt(f.importo) + '</td><td><button class="incassa-btn" data-id="' + f.id + '" data-pagata="' + f.pagata + '" style="background:#1a1d23;color:#fff;border:none;padding:0.3rem 0.8rem;border-radius:5px;font-size:0.75rem;font-weight:600;cursor:pointer;">Incassa</button></td></tr>';
+    }).join('');
+    fb.innerHTML = banner + '<table class="data-table"><thead><tr><th>Cliente</th><th>Data</th><th>Importo</th><th></th></tr></thead><tbody>' + tbody + '</tbody></table>';
+    document.querySelectorAll('.incassa-btn').forEach(function(b) {
+      b.addEventListener('click', function() { togglePagata(this.dataset.id, this.dataset.pagata === 'true'); });
+    });
+  }
+
   // F24
-  const oggi = new Date();
-  const prossimi = f24Data.filter(f => !f.pagato).slice(0, 5);
-  const f24b = document.getElementById('dash-f24-body');
+  var oggi = new Date();
+  var prossimi = f24Data.filter(function(f) { return !f.pagato; }).slice(0,5);
+  var f24b = el('dash-f24-body');
   if (prossimi.length === 0) {
     f24b.innerHTML = emptyState('Nessuna scadenza F24 aperta');
   } else {
-    f24b.innerHTML = '<table class="data-table"><thead><tr><th>Scadenza</th><th>Tipo</th><th>Importo</th></tr></thead><tbody>' +
-      prossimi.map(f => {
-        const scad = new Date(f.scadenza);
-        const giorni = Math.ceil((scad - oggi) / (1000*60*60*24));
-        const cls = giorni <= 15 ? 'badge-red' : 'badge-orange';
-        return '<tr><td><span class="badge ' + cls + '">' + fmtDate(f.scadenza) + '</span></td><td style="font-size:0.82rem;color:var(--text-mid)">' + (f.tipo||'—') + '</td><td class="amount">' + fmt(f.importo) + '</td></tr>';
-      }).join('') + '</tbody></table>';
+    var f24rows = prossimi.map(function(f) {
+      var scad = new Date(f.scadenza);
+      var giorni = Math.ceil((scad - oggi) / (1000*60*60*24));
+      var cls = giorni <= 15 ? 'badge-red' : 'badge-orange';
+      return '<tr><td><span class="badge ' + cls + '">' + fmtDate(f.scadenza) + '</span></td><td style="font-size:0.82rem;color:var(--text-mid)">' + (f.tipo||'\u2014') + '</td><td class="amount">' + fmt(f.importo) + '</td></tr>';
+    }).join('');
+    f24b.innerHTML = '<table class="data-table"><thead><tr><th>Scadenza</th><th>Tipo</th><th>Importo</th></tr></thead><tbody>' + f24rows + '</tbody></table>';
   }
 }
 
-// TOGGLE PAGATA
 async function togglePagata(id, currentVal) {
-  const nuovoStato = !currentVal;
-  const btn = document.getElementById('btn-pagata-' + id);
-  if (btn) { btn.textContent = '...'; btn.disabled = true; }
-  const { error } = await sb.from('fatture').update({ pagata: nuovoStato }).eq('id', id);
-  if (error) { alert('Errore: ' + error.message); return; }
-  const idx = fattureData.findIndex(f => f.id === id);
+  var nuovoStato = !currentVal;
+  var res = await sb.from('fatture').update({ pagata: nuovoStato }).eq('id', id);
+  if (res.error) { alert('Errore: ' + res.error.message); return; }
+  var idx = fattureData.findIndex(function(f) { return f.id === id; });
   if (idx !== -1) fattureData[idx].pagata = nuovoStato;
   renderFatture();
   renderDashboard();
 }
 
-// FATTURE
 function renderFatture() {
-  let list = fattureData;
-  if (currentFattureFilter !== 'tutte') list = list.filter(f => f.tipo === currentFattureFilter);
-  const el = document.getElementById('fatture-body');
-  if (list.length === 0) { el.innerHTML = emptyState('Nessuna fattura trovata'); return; }
-  el.innerHTML = '<table class="data-table"><thead><tr><th>Numero</th><th>Data</th><th>Tipo</th><th>Controparte</th><th>Importo</th><th>Stato</th></tr></thead><tbody>' +
-    list.map(f => {
-      const cp = f.cessionario_nome || f.cedente_nome || '—';
-      const btnStyle = 'font-family:Inter,sans-serif;font-size:0.72rem;font-weight:600;padding:0.25rem 0.7rem;border-radius:20px;border:1px solid ' + (f.pagata ? '#6EE7B7' : '#FED7AA') + ';background:' + (f.pagata ? '#ECFDF5' : '#FFF7ED') + ';color:' + (f.pagata ? '#065F46' : '#9A3412') + ';cursor:pointer;';
-      return '<tr><td class="mono">' + (f.numero||'—') + '</td><td style="color:var(--text-mid)">' + fmtDate(f.data_emissione) + '</td><td><span class="badge ' + (f.tipo==='emessa'?'badge-blue':'badge-gold') + '">' + (f.tipo==='emessa'?'Emessa':'Ricevuta') + '</span></td><td style="font-size:0.85rem;max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">' + cp + '</td><td class="amount">' + fmt(f.importo) + '</td><td><button id="btn-pagata-' + f.id + '" onclick="togglePagata('' + f.id + '',' + f.pagata + ')" style="' + btnStyle + '">' + (f.pagata?'Pagata':'In attesa') + '</button></td></tr>';
-    }).join('') + '</tbody></table>';
+  var list = currentFattureFilter === 'tutte' ? fattureData : fattureData.filter(function(f) { return f.tipo === currentFattureFilter; });
+  var fatEl = el('fatture-body');
+  if (list.length === 0) { fatEl.innerHTML = emptyState('Nessuna fattura trovata'); return; }
+  var rows = list.map(function(f) {
+    var cp = f.cessionario_nome || f.cedente_nome || '\u2014';
+    var tipoClass = f.tipo === 'emessa' ? 'badge-blue' : 'badge-gold';
+    var tipoLabel = f.tipo === 'emessa' ? 'Emessa' : 'Ricevuta';
+    var pagColor = f.pagata ? '#065F46' : '#9A3412';
+    var pagBg = f.pagata ? '#ECFDF5' : '#FFF7ED';
+    var pagBorder = f.pagata ? '#6EE7B7' : '#FED7AA';
+    var pagLabel = f.pagata ? 'Pagata' : 'In attesa';
+    return '<tr>' +
+      '<td class="mono">' + (f.numero||'\u2014') + '</td>' +
+      '<td style="color:var(--text-mid)">' + fmtDate(f.data_emissione) + '</td>' +
+      '<td><span class="badge ' + tipoClass + '">' + tipoLabel + '</span></td>' +
+      '<td style="font-size:0.85rem;max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">' + cp + '</td>' +
+      '<td class="amount">' + fmt(f.importo) + '</td>' +
+      '<td><button class="toggle-pag" data-id="' + f.id + '" data-pagata="' + f.pagata + '" style="font-family:Inter,sans-serif;font-size:0.72rem;font-weight:600;padding:0.25rem 0.7rem;border-radius:20px;border:1px solid ' + pagBorder + ';background:' + pagBg + ';color:' + pagColor + ';cursor:pointer;">' + pagLabel + '</button></td>' +
+      '</tr>';
+  }).join('');
+  fatEl.innerHTML = '<table class="data-table"><thead><tr><th>Numero</th><th>Data</th><th>Tipo</th><th>Controparte</th><th>Importo</th><th>Stato</th></tr></thead><tbody>' + rows + '</tbody></table>';
+  document.querySelectorAll('.toggle-pag').forEach(function(b) {
+    b.addEventListener('click', function() { togglePagata(this.dataset.id, this.dataset.pagata === 'true'); });
+  });
 }
 
 function filterFatture(tipo, btn) {
   currentFattureFilter = tipo;
-  document.querySelectorAll('#section-fatture .filter-btn').forEach(b => b.classList.remove('active'));
+  document.querySelectorAll('#section-fatture .filter-btn').forEach(function(b) { b.classList.remove('active'); });
   btn.classList.add('active');
   renderFatture();
 }
 
-// F24
 function renderF24() {
-  let list = f24Data;
-  if (currentF24Filter === 'da_pagare') list = list.filter(f => !f.pagato);
-  if (currentF24Filter === 'pagati') list = list.filter(f => f.pagato);
-  const el = document.getElementById('f24-body');
-  if (list.length === 0) { el.innerHTML = emptyState('Nessun F24 trovato'); return; }
-  const oggi = new Date();
-  el.innerHTML = '<table class="data-table"><thead><tr><th>Scadenza</th><th>Tipo versamento</th><th>Anno</th><th>Importo</th><th>Stato</th></tr></thead><tbody>' +
-    list.map(f => {
-      const scad = new Date(f.scadenza);
-      const giorni = Math.ceil((scad - oggi) / (1000*60*60*24));
-      const urgente = !f.pagato && giorni <= 15;
-      return '<tr><td><span class="badge ' + (f.pagato?'badge-green':urgente?'badge-red':'badge-orange') + '">' + fmtDate(f.scadenza) + '</span></td><td style="font-size:0.82rem">' + (f.tipo||'—') + '</td><td class="mono">' + (f.anno||'—') + '</td><td class="amount">' + fmt(f.importo) + '</td><td><span class="badge ' + (f.pagato?'badge-green':'badge-red') + '">' + (f.pagato?'Pagato':'Da pagare') + '</span></td></tr>';
-    }).join('') + '</tbody></table>';
+  var list = f24Data;
+  if (currentF24Filter === 'da_pagare') list = list.filter(function(f) { return !f.pagato; });
+  if (currentF24Filter === 'pagati') list = list.filter(function(f) { return f.pagato; });
+  var f24El = el('f24-body');
+  if (list.length === 0) { f24El.innerHTML = emptyState('Nessun F24 trovato'); return; }
+  var oggi = new Date();
+  var rows = list.map(function(f) {
+    var scad = new Date(f.scadenza);
+    var giorni = Math.ceil((scad - oggi) / (1000*60*60*24));
+    var urgente = !f.pagato && giorni <= 15;
+    return '<tr>' +
+      '<td><span class="badge ' + (f.pagato?'badge-green':urgente?'badge-red':'badge-orange') + '">' + fmtDate(f.scadenza) + '</span></td>' +
+      '<td style="font-size:0.82rem">' + (f.tipo||'\u2014') + '</td>' +
+      '<td class="mono">' + (f.anno||'\u2014') + '</td>' +
+      '<td class="amount">' + fmt(f.importo) + '</td>' +
+      '<td><span class="badge ' + (f.pagato?'badge-green':'badge-red') + '">' + (f.pagato?'Pagato':'Da pagare') + '</span></td>' +
+      '</tr>';
+  }).join('');
+  f24El.innerHTML = '<table class="data-table"><thead><tr><th>Scadenza</th><th>Tipo</th><th>Anno</th><th>Importo</th><th>Stato</th></tr></thead><tbody>' + rows + '</tbody></table>';
 }
 
 function filterF24(tipo, btn) {
   currentF24Filter = tipo;
-  document.querySelectorAll('#section-f24 .filter-btn').forEach(b => b.classList.remove('active'));
+  document.querySelectorAll('#section-f24 .filter-btn').forEach(function(b) { b.classList.remove('active'); });
   btn.classList.add('active');
   renderF24();
 }
 
-// PROFILO
 function renderProfilo() {
   if (!clienteData) return;
-  const c = clienteData;
-  document.getElementById('profilo-anagrafica').innerHTML =
+  var c = clienteData;
+  el('profilo-anagrafica').innerHTML =
     '<div class="profilo-field"><span class="pf-label">Nome</span><span class="pf-value">' + c.nome + ' ' + c.cognome + '</span></div>' +
     '<div class="profilo-field"><span class="pf-label">Email</span><span class="pf-value">' + c.email + '</span></div>' +
-    '<div class="profilo-field"><span class="pf-label">Codice Fiscale</span><span class="pf-value mono">' + (c.codice_fiscale||'—') + '</span></div>' +
-    '<div class="profilo-field"><span class="pf-label">Partita IVA</span><span class="pf-value mono">' + (c.partita_iva||'—') + '</span></div>';
-  document.getElementById('profilo-fiscale').innerHTML =
+    '<div class="profilo-field"><span class="pf-label">Codice Fiscale</span><span class="pf-value mono">' + (c.codice_fiscale||'\u2014') + '</span></div>' +
+    '<div class="profilo-field"><span class="pf-label">Partita IVA</span><span class="pf-value mono">' + (c.partita_iva||'\u2014') + '</span></div>';
+  el('profilo-fiscale').innerHTML =
     '<div style="display:flex;flex-direction:column;gap:0.8rem;">' +
-    '<div class="profilo-field"><span class="pf-label">Codice ATECO</span><span class="pf-value mono">' + (c.codice_ateco||'—') + '</span></div>' +
+    '<div class="profilo-field"><span class="pf-label">Codice ATECO</span><span class="pf-value mono">' + (c.codice_ateco||'\u2014') + '</span></div>' +
     '<div class="profilo-field"><span class="pf-label">Coefficiente redditività</span><span class="pf-value">' + ((c.coefficiente_redd||0.78)*100).toFixed(0) + '%</span></div>' +
     '<div class="profilo-field"><span class="pf-label">Aliquota imposta sostitutiva</span><span class="pf-value">' + (c.aliquota_imposta||15) + '%</span></div>' +
-    '<div class="profilo-field"><span class="pf-label">Anno apertura P.IVA</span><span class="pf-value">' + (c.anno_apertura_piva||'—') + '</span></div></div>';
-  const anno = new Date().getFullYear();
-  const fatturato = fattureData.filter(f => f.tipo==='emessa' && f.anno===anno).reduce((s,f) => s+parseFloat(f.importo||0), 0);
-  const coeff = c.coefficiente_redd || 0.78;
-  const aliquota = c.aliquota_imposta || 15;
-  const reddito = fatturato * coeff;
-  const imposta = reddito * aliquota / 100;
-  document.getElementById('calcolo-sinistra').innerHTML =
+    '<div class="profilo-field"><span class="pf-label">Anno apertura P.IVA</span><span class="pf-value">' + (c.anno_apertura_piva||'\u2014') + '</span></div></div>';
+  var anno = new Date().getFullYear();
+  var fatturato = fattureData.filter(function(f){return f.tipo==='emessa'&&f.anno===anno;}).reduce(function(s,f){return s+parseFloat(f.importo||0);},0);
+  var coeff = c.coefficiente_redd || 0.78;
+  var aliquota = c.aliquota_imposta || 15;
+  var reddito = fatturato * coeff;
+  var imposta = reddito * aliquota / 100;
+  el('calcolo-sinistra').innerHTML =
     '<div class="calc-row"><span class="cr-label">Fatturato ' + anno + '</span><span class="cr-value">' + fmt(fatturato) + '</span></div>' +
     '<div class="calc-row"><span class="cr-label">Coefficiente (' + (coeff*100).toFixed(0) + '%)</span><span class="cr-value">x</span></div>' +
     '<div class="calc-row total"><span class="cr-label">= Reddito imponibile</span><span class="cr-value">' + fmt(reddito) + '</span></div>';
-  document.getElementById('calcolo-destra').innerHTML =
+  el('calcolo-destra').innerHTML =
     '<div class="calc-row"><span class="cr-label">Reddito imponibile</span><span class="cr-value">' + fmt(reddito) + '</span></div>' +
     '<div class="calc-row"><span class="cr-label">Aliquota (' + aliquota + '%)</span><span class="cr-value">x</span></div>' +
     '<div class="calc-row total"><span class="cr-label">= Imposta sostitutiva stimata</span><span class="cr-value">' + fmt(imposta) + '</span></div>';
 }
 
-// NAV
 function showSection(id, ev) {
-  document.querySelectorAll('.section-page').forEach(el => el.classList.remove('active'));
-  document.querySelectorAll('.nav-tab').forEach(el => el.classList.remove('active'));
-  document.getElementById('section-' + id).classList.add('active');
+  document.querySelectorAll('.section-page').forEach(function(e) { e.classList.remove('active'); });
+  document.querySelectorAll('.nav-tab').forEach(function(e) { e.classList.remove('active'); });
+  el('section-' + id).classList.add('active');
   if (ev && ev.currentTarget) ev.currentTarget.classList.add('active');
 }
-
-// HELPERS
-function fmt(n) {
-  if (n === null || n === undefined) return '—';
-  return '\u20ac ' + parseFloat(n).toLocaleString('it-IT', {minimumFractionDigits:2, maximumFractionDigits:2});
-}
-function fmtDate(d) {
-  if (!d) return '—';
-  return new Date(d).toLocaleDateString('it-IT', {day:'2-digit', month:'2-digit', year:'numeric'});
-}
-function emptyState(msg) {
-  return '<div class="empty-state"><p>' + msg + '</p></div>';
-}
 </script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 
 </body>
