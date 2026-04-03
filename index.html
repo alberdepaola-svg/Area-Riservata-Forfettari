@@ -292,6 +292,7 @@ html, body { height: 100%; font-family: var(--sans); }
   gap: 0.8rem;
   margin-left: auto;
 }
+.user-menu { position: relative; }
 .user-avatar {
   width: 34px; height: 34px;
   background: var(--gold);
@@ -301,6 +302,69 @@ html, body { height: 100%; font-family: var(--sans); }
   font-weight: 700;
   color: var(--navy);
   flex-shrink: 0;
+  cursor: pointer;
+  user-select: none;
+  transition: opacity 0.2s;
+}
+.user-avatar:hover { opacity: 0.85; }
+.user-dropdown {
+  display: none;
+  position: absolute;
+  top: calc(100% + 10px);
+  right: 0;
+  background: var(--white);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  box-shadow: 0 8px 30px rgba(0,0,0,0.12);
+  min-width: 200px;
+  z-index: 999;
+  overflow: hidden;
+}
+.user-dropdown.open { display: block; }
+.user-dropdown-name {
+  padding: 0.9rem 1rem 0.2rem;
+  font-size: 0.88rem;
+  font-weight: 600;
+  color: var(--text);
+}
+.user-dropdown-email {
+  padding: 0 1rem 0.8rem;
+  font-size: 0.75rem;
+  color: var(--text-mid);
+}
+.user-dropdown-divider {
+  height: 1px;
+  background: var(--border);
+}
+.user-dropdown-item {
+  display: block;
+  width: 100%;
+  padding: 0.7rem 1rem;
+  text-align: left;
+  font-family: var(--sans);
+  font-size: 0.85rem;
+  font-weight: 500;
+  color: var(--text);
+  background: none;
+  border: none;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+.user-dropdown-item:hover { background: var(--app-bg); }
+.user-dropdown-logout { color: var(--red); }
+
+/* Fix incassa button in dashboard table */
+.dash-incassa-btn {
+  white-space: nowrap;
+  background: #1a1d23;
+  color: #fff;
+  border: none;
+  padding: 0.3rem 0.7rem;
+  border-radius: 5px;
+  font-size: 0.72rem;
+  font-weight: 600;
+  cursor: pointer;
+  font-family: var(--sans);
 }
 .user-name { font-size: 0.82rem; color: rgba(255,255,255,0.6); font-weight: 300; }
 .btn-logout {
@@ -323,7 +387,7 @@ html, body { height: 100%; font-family: var(--sans); }
 .main-content {
   flex: 1;
   padding: 2rem 2.5rem;
-  max-width: 1080px;
+  max-width: 1400px;
   margin: 0 auto;
   width: 100%;
   padding-top: 2rem;
@@ -372,7 +436,7 @@ html, body { height: 100%; font-family: var(--sans); }
 .kpi-grid {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
-  gap: 1rem;
+  gap: 1.2rem;
   margin-bottom: 1.2rem;
 }
 .kpi-card {
@@ -643,10 +707,19 @@ body.dark .calc-row .cr-value { color: #F9FAFB; }
       <button class="nav-tab" onclick="showSection('fatture',event)">Fatture</button>
       <button class="nav-tab" onclick="showSection('f24',event)">F24</button>
       <button class="nav-tab" onclick="showSection('clienti',event)">Clienti</button>
-      <button class="nav-tab" onclick="showSection('profilo',event)">Profilo</button>
     </div>
     <div class="topbar-user">
-      <div class="user-avatar" id="user-avatar">?</div>
+      <div class="user-menu" id="user-menu-wrap">
+        <div class="user-avatar" id="user-avatar" onclick="toggleUserMenu()">?</div>
+        <div class="user-dropdown" id="user-dropdown">
+          <div class="user-dropdown-name" id="user-dropdown-name"></div>
+          <div class="user-dropdown-email" id="user-dropdown-email"></div>
+          <div class="user-dropdown-divider"></div>
+          <button class="user-dropdown-item" onclick="showSection('profilo',event);toggleUserMenu()">Profilo</button>
+          <div class="user-dropdown-divider"></div>
+          <button class="user-dropdown-item user-dropdown-logout" onclick="doLogout()">Esci</button>
+        </div>
+      </div>
       <span class="user-name" id="user-name-top"></span>
       <button class="btn-logout" onclick="doLogout()">Esci</button>
     </div>
@@ -846,31 +919,20 @@ body.dark .calc-row .cr-value { color: #F9FAFB; }
     <div class="section-page" id="section-profilo">
       <div class="page-header fade-in">
         <h2>Il mio profilo</h2>
-        <p>I tuoi dati fiscali</p>
+        <p>I tuoi dati anagrafici e fiscali</p>
       </div>
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;">
-        <div class="card fade-in">
-          <div class="card-header"><h3>Dati anagrafici</h3></div>
-          <div class="card-body">
-            <div class="profilo-grid" id="profilo-anagrafica">
-              <div class="loading-spinner"><div class="spinner"></div></div>
-            </div>
-          </div>
-        </div>
-        <div class="card fade-in">
-          <div class="card-header"><h3>Dati fiscali</h3></div>
-          <div class="card-body" id="profilo-fiscale">
+      <div class="card fade-in">
+        <div class="card-header"><h3>Dati anagrafici</h3></div>
+        <div class="card-body">
+          <div class="profilo-grid" id="profilo-anagrafica">
             <div class="loading-spinner"><div class="spinner"></div></div>
           </div>
         </div>
-        <div class="card fade-in" style="grid-column:1/-1;">
-          <div class="card-header"><h3>Calcolo reddito forfettario</h3></div>
-          <div class="card-body">
-            <div class="calcolo-grid">
-              <div id="calcolo-sinistra"></div>
-              <div id="calcolo-destra"></div>
-            </div>
-          </div>
+      </div>
+      <div class="card fade-in">
+        <div class="card-header"><h3>Dati fiscali</h3></div>
+        <div class="card-body" id="profilo-fiscale">
+          <div class="loading-spinner"><div class="spinner"></div></div>
         </div>
       </div>
     </div>
@@ -952,8 +1014,11 @@ async function initApp() {
   var res = await sb.from('clienti').select('*').eq('email', currentUser.email).single();
   clienteData = res.data;
   if (clienteData) {
-    el('user-name-top').textContent = clienteData.nome + ' ' + clienteData.cognome;
+    var nomeCompleto = clienteData.nome + ' ' + clienteData.cognome;
+    el('user-name-top').textContent = nomeCompleto;
     el('user-avatar').textContent = (clienteData.nome[0] + clienteData.cognome[0]).toUpperCase();
+    el('user-dropdown-name').textContent = nomeCompleto;
+    el('user-dropdown-email').textContent = clienteData.email;
     el('dashboard-welcome').textContent = 'Benvenuto, ' + clienteData.nome;
   }
   el('dashboard-year').textContent = 'Anno fiscale ' + new Date().getFullYear();
@@ -963,12 +1028,12 @@ async function initApp() {
 }
 
 async function loadFatture() {
-  var res = await sb.from('fatture').select('*').order('data_emissione', { ascending: false });
+  var res = await sb.from('fatture').select('id,cliente_id,tipo,numero,data_emissione,anno,importo,iva,importo_netto,descrizione,cedente_piva,cedente_nome,cessionario_nome,cessionario_piva,cessionario_cf,pagata,data_incasso,created_at').order('data_emissione', { ascending: false });
   fattureData = res.data || [];
   renderFatture();
 }
 async function loadF24() {
-  var res = await sb.from('f24').select('*').order('scadenza', { ascending: true });
+  var res = await sb.from('f24').select('id,cliente_id,scadenza,importo,tipo,descrizione,pagato,anno,allegato_url,codice_tributo').order('scadenza', { ascending: true });
   f24Data = res.data || [];
   renderF24();
 }
@@ -1076,11 +1141,14 @@ function renderDashboard() {
     });
   }
 
-  // Incassi mese per mese
+  // Incassi per mese — usa data_incasso per anno corretto
   var mesiNomi = ['Gennaio','Febbraio','Marzo','Aprile','Maggio','Giugno','Luglio','Agosto','Settembre','Ottobre','Novembre','Dicembre'];
   var incassiMese = Array(12).fill(0);
-  fattureData.filter(function(f) { return f.tipo === 'emessa' && f.anno === anno && f.pagata; }).forEach(function(f) {
-    incassiMese[new Date(f.data_emissione).getMonth()] += parseFloat(f.importo || 0);
+  fattureData.filter(function(f) {
+    if (!f.pagata || !f.data_incasso) return false;
+    return new Date(f.data_incasso).getFullYear() === anno;
+  }).forEach(function(f) {
+    incassiMese[new Date(f.data_incasso).getMonth()] += parseFloat(f.importo || 0);
   });
   var totIncassato = incassiMese.reduce(function(a,b){return a+b;}, 0);
   var maxVal = Math.max.apply(null, incassiMese.concat([1]));
@@ -1110,7 +1178,7 @@ function renderDashboard() {
   } else {
     var tbody = daIncassare.slice(0,6).map(function(f) {
       var cp = f.cessionario_nome || f.cedente_nome || '\u2014';
-      return '<tr><td class="mono" style="color:var(--text-mid);font-size:0.78rem">' + (f.numero||'\u2014') + '</td><td style="font-weight:500">' + cp + '</td><td style="color:var(--text-mid)">' + fmtDate(f.data_emissione) + '</td><td class="amount">' + fmt(f.importo) + '</td><td><button class="incassa-btn" data-id="' + f.id + '" data-pagata="' + f.pagata + '" style="background:#1a1d23;color:#fff;border:none;padding:0.3rem 0.8rem;border-radius:5px;font-size:0.75rem;font-weight:600;cursor:pointer;">Incassa</button></td></tr>';
+      return '<tr><td class="mono" style="color:var(--text-mid);font-size:0.78rem;white-space:nowrap">' + (f.numero||'\u2014') + '</td><td style="font-weight:500">' + cp + '</td><td style="color:var(--text-mid);white-space:nowrap">' + fmtDate(f.data_emissione) + '</td><td class="amount" style="white-space:nowrap">' + fmt(f.importo) + '</td><td><button class="dash-incassa-btn incassa-btn" data-id="' + f.id + '" data-pagata="' + f.pagata + '">Incassa</button></td></tr>';
     }).join('');
     fb.innerHTML = banner + '<table class="data-table"><thead><tr><th>N°</th><th>Cliente</th><th>Data</th><th>Importo</th><th></th></tr></thead><tbody>' + tbody + '</tbody></table>';
     document.querySelectorAll('.incassa-btn').forEach(function(b) {
@@ -1202,12 +1270,51 @@ function renderDashboard() {
   }
 }
 
-async function togglePagata(id, currentVal) {
-  var nuovoStato = !currentVal;
-  var res = await sb.from('fatture').update({ pagata: nuovoStato }).eq('id', id);
+var _incassoId = null;
+var _incassoCurrentVal = null;
+
+function togglePagata(id, currentVal) {
+  if (currentVal) {
+    // Se già pagata → rimuovi incasso direttamente
+    _eseguiTogglePagata(id, false, null);
+    return;
+  }
+  // Apri modale per data incasso
+  _incassoId = id;
+  _incassoCurrentVal = currentVal;
+  var oggi = new Date().toISOString().split('T')[0];
+  el('modal-data-incasso').value = oggi;
+  var modale = el('modal-incasso');
+  modale.style.display = 'flex';
+}
+
+function chiudiModale() {
+  el('modal-incasso').style.display = 'none';
+  _incassoId = null;
+  _incassoCurrentVal = null;
+}
+
+async function confermaIncasso() {
+  var dataIncasso = el('modal-data-incasso').value;
+  if (!dataIncasso) {
+    alert('Inserisci la data di incasso.');
+    return;
+  }
+  chiudiModale();
+  await _eseguiTogglePagata(_incassoId || arguments[0], true, dataIncasso);
+}
+
+async function _eseguiTogglePagata(id, nuovoStato, dataIncasso) {
+  var payload = { pagata: nuovoStato };
+  if (dataIncasso) payload.data_incasso = dataIncasso;
+  if (!nuovoStato) payload.data_incasso = null;
+  var res = await sb.from('fatture').update(payload).eq('id', id);
   if (res.error) { alert('Errore: ' + res.error.message); return; }
   var idx = fattureData.findIndex(function(f) { return f.id === id; });
-  if (idx !== -1) fattureData[idx].pagata = nuovoStato;
+  if (idx !== -1) {
+    fattureData[idx].pagata = nuovoStato;
+    fattureData[idx].data_incasso = dataIncasso || null;
+  }
   renderFatture();
   renderDashboard();
 }
@@ -1227,13 +1334,14 @@ function renderFatture() {
     return '<tr>' +
       '<td class="mono">' + (f.numero||'\u2014') + '</td>' +
       '<td style="color:var(--text-mid)">' + fmtDate(f.data_emissione) + '</td>' +
+      '<td style="color:var(--text-mid)">' + (f.data_incasso ? fmtDate(f.data_incasso) : '\u2014') + '</td>' +
       '<td><span class="badge ' + tipoClass + '">' + tipoLabel + '</span></td>' +
-      '<td style="font-size:0.85rem;max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">' + cp + '</td>' +
+      '<td style="font-size:0.85rem;max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">' + cp + '</td>' +
       '<td class="amount">' + fmt(f.importo) + '</td>' +
       '<td><button class="toggle-pag" data-id="' + f.id + '" data-pagata="' + f.pagata + '" style="font-family:Inter,sans-serif;font-size:0.72rem;font-weight:600;padding:0.25rem 0.7rem;border-radius:20px;border:1px solid ' + pagBorder + ';background:' + pagBg + ';color:' + pagColor + ';cursor:pointer;">' + pagLabel + '</button></td>' +
       '</tr>';
   }).join('');
-  fatEl.innerHTML = '<table class="data-table"><thead><tr><th>Numero</th><th>Data</th><th>Tipo</th><th>Controparte</th><th>Importo</th><th>Stato</th></tr></thead><tbody>' + rows + '</tbody></table>';
+  fatEl.innerHTML = '<table class="data-table"><thead><tr><th>Numero</th><th>Data emissione</th><th>Data incasso</th><th>Tipo</th><th>Controparte</th><th>Importo</th><th>Stato</th></tr></thead><tbody>' + rows + '</tbody></table>';
   document.querySelectorAll('.toggle-pag').forEach(function(b) {
     b.addEventListener('click', function() { togglePagata(this.dataset.id, this.dataset.pagata === 'true'); });
   });
@@ -1300,31 +1408,22 @@ function filterF24(tipo, btn) {
 function renderProfilo() {
   if (!clienteData) return;
   var c = clienteData;
+
   el('profilo-anagrafica').innerHTML =
-    '<div class="profilo-field"><span class="pf-label">Nome</span><span class="pf-value">' + c.nome + ' ' + c.cognome + '</span></div>' +
+    '<div class="profilo-field"><span class="pf-label">Nome e Cognome</span><span class="pf-value">' + c.nome + ' ' + c.cognome + '</span></div>' +
     '<div class="profilo-field"><span class="pf-label">Email</span><span class="pf-value">' + c.email + '</span></div>' +
     '<div class="profilo-field"><span class="pf-label">Codice Fiscale</span><span class="pf-value mono">' + (c.codice_fiscale||'\u2014') + '</span></div>' +
     '<div class="profilo-field"><span class="pf-label">Partita IVA</span><span class="pf-value mono">' + (c.partita_iva||'\u2014') + '</span></div>';
+
   el('profilo-fiscale').innerHTML =
-    '<div style="display:flex;flex-direction:column;gap:0.8rem;">' +
+    '<div class="profilo-grid">' +
     '<div class="profilo-field"><span class="pf-label">Codice ATECO</span><span class="pf-value mono">' + (c.codice_ateco||'\u2014') + '</span></div>' +
+    '<div class="profilo-field"><span class="pf-label">Anno apertura P.IVA</span><span class="pf-value">' + (c.anno_apertura_piva||'\u2014') + '</span></div>' +
     '<div class="profilo-field"><span class="pf-label">Coefficiente redditività</span><span class="pf-value">' + ((c.coefficiente_redd||0.78)*100).toFixed(0) + '%</span></div>' +
     '<div class="profilo-field"><span class="pf-label">Aliquota imposta sostitutiva</span><span class="pf-value">' + (c.aliquota_imposta||15) + '%</span></div>' +
-    '<div class="profilo-field"><span class="pf-label">Anno apertura P.IVA</span><span class="pf-value">' + (c.anno_apertura_piva||'\u2014') + '</span></div></div>';
-  var anno = new Date().getFullYear();
-  var fatturato = fattureData.filter(function(f){return f.tipo==='emessa'&&f.anno===anno;}).reduce(function(s,f){return s+parseFloat(f.importo||0);},0);
-  var coeff = c.coefficiente_redd || 0.78;
-  var aliquota = c.aliquota_imposta || 15;
-  var reddito = fatturato * coeff;
-  var imposta = reddito * aliquota / 100;
-  el('calcolo-sinistra').innerHTML =
-    '<div class="calc-row"><span class="cr-label">Fatturato ' + anno + '</span><span class="cr-value">' + fmt(fatturato) + '</span></div>' +
-    '<div class="calc-row"><span class="cr-label">Coefficiente (' + (coeff*100).toFixed(0) + '%)</span><span class="cr-value">x</span></div>' +
-    '<div class="calc-row total"><span class="cr-label">= Reddito imponibile</span><span class="cr-value">' + fmt(reddito) + '</span></div>';
-  el('calcolo-destra').innerHTML =
-    '<div class="calc-row"><span class="cr-label">Reddito imponibile</span><span class="cr-value">' + fmt(reddito) + '</span></div>' +
-    '<div class="calc-row"><span class="cr-label">Aliquota (' + aliquota + '%)</span><span class="cr-value">x</span></div>' +
-    '<div class="calc-row total"><span class="cr-label">= Imposta sostitutiva stimata</span><span class="cr-value">' + fmt(imposta) + '</span></div>';
+    '<div class="profilo-field"><span class="pf-label">Regime fiscale</span><span class="pf-value">Forfettario</span></div>' +
+    '<div class="profilo-field"><span class="pf-label">Soglia massima</span><span class="pf-value">\u20ac 85.000</span></div>' +
+    '</div>';
 }
 
 function renderClienti() {
@@ -1367,6 +1466,15 @@ function renderClienti() {
     '</table>';
 }
 
+function toggleUserMenu() {
+  el('user-dropdown').classList.toggle('open');
+}
+document.addEventListener('click', function(e) {
+  if (!el('user-menu-wrap').contains(e.target)) {
+    el('user-dropdown').classList.remove('open');
+  }
+});
+
 function showSection(id, ev) {
   document.querySelectorAll('.section-page').forEach(function(e) { e.classList.remove('active'); });
   document.querySelectorAll('.nav-tab').forEach(function(e) { e.classList.remove('active'); });
@@ -1375,5 +1483,18 @@ function showSection(id, ev) {
   if (id === 'clienti') renderClienti();
 }
 </script>
+<!-- Modale data incasso -->
+<div id="modal-incasso" style="display:none;position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,0.5);align-items:center;justify-content:center;">
+  <div style="background:#fff;border-radius:12px;padding:2rem;width:100%;max-width:360px;box-shadow:0 20px 60px rgba(0,0,0,0.2);">
+    <h3 style="font-size:1rem;font-weight:700;color:#1a1d23;margin-bottom:0.4rem;">Data di incasso</h3>
+    <p style="font-size:0.82rem;color:#6b7280;margin-bottom:1.2rem;">Inserisci la data in cui hai incassato questa fattura.</p>
+    <input type="date" id="modal-data-incasso" style="width:100%;padding:0.7rem 1rem;border:1.5px solid #e5e7eb;border-radius:8px;font-family:Inter,sans-serif;font-size:0.92rem;outline:none;margin-bottom:1.2rem;" />
+    <div style="display:flex;gap:0.8rem;">
+      <button onclick="chiudiModale()" style="flex:1;padding:0.7rem;border:1px solid #e5e7eb;border-radius:8px;background:#fff;font-family:Inter,sans-serif;font-size:0.85rem;font-weight:500;cursor:pointer;color:#6b7280;">Annulla</button>
+      <button onclick="confermaIncasso()" style="flex:1;padding:0.7rem;border:none;border-radius:8px;background:#1a1d23;font-family:Inter,sans-serif;font-size:0.85rem;font-weight:600;cursor:pointer;color:#fff;">Conferma</button>
+    </div>
+  </div>
+</div>
+
 </body>
 </html>
