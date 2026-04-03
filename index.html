@@ -6,6 +6,11 @@
 <title>Area Riservata — Studio De Paola</title>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script>
+// Leggi l'hash PRIMA che Supabase lo pulisca
+var _initialHash = window.location.hash || '';
+var _isPasswordRecovery = _initialHash.includes('type=recovery');
+</script>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;1,300;1,400&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
 <style>
 :root {
@@ -1055,30 +1060,27 @@ async function doLogout() {
 
 window.addEventListener('load', async function() {
 
-  // Gestione reset password — Supabase manda token nell'hash o nei params
-  var hash = window.location.hash || '';
-  var search = window.location.search || '';
-  var isRecovery = hash.includes('type=recovery') || search.includes('type=recovery');
+  // Registra listener PRIMA di tutto
+  sb.auth.onAuthStateChange(async function(event, session) {
+    if (event === 'PASSWORD_RECOVERY') {
+      mostraFormNuovaPassword();
+    }
+  });
 
-  if (isRecovery) {
-    // Lascia che Supabase processi il token dall'URL
-    await new Promise(function(resolve) { setTimeout(resolve, 800); });
+  // Se era un link di recovery (hash letto prima che Supabase lo pulisse)
+  if (_isPasswordRecovery) {
+    // Aspetta che Supabase processi il token e crei la sessione
+    await new Promise(function(r){ setTimeout(r, 500); });
     mostraFormNuovaPassword();
     return;
   }
 
-  // Ascolta cambio auth state (recovery token processato da Supabase)
-  sb.auth.onAuthStateChange(async function(event, session) {
-    if (event === 'PASSWORD_RECOVERY') {
-      mostraFormNuovaPassword();
-    } else if (event === 'SIGNED_IN' && !currentUser) {
-      currentUser = session.user;
-      await initApp();
-    }
-  });
-
+  // Login normale: controlla sessione esistente
   var res = await sb.auth.getSession();
-  if (res.data.session) { currentUser = res.data.session.user; await initApp(); }
+  if (res.data.session) {
+    currentUser = res.data.session.user;
+    await initApp();
+  }
 });
 
 function mostraFormNuovaPassword() {
