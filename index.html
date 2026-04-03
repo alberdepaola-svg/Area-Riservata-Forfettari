@@ -734,44 +734,51 @@ body.dark .calc-row .cr-value { color: #F9FAFB; }
         <p id="dashboard-year"></p>
       </div>
 
-      <!-- KPI — 2 righe da 3 + grafico soglia -->
-      <div style="display:grid;grid-template-columns:1fr 1fr 1fr 320px;gap:1.2rem;margin-bottom:1.2rem;">
-        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:1.2rem;grid-column:1/4;">
-          <!-- Riga 1 -->
-          <div class="kpi-card blue">
-            <div class="kpi-label">Fatturato</div>
-            <div class="kpi-value" id="kpi-fatturato">—</div>
-            <div class="kpi-sub" id="kpi-fatturato-sub"></div>
+      <!-- KPI — 2 righe da 3 -->
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:1.2rem;margin-bottom:1.2rem;">
+        <div class="kpi-card blue">
+          <div class="kpi-label">Fatturato</div>
+          <div class="kpi-value" id="kpi-fatturato">—</div>
+          <div class="kpi-sub" id="kpi-fatturato-sub"></div>
+        </div>
+        <div class="kpi-card" style="border-top:3px solid #7C3AED;">
+          <div class="kpi-label">Reddito lordo</div>
+          <div class="kpi-value" id="kpi-reddito-lordo">—</div>
+          <div class="kpi-sub" id="kpi-reddito-lordo-sub"></div>
+        </div>
+        <div class="kpi-card" style="border-top:3px solid #0891B2;">
+          <div class="kpi-label">Contributi versati</div>
+          <div class="kpi-value" id="kpi-contributi">—</div>
+          <div class="kpi-sub">anno corrente</div>
+        </div>
+        <div class="kpi-card green">
+          <div class="kpi-label">Reddito imponibile</div>
+          <div class="kpi-value" id="kpi-reddito">—</div>
+          <div class="kpi-sub" id="kpi-reddito-sub"></div>
+        </div>
+        <div class="kpi-card gold">
+          <div class="kpi-label">Imposta sostitutiva</div>
+          <div class="kpi-value" id="kpi-imposta">—</div>
+          <div class="kpi-sub" id="kpi-imposta-sub"></div>
+        </div>
+        <div class="kpi-card red">
+          <div class="kpi-label">F24 da pagare</div>
+          <div class="kpi-value" id="kpi-f24">—</div>
+          <div class="kpi-sub">scadenze aperte</div>
+        </div>
+      </div>
+
+      <!-- Grafico fatturato + soglia affiancati -->
+      <div style="display:grid;grid-template-columns:1fr 280px;gap:1.2rem;margin-bottom:1.2rem;">
+        <div class="card fade-in">
+          <div class="card-header">
+            <h3>Andamento fatturato mensile</h3>
+            <span id="chart-legend" style="font-size:0.82rem;"></span>
           </div>
-          <div class="kpi-card" style="border-top:3px solid #7C3AED;">
-            <div class="kpi-label">Reddito lordo</div>
-            <div class="kpi-value" id="kpi-reddito-lordo">—</div>
-            <div class="kpi-sub" id="kpi-reddito-lordo-sub"></div>
-          </div>
-          <div class="kpi-card" style="border-top:3px solid #0891B2;">
-            <div class="kpi-label">Contributi versati</div>
-            <div class="kpi-value" id="kpi-contributi">—</div>
-            <div class="kpi-sub">anno corrente</div>
-          </div>
-          <!-- Riga 2 -->
-          <div class="kpi-card green">
-            <div class="kpi-label">Reddito imponibile</div>
-            <div class="kpi-value" id="kpi-reddito">—</div>
-            <div class="kpi-sub" id="kpi-reddito-sub"></div>
-          </div>
-          <div class="kpi-card gold">
-            <div class="kpi-label">Imposta sostitutiva</div>
-            <div class="kpi-value" id="kpi-imposta">—</div>
-            <div class="kpi-sub" id="kpi-imposta-sub"></div>
-          </div>
-          <div class="kpi-card red">
-            <div class="kpi-label">F24 da pagare</div>
-            <div class="kpi-value" id="kpi-f24">—</div>
-            <div class="kpi-sub">scadenze aperte</div>
+          <div style="padding:1rem 1.4rem 0.8rem;">
+            <canvas id="chart-fatturato" height="80"></canvas>
           </div>
         </div>
-
-        <!-- Grafico soglia circolare -->
         <div class="card fade-in" style="display:flex;flex-direction:column;align-items:center;justify-content:center;padding:1.4rem;text-align:center;">
           <div style="font-size:0.7rem;font-weight:600;text-transform:uppercase;letter-spacing:0.1em;color:var(--text-mid);margin-bottom:0.8rem;">Soglia forfettaria</div>
           <div style="position:relative;width:140px;height:140px;">
@@ -786,17 +793,6 @@ body.dark .calc-row .cr-value { color: #F9FAFB; }
             <div style="font-size:0.68rem;color:var(--text-light);">residuo max fatturabile</div>
           </div>
           <div id="soglia-alert" style="margin-top:0.6rem;display:none;font-size:0.72rem;"></div>
-        </div>
-      </div>
-
-      <!-- Grafico — full width -->
-      <div class="card fade-in">
-        <div class="card-header">
-          <h3>Andamento fatturato mensile</h3>
-          <span id="chart-legend" style="font-size:0.82rem;"></span>
-        </div>
-        <div style="padding:1rem 1.4rem 0.8rem;">
-          <canvas id="chart-fatturato" height="80"></canvas>
         </div>
       </div>
 
@@ -1069,7 +1065,7 @@ function renderDashboard() {
   var SOGLIA = 85000;
   var residuo = Math.max(0, SOGLIA - fatturato);
   var pct = Math.min(100, Math.round((fatturato / SOGLIA) * 100));
-  var barColor = pct >= 90 ? '#DC2626' : pct >= 75 ? '#EA580C' : '#2563EB';
+  var barColor = pct >= 90 ? '#DC2626' : pct >= 75 ? '#EA580C' : '#059669';
 
   var pctEl = el('soglia-pct-num');
   if (pctEl) { pctEl.textContent = pct + '%'; pctEl.style.color = barColor; }
