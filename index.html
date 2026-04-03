@@ -1429,23 +1429,25 @@ async function resetPassword() {
     errEl.style.display = 'block';
     return;
   }
-  var btn = el('btn-login');
-  btn.disabled = true;
+  var btnReset = el('btn-login');
+  btnReset.disabled = true;
   var res = await sb.auth.resetPasswordForEmail(email, {
     redirectTo: 'https://alberdepaola-svg.github.io/Area-Riservata-Forfettari/'
   });
-  btn.disabled = false;
+  btnReset.disabled = false;
   if (res.error) {
-    var errEl = el('login-error');
-    errEl.textContent = 'Errore: ' + res.error.message;
-    errEl.style.display = 'block';
+    var errEl2 = el('login-error');
+    errEl2.textContent = 'Errore: ' + res.error.message;
+    errEl2.style.display = 'block';
   } else {
     el('login-error').style.display = 'none';
     var suc = el('login-success');
     suc.style.display = 'block';
-    suc.textContent = 'Email inviata a ' + email + '. Controlla la casella e segui il link per reimpostare la password.';
+    suc.textContent = 'Email inviata a ' + email + '. Controlla la casella e segui il link.';
   }
 }
+
+async function togglePagato(id, currentVal) {
   var nuovoStato = !currentVal;
   var res = await sb.from('f24').update({ pagato: nuovoStato }).eq('id', id);
   if (res.error) { alert('Errore: ' + res.error.message); return; }
