@@ -387,7 +387,7 @@ html, body { height: 100%; font-family: var(--sans); }
 .main-content {
   flex: 1;
   padding: 2rem 2.5rem;
-  max-width: 1400px;
+  max-width: 1250px;
   margin: 0 auto;
   width: 100%;
   padding-top: 2rem;
@@ -921,18 +921,18 @@ body.dark .calc-row .cr-value { color: #F9FAFB; }
         <h2>Il mio profilo</h2>
         <p>I tuoi dati anagrafici e fiscali</p>
       </div>
-      <div class="card fade-in">
-        <div class="card-header"><h3>Dati anagrafici</h3></div>
-        <div class="card-body">
-          <div class="profilo-grid" id="profilo-anagrafica">
-            <div class="loading-spinner"><div class="spinner"></div></div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:1.2rem;max-width:900px;">
+        <div class="card fade-in">
+          <div class="card-header"><h3>Dati anagrafici</h3></div>
+          <div style="padding:1.8rem 2rem;">
+            <div id="profilo-anagrafica" style="display:grid;grid-template-columns:1fr 1fr;gap:1.6rem;"></div>
           </div>
         </div>
-      </div>
-      <div class="card fade-in">
-        <div class="card-header"><h3>Dati fiscali</h3></div>
-        <div class="card-body" id="profilo-fiscale">
-          <div class="loading-spinner"><div class="spinner"></div></div>
+        <div class="card fade-in">
+          <div class="card-header"><h3>Dati fiscali</h3></div>
+          <div style="padding:1.8rem 2rem;">
+            <div id="profilo-fiscale" style="display:grid;grid-template-columns:1fr 1fr;gap:1.6rem;"></div>
+          </div>
         </div>
       </div>
     </div>
@@ -1300,8 +1300,9 @@ async function confermaIncasso() {
     alert('Inserisci la data di incasso.');
     return;
   }
+  var id = _incassoId;
   chiudiModale();
-  await _eseguiTogglePagata(_incassoId || arguments[0], true, dataIncasso);
+  await _eseguiTogglePagata(id, true, dataIncasso);
 }
 
 async function _eseguiTogglePagata(id, nuovoStato, dataIncasso) {
@@ -1409,21 +1410,26 @@ function renderProfilo() {
   if (!clienteData) return;
   var c = clienteData;
 
+  function campo(label, value) {
+    return '<div style="display:flex;flex-direction:column;gap:0.4rem;padding:0.8rem 0;border-bottom:1px solid var(--border);">' +
+      '<span style="font-size:0.68rem;font-weight:600;text-transform:uppercase;letter-spacing:0.1em;color:var(--text-light);">' + label + '</span>' +
+      '<span style="font-size:0.95rem;font-weight:500;color:var(--text);">' + (value||'\u2014') + '</span>' +
+      '</div>';
+  }
+
   el('profilo-anagrafica').innerHTML =
-    '<div class="profilo-field"><span class="pf-label">Nome e Cognome</span><span class="pf-value">' + c.nome + ' ' + c.cognome + '</span></div>' +
-    '<div class="profilo-field"><span class="pf-label">Email</span><span class="pf-value">' + c.email + '</span></div>' +
-    '<div class="profilo-field"><span class="pf-label">Codice Fiscale</span><span class="pf-value mono">' + (c.codice_fiscale||'\u2014') + '</span></div>' +
-    '<div class="profilo-field"><span class="pf-label">Partita IVA</span><span class="pf-value mono">' + (c.partita_iva||'\u2014') + '</span></div>';
+    campo('Nome e Cognome', c.nome + ' ' + c.cognome) +
+    campo('Email', c.email) +
+    campo('Codice Fiscale', c.codice_fiscale) +
+    campo('Partita IVA', c.partita_iva);
 
   el('profilo-fiscale').innerHTML =
-    '<div class="profilo-grid">' +
-    '<div class="profilo-field"><span class="pf-label">Codice ATECO</span><span class="pf-value mono">' + (c.codice_ateco||'\u2014') + '</span></div>' +
-    '<div class="profilo-field"><span class="pf-label">Anno apertura P.IVA</span><span class="pf-value">' + (c.anno_apertura_piva||'\u2014') + '</span></div>' +
-    '<div class="profilo-field"><span class="pf-label">Coefficiente redditività</span><span class="pf-value">' + ((c.coefficiente_redd||0.78)*100).toFixed(0) + '%</span></div>' +
-    '<div class="profilo-field"><span class="pf-label">Aliquota imposta sostitutiva</span><span class="pf-value">' + (c.aliquota_imposta||15) + '%</span></div>' +
-    '<div class="profilo-field"><span class="pf-label">Regime fiscale</span><span class="pf-value">Forfettario</span></div>' +
-    '<div class="profilo-field"><span class="pf-label">Soglia massima</span><span class="pf-value">\u20ac 85.000</span></div>' +
-    '</div>';
+    campo('Codice ATECO', c.codice_ateco) +
+    campo('Anno apertura P.IVA', c.anno_apertura_piva) +
+    campo('Coefficiente redditività', ((c.coefficiente_redd||0.78)*100).toFixed(0) + '%') +
+    campo('Aliquota imposta sostitutiva', (c.aliquota_imposta||15) + '%') +
+    campo('Regime fiscale', 'Forfettario') +
+    campo('Soglia massima', '\u20ac 85.000');
 }
 
 function renderClienti() {
