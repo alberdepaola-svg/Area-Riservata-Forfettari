@@ -534,6 +534,46 @@ html, body { height: 100%; font-family: var(--sans); }
 }
 .info-banner strong { font-weight: 600; }
 
+.btn-settings {
+  background: transparent;
+  border: 1px solid rgba(255,255,255,0.2);
+  color: rgba(255,255,255,0.6);
+  width: 32px; height: 32px;
+  border-radius: 6px;
+  cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  transition: all 0.2s;
+}
+.btn-settings:hover { border-color: var(--gold); color: var(--gold-light); }
+
+/* Dark mode */
+body.dark {
+  --app-bg: #111827;
+  --white: #1F2937;
+  --text: #F9FAFB;
+  --text-mid: #9CA3AF;
+  --text-light: #6B7280;
+  --border: #374151;
+  --shadow-sm: 0 1px 3px rgba(0,0,0,0.3);
+  --shadow: 0 4px 16px rgba(0,0,0,0.4);
+}
+body.dark .data-table th { background: #374151; color: #9CA3AF; }
+body.dark .data-table td { color: #F9FAFB; border-color: #374151; }
+body.dark .data-table tr:hover td { background: #374151; }
+body.dark .filter-btn { background: #1F2937; color: #9CA3AF; border-color: #374151; }
+body.dark .filter-btn.active { background: var(--navy); color: #fff; border-color: var(--navy); }
+body.dark .info-banner { background: #1E3A5F; border-color: #2563EB; color: #93C5FD; }
+body.dark #soglia-bar + div { display: none; }
+body.dark .kpi-card { background: #1F2937; border-color: #374151; }
+body.dark .kpi-label { color: #9CA3AF; }
+body.dark .kpi-value { color: #F9FAFB; }
+body.dark .kpi-sub { color: #6B7280; }
+body.dark .page-header h2 { color: #F9FAFB; }
+body.dark .page-header p { color: #9CA3AF; }
+body.dark .profilo-field .pf-value { color: #F9FAFB; }
+body.dark .calc-row .cr-label { color: #9CA3AF; }
+body.dark .calc-row .cr-value { color: #F9FAFB; }
+
 @media (max-width: 768px) {
   .login-left { display: none; }
   .kpi-grid { grid-template-columns: 1fr 1fr; }
@@ -605,6 +645,12 @@ html, body { height: 100%; font-family: var(--sans); }
     <div class="topbar-user">
       <div class="user-avatar" id="user-avatar">?</div>
       <span class="user-name" id="user-name-top"></span>
+      <button class="btn-settings" onclick="toggleDark()" title="Impostazioni">
+        <svg id="settings-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="12" r="3"></circle>
+          <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
+        </svg>
+      </button>
       <button class="btn-logout" onclick="doLogout()">Esci</button>
     </div>
   </div>
@@ -642,37 +688,35 @@ html, body { height: 100%; font-family: var(--sans); }
         </div>
       </div>
 
-      <!-- Soglia forfettario -->
-      <div class="card fade-in" id="card-soglia">
+      <!-- Soglia forfettario — compatta -->
+      <div class="card fade-in" id="card-soglia" style="margin-bottom:1.2rem;">
         <div class="card-header">
           <h3>Soglia regime forfettario</h3>
           <span id="soglia-pct-label" style="font-size:0.82rem;"></span>
         </div>
-        <div style="padding:1.2rem 1.4rem;">
-          <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:1rem;margin-bottom:1.2rem;">
+        <div style="padding:0.9rem 1.4rem;">
+          <div style="display:flex;align-items:center;gap:2rem;margin-bottom:0.7rem;">
             <div>
-              <div style="font-size:0.72rem;font-weight:600;text-transform:uppercase;letter-spacing:0.06em;color:var(--text-mid);margin-bottom:0.3rem;">Fatturato anno corrente</div>
-              <div style="font-size:1.4rem;font-weight:700;color:var(--text);letter-spacing:-0.02em;" id="soglia-fatturato">—</div>
+              <span style="font-size:0.7rem;font-weight:600;text-transform:uppercase;letter-spacing:0.06em;color:var(--text-mid);">Fatturato </span>
+              <span style="font-size:1rem;font-weight:700;color:var(--text);" id="soglia-fatturato">—</span>
             </div>
+            <div style="color:var(--text-light);font-size:0.9rem;">→</div>
             <div>
-              <div style="font-size:0.72rem;font-weight:600;text-transform:uppercase;letter-spacing:0.06em;color:var(--text-mid);margin-bottom:0.3rem;">Residuo max fatturabile</div>
-              <div style="font-size:1.4rem;font-weight:700;letter-spacing:-0.02em;" id="soglia-residuo">—</div>
+              <span style="font-size:0.7rem;font-weight:600;text-transform:uppercase;letter-spacing:0.06em;color:var(--text-mid);">Residuo max </span>
+              <span style="font-size:1rem;font-weight:700;" id="soglia-residuo">—</span>
             </div>
+            <div style="color:var(--text-light);font-size:0.9rem;">·</div>
             <div>
-              <div style="font-size:0.72rem;font-weight:600;text-transform:uppercase;letter-spacing:0.06em;color:var(--text-mid);margin-bottom:0.3rem;">Limite regime forfettario</div>
-              <div style="font-size:1.4rem;font-weight:700;color:var(--text-mid);letter-spacing:-0.02em;">€ 85.000</div>
+              <span style="font-size:0.7rem;font-weight:600;text-transform:uppercase;letter-spacing:0.06em;color:var(--text-mid);">Limite </span>
+              <span style="font-size:1rem;font-weight:600;color:var(--text-mid);">€ 85.000</span>
             </div>
           </div>
-          <div style="position:relative;">
-            <div style="height:12px;background:#F3F4F6;border-radius:6px;overflow:hidden;">
-              <div id="soglia-bar" style="height:100%;width:0%;border-radius:6px;transition:width 0.8s ease;background:#2563EB;"></div>
-            </div>
-            <div style="display:flex;justify-content:space-between;margin-top:0.4rem;">
-              <span style="font-size:0.72rem;color:var(--text-light);">€ 0</span>
-              <span style="font-size:0.72rem;color:var(--text-light);">€ 85.000 — limite forfettario</span>
+          <div>
+            <div style="height:8px;background:#F3F4F6;border-radius:4px;overflow:hidden;">
+              <div id="soglia-bar" style="height:100%;width:0%;border-radius:4px;transition:width 0.8s ease;background:#2563EB;"></div>
             </div>
           </div>
-          <div id="soglia-alert" style="margin-top:1rem;display:none;"></div>
+          <div id="soglia-alert" style="margin-top:0.7rem;display:none;"></div>
         </div>
       </div>
 
@@ -680,10 +724,20 @@ html, body { height: 100%; font-family: var(--sans); }
       <div class="card fade-in">
         <div class="card-header">
           <h3>Fatturato vs Incassato</h3>
-          <span id="chart-legend" style="font-size:0.78rem;color:var(--text-light);font-family:var(--mono);"></span>
+          <span id="chart-legend" style="font-size:0.78rem;"></span>
         </div>
-        <div style="padding:1.2rem 1.4rem 0.8rem;">
-          <canvas id="chart-fatturato" height="75"></canvas>
+        <div style="padding:0.5rem 1.4rem 0.3rem;display:flex;gap:1.2rem;border-bottom:1px solid var(--border);">
+          <div style="display:flex;align-items:center;gap:0.4rem;font-size:0.8rem;color:var(--text-mid);">
+            <div style="width:12px;height:12px;border-radius:50%;background:#2563EB;"></div>
+            <span id="leg-fatturato">Fatturato 2026</span>
+          </div>
+          <div style="display:flex;align-items:center;gap:0.4rem;font-size:0.8rem;color:var(--text-mid);">
+            <div style="width:12px;height:12px;border-radius:50%;background:#059669;"></div>
+            <span id="leg-incassato">Incassato 2026</span>
+          </div>
+        </div>
+        <div style="padding:1rem 1.4rem 0.8rem;">
+          <canvas id="chart-fatturato" height="80"></canvas>
         </div>
       </div>
 
@@ -981,7 +1035,79 @@ function renderDashboard() {
 
   var totIncassatoGrafico = datiIncassati.reduce(function(a,b){return a+b;},0);
   var legEl = el('chart-legend');
-  if (legEl) legEl.textContent = 'Fatturato: ' + fmt(fatturato) + '  ·  Incassato: ' + fmt(totIncassatoGrafico);
+  if (legEl) legEl.textContent = fmt(fatturato) + ' fatturato  ·  ' + fmt(totIncassatoGrafico) + ' incassato';
+  var legFat = el('leg-fatturato');
+  var legInc = el('leg-incassato');
+  if (legFat) legFat.textContent = 'Fatturato ' + anno;
+  if (legInc) legInc.textContent = 'Incassato ' + anno;
+
+  if (typeof Chart !== 'undefined') {
+    var ctx = el('chart-fatturato').getContext('2d');
+    if (chartInstance) chartInstance.destroy();
+    chartInstance = new Chart(ctx, {
+      type: 'line',
+      data: {
+        labels: mesi,
+        datasets: [
+          {
+            label: 'Fatturato ' + anno,
+            data: datiAnno,
+            borderColor: '#2563EB',
+            backgroundColor: 'rgba(37,99,235,0.06)',
+            borderWidth: 2.5,
+            pointBackgroundColor: '#2563EB',
+            pointRadius: 4,
+            pointHoverRadius: 6,
+            fill: true,
+            tension: 0.4
+          },
+          {
+            label: 'Incassato ' + anno,
+            data: datiIncassati,
+            borderColor: '#059669',
+            backgroundColor: 'rgba(5,150,105,0.06)',
+            borderWidth: 2.5,
+            pointBackgroundColor: '#059669',
+            pointRadius: 4,
+            pointHoverRadius: 6,
+            fill: true,
+            tension: 0.4
+          }
+        ]
+      },
+      options: {
+        responsive: true,
+        interaction: { mode: 'index', intersect: false },
+        plugins: {
+          legend: { display: false },
+          tooltip: {
+            backgroundColor: '#1a1d23',
+            borderColor: '#e5e7eb',
+            borderWidth: 1,
+            titleColor: '#9ca3af',
+            bodyColor: '#ffffff',
+            padding: 12,
+            callbacks: {
+              label: function(c) {
+                return ' ' + c.dataset.label + ': \u20ac ' + c.parsed.y.toLocaleString('it-IT', {minimumFractionDigits:2});
+              },
+              afterBody: function(items) {
+                if (items.length === 2) {
+                  var gap = items[0].parsed.y - items[1].parsed.y;
+                  if (gap > 0) return ['', 'Da incassare: \u20ac ' + gap.toLocaleString('it-IT', {minimumFractionDigits:2})];
+                }
+                return [];
+              }
+            }
+          }
+        },
+        scales: {
+          x: { grid: { color: '#f3f4f6' }, ticks: { color: '#9ca3af', font: { family: 'Inter', size: 11 } } },
+          y: { grid: { color: '#f3f4f6' }, ticks: { color: '#9ca3af', font: { family: 'Inter', size: 11 }, callback: function(v) { return '\u20ac ' + v.toLocaleString('it-IT'); } } }
+        }
+      }
+    });
+  }
 
   if (typeof Chart !== 'undefined') {
     var ctx = el('chart-fatturato').getContext('2d');
@@ -1289,9 +1415,21 @@ function showSection(id, ev) {
   el('section-' + id).classList.add('active');
   if (ev && ev.currentTarget) ev.currentTarget.classList.add('active');
 }
+
+function toggleDark() {
+  var isDark = document.body.classList.toggle('dark');
+  localStorage.setItem('sdp_dark', isDark ? '1' : '0');
+  var icon = el('settings-icon');
+  if (icon) icon.style.color = isDark ? 'var(--gold-light)' : '';
+}
+
+// Ripristina dark mode al caricamento
+window.addEventListener('load', function() {
+  if (localStorage.getItem('sdp_dark') === '1') {
+    document.body.classList.add('dark');
+  }
+}, true);
 </script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
-
 </body>
 </html>
