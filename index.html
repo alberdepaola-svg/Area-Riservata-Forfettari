@@ -734,59 +734,58 @@ body.dark .calc-row .cr-value { color: #F9FAFB; }
         <p id="dashboard-year"></p>
       </div>
 
-      <!-- KPI -->
-      <div class="kpi-grid fade-in">
-        <div class="kpi-card blue">
-          <div class="kpi-label">Fatturato</div>
-          <div class="kpi-value" id="kpi-fatturato">—</div>
-          <div class="kpi-sub" id="kpi-fatturato-sub"></div>
+      <!-- KPI — 2 righe da 3 + grafico soglia -->
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr 320px;gap:1.2rem;margin-bottom:1.2rem;">
+        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:1.2rem;grid-column:1/4;">
+          <!-- Riga 1 -->
+          <div class="kpi-card blue">
+            <div class="kpi-label">Fatturato</div>
+            <div class="kpi-value" id="kpi-fatturato">—</div>
+            <div class="kpi-sub" id="kpi-fatturato-sub"></div>
+          </div>
+          <div class="kpi-card" style="border-top:3px solid #7C3AED;">
+            <div class="kpi-label">Reddito lordo</div>
+            <div class="kpi-value" id="kpi-reddito-lordo">—</div>
+            <div class="kpi-sub" id="kpi-reddito-lordo-sub"></div>
+          </div>
+          <div class="kpi-card" style="border-top:3px solid #0891B2;">
+            <div class="kpi-label">Contributi versati</div>
+            <div class="kpi-value" id="kpi-contributi">—</div>
+            <div class="kpi-sub">anno corrente</div>
+          </div>
+          <!-- Riga 2 -->
+          <div class="kpi-card green">
+            <div class="kpi-label">Reddito imponibile</div>
+            <div class="kpi-value" id="kpi-reddito">—</div>
+            <div class="kpi-sub" id="kpi-reddito-sub"></div>
+          </div>
+          <div class="kpi-card gold">
+            <div class="kpi-label">Imposta sostitutiva</div>
+            <div class="kpi-value" id="kpi-imposta">—</div>
+            <div class="kpi-sub" id="kpi-imposta-sub"></div>
+          </div>
+          <div class="kpi-card red">
+            <div class="kpi-label">F24 da pagare</div>
+            <div class="kpi-value" id="kpi-f24">—</div>
+            <div class="kpi-sub">scadenze aperte</div>
+          </div>
         </div>
-        <div class="kpi-card green">
-          <div class="kpi-label">Reddito imponibile</div>
-          <div class="kpi-value" id="kpi-reddito">—</div>
-          <div class="kpi-sub" id="kpi-reddito-sub"></div>
-        </div>
-        <div class="kpi-card gold">
-          <div class="kpi-label">Imposta sostitutiva</div>
-          <div class="kpi-value" id="kpi-imposta">—</div>
-          <div class="kpi-sub" id="kpi-imposta-sub"></div>
-        </div>
-        <div class="kpi-card red">
-          <div class="kpi-label">F24 da pagare</div>
-          <div class="kpi-value" id="kpi-f24">—</div>
-          <div class="kpi-sub">scadenze aperte</div>
-        </div>
-      </div>
 
-      <!-- Soglia forfettario — compatta -->
-      <div class="card fade-in" id="card-soglia" style="margin-bottom:1.2rem;">
-        <div class="card-header">
-          <h3>Soglia regime forfettario</h3>
-          <span id="soglia-pct-label" style="font-size:0.82rem;"></span>
-        </div>
-        <div style="padding:0.9rem 1.4rem;">
-          <div style="display:flex;align-items:center;gap:2rem;margin-bottom:0.7rem;">
-            <div>
-              <span style="font-size:0.7rem;font-weight:600;text-transform:uppercase;letter-spacing:0.06em;color:var(--text-mid);">Fatturato </span>
-              <span style="font-size:1rem;font-weight:700;color:var(--text);" id="soglia-fatturato">—</span>
-            </div>
-            <div style="color:var(--text-light);font-size:0.9rem;">→</div>
-            <div>
-              <span style="font-size:0.7rem;font-weight:600;text-transform:uppercase;letter-spacing:0.06em;color:var(--text-mid);">Residuo max </span>
-              <span style="font-size:1rem;font-weight:700;" id="soglia-residuo">—</span>
-            </div>
-            <div style="color:var(--text-light);font-size:0.9rem;">·</div>
-            <div>
-              <span style="font-size:0.7rem;font-weight:600;text-transform:uppercase;letter-spacing:0.06em;color:var(--text-mid);">Limite </span>
-              <span style="font-size:1rem;font-weight:600;color:var(--text-mid);">€ 85.000</span>
+        <!-- Grafico soglia circolare -->
+        <div class="card fade-in" style="display:flex;flex-direction:column;align-items:center;justify-content:center;padding:1.4rem;text-align:center;">
+          <div style="font-size:0.7rem;font-weight:600;text-transform:uppercase;letter-spacing:0.1em;color:var(--text-mid);margin-bottom:0.8rem;">Soglia forfettaria</div>
+          <div style="position:relative;width:140px;height:140px;">
+            <canvas id="chart-soglia" width="140" height="140"></canvas>
+            <div style="position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;">
+              <div style="font-size:1.4rem;font-weight:700;color:var(--text);line-height:1;" id="soglia-pct-num">0%</div>
+              <div style="font-size:0.68rem;color:var(--text-light);margin-top:0.2rem;">utilizzato</div>
             </div>
           </div>
-          <div>
-            <div style="height:8px;background:#F3F4F6;border-radius:4px;overflow:hidden;">
-              <div id="soglia-bar" style="height:100%;width:0%;border-radius:4px;transition:width 0.8s ease;background:#2563EB;"></div>
-            </div>
+          <div style="margin-top:0.8rem;">
+            <div style="font-size:0.78rem;font-weight:600;color:var(--text);" id="soglia-residuo-small">—</div>
+            <div style="font-size:0.68rem;color:var(--text-light);">residuo max fatturabile</div>
           </div>
-          <div id="soglia-alert" style="margin-top:0.7rem;display:none;"></div>
+          <div id="soglia-alert" style="margin-top:0.6rem;display:none;font-size:0.72rem;"></div>
         </div>
       </div>
 
@@ -1049,49 +1048,51 @@ function renderDashboard() {
   var fatturato = emesse.reduce(function(s, f) { return s + parseFloat(f.importo || 0); }, 0);
   var coeff = (clienteData && clienteData.coefficiente_redd) ? clienteData.coefficiente_redd : 0.78;
   var aliquota = (clienteData && clienteData.aliquota_imposta) ? clienteData.aliquota_imposta : 15;
-  var reddito = fatturato * coeff;
-  var imposta = reddito * aliquota / 100;
+  var contributi = parseFloat((clienteData && clienteData.contributi_versati) || 0);
+  var redditoLordo = fatturato * coeff;
+  var redditoImponibile = Math.max(0, redditoLordo - contributi);
+  var imposta = redditoImponibile * aliquota / 100;
   var f24Aperti = f24Data.filter(function(f) { return !f.pagato; }).length;
 
   el('kpi-fatturato').textContent = fmt(fatturato);
   el('kpi-fatturato-sub').textContent = emesse.length + ' fatture emesse';
-  el('kpi-reddito').textContent = fmt(reddito);
-  el('kpi-reddito-sub').textContent = 'coeff. ' + (coeff*100).toFixed(0) + '%';
+  el('kpi-reddito-lordo').textContent = fmt(redditoLordo);
+  el('kpi-reddito-lordo-sub').textContent = 'coeff. ' + (coeff*100).toFixed(0) + '%';
+  el('kpi-contributi').textContent = contributi > 0 ? fmt(contributi) : '\u2014';
+  el('kpi-reddito').textContent = fmt(redditoImponibile);
+  el('kpi-reddito-sub').textContent = contributi > 0 ? 'reddito lordo \u2212 contributi' : 'nessun contributo dedotto';
   el('kpi-imposta').textContent = fmt(imposta);
   el('kpi-imposta-sub').textContent = 'aliquota ' + aliquota + '%';
   el('kpi-f24').textContent = f24Aperti;
 
-  // ── Soglia forfettario ──
+  // ── Grafico soglia circolare ──
   var SOGLIA = 85000;
   var residuo = Math.max(0, SOGLIA - fatturato);
   var pct = Math.min(100, Math.round((fatturato / SOGLIA) * 100));
+  var barColor = pct >= 90 ? '#DC2626' : pct >= 75 ? '#EA580C' : '#2563EB';
 
-  el('soglia-fatturato').textContent = fmt(fatturato);
-  el('soglia-residuo').textContent = fmt(residuo);
-  el('soglia-residuo').style.color = pct >= 90 ? '#DC2626' : pct >= 75 ? '#EA580C' : '#059669';
+  var pctEl = el('soglia-pct-num');
+  if (pctEl) { pctEl.textContent = pct + '%'; pctEl.style.color = barColor; }
+  var residuoSmEl = el('soglia-residuo-small');
+  if (residuoSmEl) { residuoSmEl.textContent = fmt(residuo); residuoSmEl.style.color = barColor; }
 
-  el('soglia-pct-label').textContent = pct + '% della soglia utilizzato';
-
-  var bar = el('soglia-bar');
-  if (bar) {
-    bar.style.width = pct + '%';
-    bar.style.background = pct >= 90 ? '#DC2626' : pct >= 75 ? '#EA580C' : '#2563EB';
+  if (typeof Chart !== 'undefined') {
+    var ctxSoglia = el('chart-soglia');
+    if (ctxSoglia) {
+      if (window.chartSoglia) window.chartSoglia.destroy();
+      window.chartSoglia = new Chart(ctxSoglia.getContext('2d'), {
+        type: 'doughnut',
+        data: { datasets: [{ data: [pct, 100 - pct], backgroundColor: [barColor, '#F3F4F6'], borderWidth: 0, hoverOffset: 0 }] },
+        options: { responsive: false, cutout: '78%', plugins: { legend: { display: false }, tooltip: { enabled: false } }, animation: { duration: 800 } }
+      });
+    }
   }
 
   var alertEl = el('soglia-alert');
   if (alertEl) {
-    if (pct >= 100) {
-      alertEl.style.display = 'block';
-      alertEl.innerHTML = '<div style="background:#FEF2F2;border:1px solid #FECACA;border-radius:8px;padding:0.8rem 1rem;font-size:0.85rem;color:#991B1B;font-weight:500;">⚠️ Hai superato la soglia di € 85.000. Contatta lo studio immediatamente per valutare il passaggio al regime ordinario.</div>';
-    } else if (pct >= 90) {
-      alertEl.style.display = 'block';
-      alertEl.innerHTML = '<div style="background:#FEF2F2;border:1px solid #FECACA;border-radius:8px;padding:0.8rem 1rem;font-size:0.85rem;color:#991B1B;font-weight:500;">⚠️ Attenzione: hai raggiunto il ' + pct + '% della soglia. Residuo fatturabile: ' + fmt(residuo) + '. Contatta lo studio.</div>';
-    } else if (pct >= 75) {
-      alertEl.style.display = 'block';
-      alertEl.innerHTML = '<div style="background:#FFF7ED;border:1px solid #FED7AA;border-radius:8px;padding:0.8rem 1rem;font-size:0.85rem;color:#9A3412;font-weight:500;">Attenzione: hai utilizzato il ' + pct + '% della soglia forfettaria. Residuo: ' + fmt(residuo) + '.</div>';
-    } else {
-      alertEl.style.display = 'none';
-    }
+    if (pct >= 100) { alertEl.style.display = 'block'; alertEl.innerHTML = '<span style="color:#DC2626;font-weight:600;">\u26a0 Soglia superata — contatta lo studio</span>'; }
+    else if (pct >= 90) { alertEl.style.display = 'block'; alertEl.innerHTML = '<span style="color:#EA580C;font-weight:600;">\u26a0 ' + pct + '% raggiunto</span>'; }
+    else { alertEl.style.display = 'none'; }
   }
 
   var mesi = ['Gen','Feb','Mar','Apr','Mag','Giu','Lug','Ago','Set','Ott','Nov','Dic'];
