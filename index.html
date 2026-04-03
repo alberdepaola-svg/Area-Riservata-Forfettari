@@ -1054,9 +1054,69 @@ async function doLogout() {
 }
 
 window.addEventListener('load', async function() {
+
+  // Gestione reset password via link email
+  var hash = window.location.hash;
+  if (hash && hash.includes('type=recovery')) {
+    // Supabase gestisce il token automaticamente via onAuthStateChange
+    // Mostriamo il form di nuova password
+    mostraFormNuovaPassword();
+    return;
+  }
+
   var res = await sb.auth.getSession();
   if (res.data.session) { currentUser = res.data.session.user; await initApp(); }
+
+  // Ascolta cambio auth state (incluso recovery)
+  sb.auth.onAuthStateChange(async function(event, session) {
+    if (event === 'PASSWORD_RECOVERY') {
+      mostraFormNuovaPassword();
+    }
+  });
 });
+
+function mostraFormNuovaPassword() {
+  el('login-page').style.display = 'flex';
+  var card = document.querySelector('.login-card');
+  if (!card) return;
+  card.innerHTML = '<h2>Nuova password</h2>' +
+    '<p class="login-sub">Scegli una nuova password per il tuo account</p>' +
+    '<div class="login-error" id="login-error" style="display:none;"></div>' +
+    '<div class="login-success" id="login-success" style="display:none;"></div>' +
+    '<div class="form-group"><label>Nuova password</label>' +
+    '<input type="password" id="new-password" placeholder="••••••••" /></div>' +
+    '<div class="form-group"><label>Conferma password</label>' +
+    '<input type="password" id="confirm-password" placeholder="••••••••" /></div>' +
+    '<button class="btn-login" onclick="salvaNuovaPassword()"><span>Salva password</span></button>';
+}
+
+async function salvaNuovaPassword() {
+  var np = el('new-password').value;
+  var cp = el('confirm-password').value;
+  var errEl = el('login-error');
+  if (!np || np.length < 6) {
+    errEl.textContent = 'La password deve essere di almeno 6 caratteri.';
+    errEl.style.display = 'block'; return;
+  }
+  if (np !== cp) {
+    errEl.textContent = 'Le password non coincidono.';
+    errEl.style.display = 'block'; return;
+  }
+  errEl.style.display = 'none';
+  var res = await sb.auth.updateUser({ password: np });
+  if (res.error) {
+    errEl.textContent = 'Errore: ' + res.error.message;
+    errEl.style.display = 'block';
+  } else {
+    var suc = el('login-success');
+    suc.style.display = 'block';
+    suc.textContent = 'Password aggiornata! Reindirizzamento...';
+    setTimeout(function() {
+      window.location.hash = '';
+      window.location.reload();
+    }, 2000);
+  }
+}
 
 document.addEventListener('keydown', function(e) {
   if (e.key === 'Enter' && el('login-page').style.display !== 'none') doLogin();
