@@ -845,14 +845,15 @@ body.dark .calc-row .cr-value { color: #F9FAFB; }
           <span id="fatturato-clienti-tot" style="font-size:0.82rem;"></span>
         </div>
         <div style="display:grid;grid-template-columns:260px 1fr;gap:0;">
-          <div style="padding:1.4rem;display:flex;align-items:center;justify-content:center;border-right:1px solid var(--border);">
-            <canvas id="chart-clienti" width="220" height="220"></canvas>
+          <div style="padding:1.4rem;display:flex;flex-direction:column;align-items:center;justify-content:flex-start;border-right:1px solid var(--border);gap:1rem;">
+            <canvas id="chart-clienti" width="200" height="200"></canvas>
+            <div id="dash-clienti-legend" style="width:100%;display:flex;flex-direction:column;gap:0.4rem;"></div>
           </div>
           <div style="padding:0;">
             <table class="data-table">
-              <thead><tr><th></th><th>Cliente</th><th>Fatturato</th><th>Incidenza</th></tr></thead>
+              <thead><tr><th>Cliente</th><th>Fatturato</th><th>Incidenza</th></tr></thead>
               <tbody id="dash-clienti-body">
-                <tr><td colspan="4" style="text-align:center;color:var(--text-light);padding:2rem">Caricamento...</td></tr>
+                <tr><td colspan="3" style="text-align:center;color:var(--text-light);padding:2rem">Caricamento...</td></tr>
               </tbody>
             </table>
           </div>
@@ -866,6 +867,30 @@ body.dark .calc-row .cr-value { color: #F9FAFB; }
       <div class="page-header fade-in">
         <h2>Le mie fatture</h2>
         <p>Tutte le fatture emesse e ricevute</p>
+      </div>
+      <!-- Grafico fatturate mensile -->
+      <div class="card fade-in" style="margin-bottom:1.2rem;">
+        <div class="card-header">
+          <h3>Fatturato mensile</h3>
+          <span id="fat-chart-tot" style="font-size:0.82rem;"></span>
+        </div>
+        <div style="padding:1.2rem 1.4rem 0.8rem;">
+          <canvas id="chart-fatture-mensile" height="70"></canvas>
+        </div>
+        <div style="display:flex;justify-content:space-between;padding:0 1.4rem 0.8rem;">
+          <span style="font-size:0.68rem;color:var(--text-light)">Gen</span>
+          <span style="font-size:0.68rem;color:var(--text-light)">Feb</span>
+          <span style="font-size:0.68rem;color:var(--text-light)">Mar</span>
+          <span style="font-size:0.68rem;color:var(--text-light)">Apr</span>
+          <span style="font-size:0.68rem;color:var(--text-light)">Mag</span>
+          <span style="font-size:0.68rem;color:var(--text-light)">Giu</span>
+          <span style="font-size:0.68rem;color:var(--text-light)">Lug</span>
+          <span style="font-size:0.68rem;color:var(--text-light)">Ago</span>
+          <span style="font-size:0.68rem;color:var(--text-light)">Set</span>
+          <span style="font-size:0.68rem;color:var(--text-light)">Ott</span>
+          <span style="font-size:0.68rem;color:var(--text-light)">Nov</span>
+          <span style="font-size:0.68rem;color:var(--text-light)">Dic</span>
+        </div>
       </div>
       <div class="filter-bar">
         <button class="filter-btn active" onclick="filterFatture('tutte',this)">Tutte</button>
@@ -885,6 +910,29 @@ body.dark .calc-row .cr-value { color: #F9FAFB; }
         <h2>Scadenzario F24</h2>
         <p>Tutte le tue scadenze fiscali</p>
       </div>
+      <!-- Barra orizzontale totale pagati -->
+      <div class="card fade-in" style="margin-bottom:1.2rem;">
+        <div class="card-header">
+          <h3>Riepilogo F24</h3>
+          <span id="f24-riepilogo-label" style="font-size:0.82rem;"></span>
+        </div>
+        <div style="padding:1.2rem 1.4rem;">
+          <div style="display:flex;justify-content:space-between;margin-bottom:0.5rem;">
+            <span style="font-size:0.72rem;color:var(--text-mid);">Pagati</span>
+            <span style="font-size:0.72rem;font-family:var(--mono);color:var(--text);" id="f24-pagati-label">—</span>
+          </div>
+          <div style="height:10px;background:#F3F4F6;border-radius:5px;overflow:hidden;margin-bottom:1rem;">
+            <div id="f24-bar-pagati" style="height:100%;width:0%;background:#059669;border-radius:5px;transition:width 1s ease;"></div>
+          </div>
+          <div style="display:flex;justify-content:space-between;margin-bottom:0.5rem;">
+            <span style="font-size:0.72rem;color:var(--text-mid);">Da pagare</span>
+            <span style="font-size:0.72rem;font-family:var(--mono);color:var(--text);" id="f24-dapagare-label">—</span>
+          </div>
+          <div style="height:10px;background:#F3F4F6;border-radius:5px;overflow:hidden;">
+            <div id="f24-bar-dapagare" style="height:100%;width:0%;background:#DC2626;border-radius:5px;transition:width 1s ease;"></div>
+          </div>
+        </div>
+      </div>
       <div class="filter-bar">
         <button class="filter-btn active" onclick="filterF24('tutti',this)">Tutti</button>
         <button class="filter-btn" onclick="filterF24('da_pagare',this)">Da pagare</button>
@@ -901,11 +949,19 @@ body.dark .calc-row .cr-value { color: #F9FAFB; }
     <div class="section-page" id="section-clienti">
       <div class="page-header fade-in">
         <h2>I miei clienti</h2>
-        <p>Fatturato, incassato e incidenza per ogni cliente</p>
+        <p>Fatturato e incidenza per ogni cliente · 2026</p>
       </div>
-      <div class="card fade-in">
-        <div id="clienti-body">
-          <div class="loading-spinner"><div class="spinner"></div> Caricamento...</div>
+      <div style="display:grid;grid-template-columns:280px 1fr;gap:1.2rem;">
+        <!-- Doughnut + legenda -->
+        <div class="card fade-in" style="padding:1.4rem;display:flex;flex-direction:column;align-items:center;gap:1rem;">
+          <canvas id="chart-clienti-section" width="200" height="200"></canvas>
+          <div id="clienti-legend" style="width:100%;display:flex;flex-direction:column;gap:0.5rem;"></div>
+        </div>
+        <!-- Tabella -->
+        <div class="card fade-in">
+          <div id="clienti-body">
+            <div class="loading-spinner"><div class="spinner"></div> Caricamento...</div>
+          </div>
         </div>
       </div>
     </div>
@@ -1197,7 +1253,8 @@ function renderDashboard() {
   var totEl2 = el('fatturato-clienti-tot');
   if (totEl2) totEl2.textContent = clientiList.length + ' clienti';
 
-  var palette = ['#2563EB','#059669','#EA580C','#7C3AED','#0891B2','#DC2626','#D97706','#65A30D'];
+  var palette = ['#2563EB','#059669','#EA580C','#7C3AED','#0891B2','#DC2626','#D97706','#65A30D',
+    '#10B981','#F59E0B','#6366F1','#EC4899','#14B8A6','#8B5CF6','#F97316','#06B6D4'];
 
   if (typeof Chart !== 'undefined' && clientiList.length > 0) {
     var ctx2 = el('chart-clienti');
@@ -1209,27 +1266,35 @@ function renderDashboard() {
           labels: clientiList.map(function(c) { return c.nome; }),
           datasets: [{ data: clientiList.map(function(c) { return c.totale; }), backgroundColor: clientiList.map(function(_,i) { return palette[i % palette.length]; }), borderWidth: 2, borderColor: '#fff', hoverOffset: 6 }]
         },
-        options: {
-          responsive: false, cutout: '70%',
-          plugins: {
-            legend: { display: false },
-            tooltip: { backgroundColor: '#1a1d23', bodyColor: '#fff', padding: 10, callbacks: { label: function(c) { var pct = totClienti > 0 ? Math.round((c.parsed/totClienti)*100) : 0; return ' ' + fmt(c.parsed) + ' (' + pct + '%)'; } } }
-          }
-        }
+        options: { responsive: false, cutout: '65%', plugins: { legend: { display: false }, tooltip: { backgroundColor: '#1a1d23', bodyColor: '#fff', padding: 10, callbacks: { label: function(c) { var pct = totClienti > 0 ? Math.round((c.parsed/totClienti)*100) : 0; return ' ' + fmt(c.parsed) + ' (' + pct + '%)'; } } } } }
       });
     }
+  }
+
+  // Legenda dashboard
+  var dashLegend = el('dash-clienti-legend');
+  if (dashLegend) {
+    dashLegend.innerHTML = clientiList.slice(0,6).map(function(c,i) {
+      var pct = totClienti > 0 ? Math.round((c.totale/totClienti)*100) : 0;
+      var colore = palette[i % palette.length];
+      return '<div style="display:flex;align-items:center;gap:0.4rem;font-size:0.7rem;">' +
+        '<div style="width:7px;height:7px;border-radius:50%;background:' + colore + ';flex-shrink:0;"></div>' +
+        '<span style="flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--text);">' + c.nome + '</span>' +
+        '<span style="font-weight:700;color:' + colore + ';">' + pct + '%</span>' +
+        '</div>';
+    }).join('');
+    if (clientiList.length > 6) dashLegend.innerHTML += '<div style="font-size:0.68rem;color:var(--text-light);margin-top:0.2rem;">+ altri ' + (clientiList.length-6) + '</div>';
   }
 
   var clientiEl = el('dash-clienti-body');
   if (clientiEl) {
     if (clientiList.length === 0) {
-      clientiEl.innerHTML = '<tr><td colspan="4" style="text-align:center;color:var(--text-light);padding:2rem">Nessun dato disponibile</td></tr>';
+      clientiEl.innerHTML = '<tr><td colspan="3" style="text-align:center;color:var(--text-light);padding:2rem">Nessun dato disponibile</td></tr>';
     } else {
       clientiEl.innerHTML = clientiList.map(function(c, i) {
         var pct = totClienti > 0 ? Math.round((c.totale / totClienti) * 100) : 0;
         var colore = palette[i % palette.length];
         return '<tr>' +
-          '<td style="width:12px;padding-right:0;"><div style="width:10px;height:10px;border-radius:50%;background:' + colore + ';"></div></td>' +
           '<td style="font-weight:500">' + c.nome + '</td>' +
           '<td class="amount">' + fmt(c.totale) + '</td>' +
           '<td style="font-weight:700;color:' + colore + '">' + pct + '%</td>' +
@@ -1434,7 +1499,6 @@ function renderClienti() {
   var emesse = fattureData.filter(function(f) { return f.tipo === 'emessa' && f.anno === anno; });
   var totFatturato = emesse.reduce(function(s,f) { return s + parseFloat(f.importo||0); }, 0);
 
-  // Raggruppa per cliente
   var map = {};
   emesse.forEach(function(f) {
     var nome = f.cessionario_nome || f.cedente_nome || 'Sconosciuto';
@@ -1447,26 +1511,100 @@ function renderClienti() {
     return { nome: nome, fatturato: map[nome].fatturato, incassato: map[nome].incassato };
   }).sort(function(a,b) { return b.fatturato - a.fatturato; });
 
+  var palette = ['#2563EB','#059669','#EA580C','#7C3AED','#0891B2','#DC2626','#D97706','#65A30D',
+    '#10B981','#F59E0B','#6366F1','#EC4899','#14B8A6','#8B5CF6','#F97316','#06B6D4'];
+
+  // Doughnut sezione clienti
+  var ctxSec = el('chart-clienti-section');
+  if (ctxSec && typeof Chart !== 'undefined' && list.length > 0) {
+    if (window.chartClientiSection) window.chartClientiSection.destroy();
+    window.chartClientiSection = new Chart(ctxSec.getContext('2d'), {
+      type: 'doughnut',
+      data: {
+        labels: list.map(function(c) { return c.nome; }),
+        datasets: [{ data: list.map(function(c) { return c.fatturato; }), backgroundColor: list.map(function(_,i) { return palette[i % palette.length]; }), borderWidth: 2, borderColor: '#fff', hoverOffset: 6 }]
+      },
+      options: { responsive: false, cutout: '65%', plugins: { legend: { display: false }, tooltip: { backgroundColor: '#1a1d23', bodyColor: '#fff', padding: 10, callbacks: { label: function(c) { var pct = totFatturato > 0 ? Math.round((c.parsed/totFatturato)*100) : 0; return ' ' + fmt(c.parsed) + ' (' + pct + '%)'; } } } } }
+    });
+  }
+
+  // Legenda
+  var legendEl = el('clienti-legend');
+  if (legendEl) {
+    legendEl.innerHTML = list.slice(0, 8).map(function(c, i) {
+      var pct = totFatturato > 0 ? Math.round((c.fatturato / totFatturato) * 100) : 0;
+      var colore = palette[i % palette.length];
+      return '<div style="display:flex;align-items:center;gap:0.5rem;font-size:0.72rem;">' +
+        '<div style="width:8px;height:8px;border-radius:50%;background:' + colore + ';flex-shrink:0;"></div>' +
+        '<span style="flex:1;color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">' + c.nome + '</span>' +
+        '<span style="font-weight:700;color:' + colore + ';">' + pct + '%</span>' +
+        '</div>';
+    }).join('');
+    if (list.length > 8) legendEl.innerHTML += '<div style="font-size:0.68rem;color:var(--text-light);margin-top:0.3rem;">+ altri ' + (list.length - 8) + ' clienti</div>';
+  }
+
+  // Tabella
   var el2 = el('clienti-body');
-  if (list.length === 0) { el2.innerHTML = emptyState('Nessun cliente trovato per ' + anno); return; }
+  if (el2) {
+    if (list.length === 0) { el2.innerHTML = emptyState('Nessun cliente trovato per ' + anno); return; }
+    var rows = list.map(function(c, i) {
+      var pct = totFatturato > 0 ? Math.round((c.fatturato / totFatturato) * 100) : 0;
+      var colore = palette[i % palette.length];
+      return '<tr>' +
+        '<td><div style="width:9px;height:9px;border-radius:50%;background:' + colore + ';"></div></td>' +
+        '<td style="font-weight:500">' + c.nome + '</td>' +
+        '<td class="amount">' + fmt(c.fatturato) + '</td>' +
+        '<td style="font-weight:700;color:' + colore + '">' + pct + '%</td>' +
+        '</tr>';
+    }).join('');
+    el2.innerHTML = '<table class="data-table"><thead><tr><th></th><th>Cliente</th><th>Fatturato ' + anno + '</th><th>Incidenza</th></tr></thead><tbody>' + rows + '</tbody></table>';
+  }
+}
 
-  var rows = list.map(function(c) {
-    var incidenza = totFatturato > 0 ? Math.round((c.fatturato / totFatturato) * 100) : 0;
-    var daIncassare = c.fatturato - c.incassato;
-    return '<tr>' +
-      '<td style="font-weight:600">' + c.nome + '</td>' +
-      '<td class="amount">' + fmt(c.fatturato) + '</td>' +
-      '<td style="color:#059669;font-weight:600">' + fmt(c.incassato) + '</td>' +
-      '<td style="color:' + (daIncassare > 0 ? '#EA580C' : '#059669') + ';font-weight:600">' + fmt(daIncassare) + '</td>' +
-      '<td style="font-weight:700;color:#2563EB">' + incidenza + '%</td>' +
-      '<td><div style="height:8px;border-radius:4px;background:#EFF6FF;overflow:hidden;min-width:80px"><div style="height:100%;width:' + incidenza + '%;background:#2563EB;border-radius:4px;"></div></div></td>' +
-      '</tr>';
-  }).join('');
+function renderFattureChart() {
+  if (typeof Chart === 'undefined') return;
+  var anno = new Date().getFullYear();
+  var dati = Array(12).fill(0);
+  fattureData.filter(function(f) { return f.tipo === 'emessa' && new Date(f.data_emissione).getFullYear() === anno; }).forEach(function(f) {
+    dati[new Date(f.data_emissione).getMonth()] += parseFloat(f.importo||0);
+  });
+  var tot = dati.reduce(function(a,b){return a+b;},0);
+  var totEl = el('fat-chart-tot');
+  if (totEl) totEl.textContent = fmt(tot);
+  var ctx = el('chart-fatture-mensile');
+  if (!ctx) return;
+  if (window.chartFattureMensili) window.chartFattureMensili.destroy();
+  window.chartFattureMensili = new Chart(ctx.getContext('2d'), {
+    type: 'bar',
+    data: {
+      labels: ['Gen','Feb','Mar','Apr','Mag','Giu','Lug','Ago','Set','Ott','Nov','Dic'],
+      datasets: [{ data: dati, backgroundColor: '#2563EB', borderRadius: 4, borderSkipped: false }]
+    },
+    options: {
+      responsive: true,
+      plugins: { legend: { display: false }, tooltip: { backgroundColor: '#1a1d23', bodyColor: '#fff', padding: 10, callbacks: { label: function(c) { return ' ' + fmt(c.parsed.y); } } } },
+      scales: {
+        x: { grid: { display: false }, ticks: { display: false } },
+        y: { grid: { color: '#f3f4f6' }, ticks: { color: '#9ca3af', font: { size: 11 }, callback: function(v) { return '\u20ac ' + v.toLocaleString('it-IT'); } } }
+      }
+    }
+  });
+}
 
-  el2.innerHTML = '<table class="data-table">' +
-    '<thead><tr><th>Cliente</th><th>Fatturato ' + anno + '</th><th>Incassato</th><th>Da incassare</th><th>Incidenza</th><th style="width:15%"></th></tr></thead>' +
-    '<tbody>' + rows + '</tbody>' +
-    '</table>';
+function renderF24Bar() {
+  var totPagati = f24Data.filter(function(f){return f.pagato;}).reduce(function(s,f){return s+parseFloat(f.importo||0);},0);
+  var totDaPagare = f24Data.filter(function(f){return !f.pagato;}).reduce(function(s,f){return s+parseFloat(f.importo||0);},0);
+  var totale = totPagati + totDaPagare;
+  var pctPagati = totale > 0 ? Math.round((totPagati/totale)*100) : 0;
+  var pctDaPagare = totale > 0 ? Math.round((totDaPagare/totale)*100) : 0;
+  var lbl = el('f24-riepilogo-label');
+  if (lbl) lbl.textContent = 'Totale: ' + fmt(totale);
+  var pl = el('f24-pagati-label'); if (pl) pl.textContent = fmt(totPagati) + ' (' + pctPagati + '%)';
+  var dl = el('f24-dapagare-label'); if (dl) dl.textContent = fmt(totDaPagare) + ' (' + pctDaPagare + '%)';
+  setTimeout(function(){
+    var bp = el('f24-bar-pagati'); if (bp) bp.style.width = pctPagati + '%';
+    var bd = el('f24-bar-dapagare'); if (bd) bd.style.width = pctDaPagare + '%';
+  }, 100);
 }
 
 function toggleUserMenu() {
@@ -1484,6 +1622,8 @@ function showSection(id, ev) {
   el('section-' + id).classList.add('active');
   if (ev && ev.currentTarget) ev.currentTarget.classList.add('active');
   if (id === 'clienti') renderClienti();
+  if (id === 'fatture') renderFattureChart();
+  if (id === 'f24') renderF24Bar();
 }
 </script>
 <!-- Modale data incasso -->
