@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Area Riservata — Studio De Paola</title>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;1,300;1,400&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
 <style>
 :root {
@@ -325,6 +326,7 @@ html, body { height: 100%; font-family: var(--sans); }
   max-width: 1080px;
   margin: 0 auto;
   width: 100%;
+  padding-top: 2rem;
 }
 .section-page { display: none; }
 .section-page.active { display: block; }
@@ -1417,6 +1419,5 @@ function showSection(id, ev) {
   if (id === 'clienti') renderClienti();
 }
 </script>
-<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 </body>
 </html>
