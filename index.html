@@ -1055,24 +1055,30 @@ async function doLogout() {
 
 window.addEventListener('load', async function() {
 
-  // Gestione reset password via link email
-  var hash = window.location.hash;
-  if (hash && hash.includes('type=recovery')) {
-    // Supabase gestisce il token automaticamente via onAuthStateChange
-    // Mostriamo il form di nuova password
+  // Gestione reset password — Supabase manda token nell'hash o nei params
+  var hash = window.location.hash || '';
+  var search = window.location.search || '';
+  var isRecovery = hash.includes('type=recovery') || search.includes('type=recovery');
+
+  if (isRecovery) {
+    // Lascia che Supabase processi il token dall'URL
+    await new Promise(function(resolve) { setTimeout(resolve, 800); });
     mostraFormNuovaPassword();
     return;
   }
 
-  var res = await sb.auth.getSession();
-  if (res.data.session) { currentUser = res.data.session.user; await initApp(); }
-
-  // Ascolta cambio auth state (incluso recovery)
+  // Ascolta cambio auth state (recovery token processato da Supabase)
   sb.auth.onAuthStateChange(async function(event, session) {
     if (event === 'PASSWORD_RECOVERY') {
       mostraFormNuovaPassword();
+    } else if (event === 'SIGNED_IN' && !currentUser) {
+      currentUser = session.user;
+      await initApp();
     }
   });
+
+  var res = await sb.auth.getSession();
+  if (res.data.session) { currentUser = res.data.session.user; await initApp(); }
 });
 
 function mostraFormNuovaPassword() {
