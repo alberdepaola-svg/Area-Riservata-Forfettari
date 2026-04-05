@@ -362,11 +362,11 @@ html, body { height: 100%; font-family: var(--sans); }
   cursor: pointer;
   border-radius: 8px;
   transition: background 0.15s;
-  overflow: hidden;
+  min-width: 0;
 }
 .sb-user:hover { background: rgba(255,255,255,0.06); }
 .sb-avatar {
-  width: 30px; height: 30px;
+  width: 32px; height: 32px;
   background: var(--gold);
   border-radius: 50%;
   display: flex; align-items: center; justify-content: center;
@@ -868,7 +868,7 @@ body.dark .data-table tr:hover td { background: #374151; }
 body.dark .filter-btn { background: #1F2937; color: #9CA3AF; border-color: #374151; }
 body.dark .filter-btn.active { background: var(--navy); color: #fff; border-color: var(--navy); }
 body.dark .info-banner { background: #1E3A5F; border-color: #2563EB; color: #93C5FD; }
-body.dark #soglia-bar + div { display: none; }
+body.dark #nav-cliente-detail { display: none !important; }
 body.dark .kpi-card { background: #1F2937; border-color: #374151; }
 body.dark .kpi-label { color: #9CA3AF; }
 body.dark .kpi-value { color: #F9FAFB; }
@@ -1084,28 +1084,34 @@ body.dark .calc-row .cr-value { color: #F9FAFB; }
             <h3>Andamento fatturato mensile</h3>
             <span id="chart-legend" style="font-size:0.82rem;"></span>
           </div>
-          <!-- Carousel: due grafici con dot navigation -->
-          <div style="position:relative;">
+          <!-- Carousel con frecce e swipe -->
+          <div id="chart-carousel" style="position:relative;user-select:none;">
             <div id="chart-panel-0" style="padding:0.8rem 1.4rem 0.4rem;">
               <canvas id="chart-fatturato" height="85"></canvas>
             </div>
             <div id="chart-panel-1" style="padding:0.8rem 1.4rem 0.4rem;display:none;">
               <canvas id="chart-fatturato-line" height="85"></canvas>
             </div>
-            <!-- Dot navigation -->
-            <div style="display:flex;justify-content:center;gap:6px;padding:0.5rem 0 0.7rem;">
+            <!-- Frecce -->
+            <button onclick="switchChart((_currentChart+1)%2)" style="position:absolute;right:10px;top:50%;transform:translateY(-50%);background:rgba(255,255,255,0.9);border:1px solid var(--border);border-radius:50%;width:26px;height:26px;display:flex;align-items:center;justify-content:center;cursor:pointer;box-shadow:0 2px 6px rgba(0,0,0,0.08);z-index:2;">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"/></svg>
+            </button>
+            <button onclick="switchChart((_currentChart+1)%2)" style="position:absolute;left:10px;top:50%;transform:translateY(-50%);background:rgba(255,255,255,0.9);border:1px solid var(--border);border-radius:50%;width:26px;height:26px;display:flex;align-items:center;justify-content:center;cursor:pointer;box-shadow:0 2px 6px rgba(0,0,0,0.08);z-index:2;">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="15 18 9 12 15 6"/></svg>
+            </button>
+            <!-- Dots -->
+            <div style="display:flex;justify-content:center;gap:6px;padding:0.4rem 0 0.6rem;">
               <button id="dot-0" onclick="switchChart(0)" style="width:7px;height:7px;border-radius:50%;border:none;background:var(--navy);cursor:pointer;padding:0;transition:all 0.2s;"></button>
               <button id="dot-1" onclick="switchChart(1)" style="width:7px;height:7px;border-radius:50%;border:none;background:#d1d5db;cursor:pointer;padding:0;transition:all 0.2s;"></button>
             </div>
           </div>
         </div>
 
-        <!-- Soglia: design professionale full-size -->
+        <!-- Soglia: titolo riposizionato, senza "Regime forfettario" -->
         <div class="card fade-in" style="padding:0;overflow:hidden;display:flex;flex-direction:column;">
-          <!-- Header navy -->
-          <div style="background:var(--navy);padding:0.8rem 1.2rem;border-bottom:1px solid rgba(184,150,62,0.25);">
-            <div style="font-size:0.6rem;font-weight:600;text-transform:uppercase;letter-spacing:0.14em;color:rgba(255,255,255,0.45);">Regime forfettario</div>
-            <div style="font-size:0.82rem;font-weight:600;color:rgba(255,255,255,0.9);margin-top:1px;">Soglia annuale</div>
+          <div style="background:var(--navy);padding:0.85rem 1.2rem;border-bottom:1px solid rgba(184,150,62,0.25);">
+            <div style="font-size:1rem;font-weight:600;color:#fff;letter-spacing:-0.01em;">Soglia annuale</div>
+            <div style="font-size:0.6rem;color:rgba(255,255,255,0.38);margin-top:2px;text-transform:uppercase;letter-spacing:0.1em;">Regime forfettario · limite € 85.000</div>
           </div>
           <!-- Corpo -->
           <div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:1rem 1.4rem;">
@@ -1407,6 +1413,7 @@ body.dark .calc-row .cr-value { color: #F9FAFB; }
 <script>
 const SUPABASE_URL = 'https://znjhrwrwgpzmfwewdbnm.supabase.co';
 const SUPABASE_KEY = 'sb_publishable_TMbin3rxRij58V_Wquk5_Q_z375MFUz';
+
 const { createClient } = supabase;
 const sb = createClient(SUPABASE_URL, SUPABASE_KEY);
 
@@ -1683,11 +1690,13 @@ function renderDashboard() {
 
   // Sparklines realistiche
   var sparkFatData = datiAnno.slice(0, meseCorrente + 1);
-  drawSparkline('chart-spark-fat', sparkFatData, fatMese >= (fatMesePrev||0) ? '#059669' : '#DC2626');
+  var fatColor = fatMesePrev > 0 ? (fatMese >= fatMesePrev ? '#059669' : '#DC2626') : '#2563EB';
+  drawSparkline('chart-spark-fat', sparkFatData, fatColor);
   var sparkNumData = datiAnno.map(function(_, mi) {
     return fattureData.filter(function(f) { return f.tipo==='emessa' && new Date(f.data_emissione).getFullYear()===anno && new Date(f.data_emissione).getMonth()===mi; }).length;
   }).slice(0, meseCorrente + 1);
-  drawSparkline('chart-spark-num', sparkNumData, numMese >= (numMesePrev||0) ? '#059669' : '#DC2626');
+  var numColor = numMesePrev > 0 ? (numMese >= numMesePrev ? '#059669' : '#DC2626') : '#7C3AED';
+  drawSparkline('chart-spark-num', sparkNumData, numColor);
 
   // Aggiorna notifiche
   renderNotifiche();
@@ -2309,11 +2318,6 @@ function showSection(id, ev) {
 }
 
 function apriClienteDetail(nome) {
-  var detNav = el('nav-cliente-detail');
-  if (detNav) detNav.style.display = 'flex';
-  var detLabel = el('nav-cliente-detail-label');
-  if (detLabel) detLabel.textContent = nome.length > 18 ? nome.slice(0,16) + '…' : nome;
-
   var anno = new Date().getFullYear();
   var fatCliente = fattureData.filter(function(f) { return f.tipo === 'emessa' && (f.cessionario_nome || f.cedente_nome || '') === nome; });
   var fatAnno = fatCliente.filter(function(f) { return new Date(f.data_emissione).getFullYear() === anno; });
@@ -2372,6 +2376,27 @@ function switchChart(idx) {
   var d1 = el('dot-1'); if (d1) d1.style.background = idx === 1 ? 'var(--navy)' : '#d1d5db';
 }
 
+// Swipe touch/mouse su carousel
+(function(){
+  var startX = null;
+  function onDown(e){ startX = (e.touches ? e.touches[0].clientX : e.clientX); }
+  function onUp(e){
+    if (startX === null) return;
+    var endX = (e.changedTouches ? e.changedTouches[0].clientX : e.clientX);
+    var diff = startX - endX;
+    if (Math.abs(diff) > 40) switchChart(diff > 0 ? 1 : 0);
+    startX = null;
+  }
+  document.addEventListener('DOMContentLoaded', function(){
+    var c = el('chart-carousel');
+    if (!c) return;
+    c.addEventListener('mousedown', onDown);
+    c.addEventListener('mouseup', onUp);
+    c.addEventListener('touchstart', onDown, { passive: true });
+    c.addEventListener('touchend', onUp);
+  });
+})();
+
 function renderChartWallStreet(datiAnno, mesi) {
   if (typeof Chart === 'undefined') return;
   var ctx = el('chart-fatturato'); if (!ctx) return;
@@ -2380,8 +2405,7 @@ function renderChartWallStreet(datiAnno, mesi) {
   chartInstance = new Chart(ctx.getContext('2d'), {
     type: 'bar',
     data: { labels: mesi, datasets: [
-      { type:'bar', label:'Fatturato', data:datiAnno, backgroundColor:barColors.map(function(c){return c+'33';}), borderColor:barColors, borderWidth:1.5, borderRadius:2, borderSkipped:false },
-      { type:'line', label:'Trend', data:datiAnno, borderColor:'#b8963e', backgroundColor:'transparent', borderWidth:2, pointRadius:datiAnno.map(function(v){return v>0?3:0;}), pointBackgroundColor:'#b8963e', pointBorderColor:'#fff', pointBorderWidth:1.5, tension:0.35, fill:false }
+      { type:'bar', label:'Fatturato', data:datiAnno, backgroundColor:barColors.map(function(c){return c+'33';}), borderColor:barColors, borderWidth:1.5, borderRadius:2, borderSkipped:false }
     ]},
     options: { responsive:true, interaction:{mode:'index',intersect:false}, plugins:{legend:{display:false}, tooltip:{backgroundColor:'#0d1b2a',borderColor:'rgba(184,150,62,0.4)',borderWidth:1,titleColor:'#9ca3af',bodyColor:'#fff',padding:12, callbacks:{label:function(c){return ' '+fmt(c.parsed.y);}}}}, scales:{ x:{grid:{display:false},ticks:{color:'#9ca3af',font:{size:10}}}, y:{grid:{color:'#f5f5f5',lineWidth:0.8},ticks:{color:'#9ca3af',font:{size:10},callback:function(v){return '€'+v.toLocaleString('it-IT');}},border:{display:false}} }, animation:{duration:600,easing:'easeInOutQuart'} }
   });
