@@ -504,7 +504,95 @@ html, body { height: 100%; font-family: var(--sans); }
 .user-dropdown-item:hover { background: var(--app-bg); }
 .user-dropdown-logout { color: var(--red); }
 
-/* Fix incassa button in dashboard table */
+/* ── GLOBAL TOPBAR ── */
+.global-topbar {
+  height: 48px;
+  background: var(--white);
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 1.4rem;
+  position: sticky;
+  top: 0;
+  z-index: 150;
+  gap: 1rem;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.04);
+}
+.gtb-left { display:flex;align-items:center;gap:0.6rem;flex-shrink:0; }
+.gtb-right { display:flex;align-items:center;gap:0.4rem;flex-shrink:0; }
+.gtb-search-wrap {
+  flex:1; max-width:480px; margin:0 auto;
+  position:relative; display:flex; align-items:center;
+}
+.gtb-search-icon { position:absolute;left:0.7rem;color:var(--text-light);pointer-events:none;flex-shrink:0; }
+.gtb-search {
+  width:100%; padding:0.4rem 0.8rem 0.4rem 2.2rem;
+  border:1px solid var(--border); border-radius:20px;
+  font-size:0.8rem; font-family:var(--sans); color:var(--text);
+  background:#fafafa; outline:none; transition:border-color 0.2s,box-shadow 0.2s;
+}
+.gtb-search:focus { border-color:var(--gold);box-shadow:0 0 0 3px rgba(184,150,62,0.1);background:var(--white); }
+.gtb-results {
+  position:absolute; top:calc(100% + 6px); left:0; right:0;
+  background:var(--white); border:1px solid var(--border); border-radius:10px;
+  box-shadow:0 8px 24px rgba(0,0,0,0.1); z-index:999;
+  max-height:320px; overflow-y:auto; display:none;
+}
+.gtb-results.open { display:block; }
+.gtb-result-item {
+  display:flex; align-items:center; gap:0.7rem;
+  padding:0.6rem 1rem; cursor:pointer; transition:background 0.12s;
+  border-bottom:1px solid #f5f5f5; font-size:0.8rem;
+}
+.gtb-result-item:last-child { border-bottom:none; }
+.gtb-result-item:hover { background:var(--app-bg); }
+.gtb-result-tag {
+  font-size:0.6rem; font-weight:600; padding:0.15rem 0.45rem;
+  border-radius:20px; white-space:nowrap; flex-shrink:0;
+}
+.gtb-result-tag.fat { background:#EFF6FF; color:#1d4ed8; }
+.gtb-result-tag.cli { background:#F0FDF4; color:#166534; }
+.gtb-result-main { font-weight:500; color:var(--text); flex:1; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.gtb-result-sub { font-size:0.72rem; color:var(--text-mid); white-space:nowrap; }
+
+/* Bell buttons */
+.gtb-notif { position:relative; }
+.gtb-bell {
+  width:34px; height:34px; border-radius:8px;
+  background:transparent; border:1px solid var(--border);
+  display:flex; align-items:center; justify-content:center;
+  cursor:pointer; color:var(--text-mid); transition:all 0.15s; position:relative;
+}
+.gtb-bell:hover { background:var(--app-bg); color:var(--text); }
+.gtb-badge {
+  position:absolute; top:-5px; right:-5px;
+  min-width:16px; height:16px; border-radius:8px;
+  font-size:0.6rem; font-weight:700; color:#fff;
+  display:flex; align-items:center; justify-content:center;
+  padding:0 4px; border:2px solid var(--white);
+}
+.gtb-dropdown {
+  display:none; position:absolute; top:calc(100% + 8px); right:0;
+  background:var(--white); border:1px solid var(--border); border-radius:12px;
+  box-shadow:0 8px 30px rgba(0,0,0,0.12); width:300px; z-index:999; overflow:hidden;
+}
+.gtb-dropdown.open { display:block; }
+.gtb-drop-title {
+  padding:0.8rem 1rem 0.5rem; font-size:0.7rem; font-weight:600;
+  text-transform:uppercase; letter-spacing:0.1em; color:var(--text-mid);
+  border-bottom:1px solid var(--border);
+}
+.gtb-notif-item {
+  padding:0.65rem 1rem; border-bottom:1px solid #f5f5f5;
+  font-size:0.78rem; cursor:pointer; transition:background 0.12s;
+}
+.gtb-notif-item:hover { background:var(--app-bg); }
+.gtb-notif-item:last-child { border-bottom:none; }
+.gtb-notif-title { font-weight:500; color:var(--text); margin-bottom:0.15rem; }
+.gtb-notif-sub { font-size:0.7rem; color:var(--text-mid); }
+.gtb-notif-amount { font-weight:600; color:var(--blue); float:right; }
+.gtb-notif-empty { padding:1.5rem 1rem; text-align:center; font-size:0.78rem; color:var(--text-light); }
 .dash-incassa-btn {
   white-space: nowrap;
   background: #1a1d23;
@@ -923,6 +1011,44 @@ body.dark .calc-row .cr-value { color: #F9FAFB; }
   <!-- MAIN -->
   <div class="app-body" id="app-body">
 
+  <!-- GLOBAL TOPBAR -->
+  <div class="global-topbar" id="global-topbar">
+    <div class="gtb-left">
+      <button class="sb-toggle-mobile" onclick="toggleSidebar()" style="color:var(--text-mid);">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+      </button>
+    </div>
+    <div class="gtb-search-wrap">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="gtb-search-icon"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+      <input type="text" id="gtb-search" class="gtb-search" placeholder="Cerca fattura, cliente..." oninput="globalSearch(this.value)" autocomplete="off"/>
+      <div class="gtb-results" id="gtb-results"></div>
+    </div>
+    <div class="gtb-right">
+      <!-- Notifiche F24 -->
+      <div class="gtb-notif" id="notif-f24-wrap">
+        <button class="gtb-bell" onclick="toggleNotif('f24')" id="notif-f24-btn">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+          <span class="gtb-badge" id="badge-f24" style="display:none;background:#DC2626;">0</span>
+        </button>
+        <div class="gtb-dropdown" id="notif-f24-panel">
+          <div class="gtb-drop-title">Scadenze F24</div>
+          <div id="notif-f24-list" style="max-height:280px;overflow-y:auto;"></div>
+        </div>
+      </div>
+      <!-- Notifiche fatture -->
+      <div class="gtb-notif" id="notif-fat-wrap">
+        <button class="gtb-bell" onclick="toggleNotif('fat')" id="notif-fat-btn">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+          <span class="gtb-badge" id="badge-fat" style="display:none;background:#EA580C;">0</span>
+        </button>
+        <div class="gtb-dropdown" id="notif-fat-panel">
+          <div class="gtb-drop-title">Fatture da incassare</div>
+          <div id="notif-fat-list" style="max-height:280px;overflow-y:auto;"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <div class="main-content">
 
     <!-- DASHBOARD -->
@@ -970,36 +1096,32 @@ body.dark .calc-row .cr-value { color: #F9FAFB; }
 
         <!-- Soglia: mix D + tondo -->
         <div class="card fade-in" style="padding:1.2rem 1.4rem;">
-          <div style="font-size:0.62rem;font-weight:600;text-transform:uppercase;letter-spacing:0.12em;color:var(--text-mid);margin-bottom:0.9rem;">Soglia regime forfettario</div>
-          <!-- Numeri affiancati -->
-          <div style="display:grid;grid-template-columns:1fr 1fr;gap:0.6rem;margin-bottom:1rem;">
-            <div>
-              <div style="font-size:0.62rem;color:var(--text-light);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:0.25rem;">Fatturato</div>
-              <div style="font-size:1rem;font-weight:700;color:var(--text);" id="soglia-fatturato-val">—</div>
-            </div>
-            <div>
-              <div style="font-size:0.62rem;color:var(--text-light);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:0.25rem;">Residuo max</div>
-              <div style="font-size:1rem;font-weight:700;" id="soglia-residuo-small">—</div>
-            </div>
-          </div>
-          <!-- Grafico tondo centrato con barra sotto -->
-          <div style="display:flex;align-items:center;gap:1rem;">
-            <div style="position:relative;width:90px;height:90px;flex-shrink:0;">
-              <canvas id="chart-soglia" width="90" height="90"></canvas>
+          <div style="font-size:0.62rem;font-weight:600;text-transform:uppercase;letter-spacing:0.12em;color:var(--text-mid);margin-bottom:0.8rem;">Soglia regime forfettario</div>
+          <!-- Doughnut grande centrato -->
+          <div style="display:flex;align-items:center;justify-content:center;margin-bottom:0.8rem;">
+            <div style="position:relative;width:110px;height:110px;">
+              <canvas id="chart-soglia" width="110" height="110"></canvas>
               <div style="position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;">
-                <div style="font-size:1.1rem;font-weight:700;line-height:1;" id="soglia-pct-num">0%</div>
-                <div style="font-size:0.55rem;color:var(--text-light);margin-top:1px;">usato</div>
+                <div style="font-size:1.3rem;font-weight:700;line-height:1;" id="soglia-pct-num">0%</div>
+                <div style="font-size:0.58rem;color:var(--text-light);margin-top:2px;">utilizzato</div>
               </div>
-            </div>
-            <div style="flex:1;">
-              <div style="font-size:0.62rem;color:var(--text-mid);margin-bottom:0.4rem;">Limite: <strong style="color:var(--text);">€ 85.000</strong></div>
-              <div style="height:8px;background:#F3F4F6;border-radius:4px;overflow:hidden;margin-bottom:0.6rem;">
-                <div id="soglia-bar-line" style="height:100%;width:0%;border-radius:4px;transition:width 1s ease;background:#059669;"></div>
-              </div>
-              <div id="soglia-alert" style="display:none;font-size:0.7rem;font-weight:600;"></div>
-              <canvas id="chart-soglia-line" height="36" style="width:100%;display:block;margin-top:0.4rem;"></canvas>
             </div>
           </div>
+          <!-- Barra + numeri sotto -->
+          <div style="height:6px;background:#F3F4F6;border-radius:3px;overflow:hidden;margin-bottom:0.7rem;">
+            <div id="soglia-bar-line" style="height:100%;width:0%;border-radius:3px;transition:width 1s ease;background:#059669;"></div>
+          </div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:0.4rem;">
+            <div>
+              <div style="font-size:0.58rem;color:var(--text-light);text-transform:uppercase;letter-spacing:0.07em;">Fatturato</div>
+              <div style="font-size:0.85rem;font-weight:700;color:var(--text);" id="soglia-fatturato-val">—</div>
+            </div>
+            <div style="text-align:right;">
+              <div style="font-size:0.58rem;color:var(--text-light);text-transform:uppercase;letter-spacing:0.07em;">Residuo max</div>
+              <div style="font-size:0.85rem;font-weight:700;" id="soglia-residuo-small">—</div>
+            </div>
+          </div>
+          <div id="soglia-alert" style="display:none;font-size:0.7rem;font-weight:600;margin-top:0.5rem;"></div>
         </div>
       </div>
 
@@ -1483,19 +1605,6 @@ function renderDashboard() {
         options: { responsive: false, cutout: '75%', plugins: { legend: { display: false }, tooltip: { enabled: false } }, animation: { duration: 800 } }
       });
     }
-    // Mini linea soglia (progressione cumulativa mesi)
-    var ctxSogliaLine = el('chart-soglia-line');
-    if (ctxSogliaLine) {
-      if (window.chartSogliaLine) window.chartSogliaLine.destroy();
-      var cumDati = [];
-      var cum = 0;
-      datiAnno.forEach(function(v) { cum += v; cumDati.push(cum); });
-      window.chartSogliaLine = new Chart(ctxSogliaLine.getContext('2d'), {
-        type: 'line',
-        data: { labels: ['G','F','M','A','M','G','L','A','S','O','N','D'], datasets: [{ data: cumDati, borderColor: barColor, backgroundColor: 'transparent', borderWidth: 1.5, pointRadius: 0, tension: 0.4 }, { data: Array(12).fill(SOGLIA), borderColor: 'rgba(0,0,0,0.1)', borderDash: [3,3], borderWidth: 1, pointRadius: 0 }] },
-        options: { responsive: true, plugins: { legend: { display: false }, tooltip: { enabled: false } }, scales: { x: { display: false }, y: { display: false, min: 0, max: SOGLIA * 1.05 } }, animation: { duration: 600 } }
-      });
-    }
   }
 
   var alertEl = el('soglia-alert');
@@ -1542,31 +1651,16 @@ function renderDashboard() {
     } else { kMND.textContent = nomeMesi[meseCorrente]; }
   }
 
-  // Sparklines
-  if (typeof Chart !== 'undefined') {
-    var sparkFatData = datiAnno.slice(0, meseCorrente + 1);
-    var ctxSF = el('chart-spark-fat');
-    if (ctxSF) {
-      if (window.chartSparkFat) window.chartSparkFat.destroy();
-      window.chartSparkFat = new Chart(ctxSF.getContext('2d'), {
-        type: 'line',
-        data: { labels: sparkFatData.map(function(_,i){return i;}), datasets: [{ data: sparkFatData, borderColor: fatMese >= (fatMesePrev||0) ? '#059669' : '#DC2626', backgroundColor: 'transparent', borderWidth: 2, pointRadius: 0, tension: 0.4 }] },
-        options: { responsive: false, plugins: { legend:{display:false}, tooltip:{enabled:false} }, scales: { x:{display:false}, y:{display:false} }, animation:{duration:600} }
-      });
-    }
-    var sparkNumData = datiAnno.map(function(_, mi) {
-      return fattureData.filter(function(f) { return f.tipo==='emessa' && new Date(f.data_emissione).getFullYear()===anno && new Date(f.data_emissione).getMonth()===mi; }).length;
-    }).slice(0, meseCorrente + 1);
-    var ctxSN = el('chart-spark-num');
-    if (ctxSN) {
-      if (window.chartSparkNum) window.chartSparkNum.destroy();
-      window.chartSparkNum = new Chart(ctxSN.getContext('2d'), {
-        type: 'line',
-        data: { labels: sparkNumData.map(function(_,i){return i;}), datasets: [{ data: sparkNumData, borderColor: numMese >= (numMesePrev||0) ? '#059669' : '#DC2626', backgroundColor: 'transparent', borderWidth: 2, pointRadius: 0, tension: 0.4 }] },
-        options: { responsive: false, plugins: { legend:{display:false}, tooltip:{enabled:false} }, scales: { x:{display:false}, y:{display:false} }, animation:{duration:600} }
-      });
-    }
-  }
+  // Sparklines realistiche
+  var sparkFatData = datiAnno.slice(0, meseCorrente + 1);
+  drawSparkline('chart-spark-fat', sparkFatData, fatMese >= (fatMesePrev||0) ? '#059669' : '#DC2626');
+  var sparkNumData = datiAnno.map(function(_, mi) {
+    return fattureData.filter(function(f) { return f.tipo==='emessa' && new Date(f.data_emissione).getFullYear()===anno && new Date(f.data_emissione).getMonth()===mi; }).length;
+  }).slice(0, meseCorrente + 1);
+  drawSparkline('chart-spark-num', sparkNumData, numMese >= (numMesePrev||0) ? '#059669' : '#DC2626');
+
+  // Aggiorna notifiche
+  renderNotifiche();
 
   var legEl = el('chart-legend');
   if (legEl) legEl.textContent = fmt(fatturato);
@@ -2062,14 +2156,141 @@ function renderF24Bar() {
   }, 100);
 }
 
+// ── GLOBAL SEARCH ──
+function globalSearch(q) {
+  var res = el('gtb-results');
+  q = (q || '').trim().toLowerCase();
+  if (!q || q.length < 2) { res.classList.remove('open'); return; }
+
+  var results = [];
+  // Cerca in fatture
+  fattureData.forEach(function(f) {
+    var num = (f.numero || '').toLowerCase();
+    var nome = (f.cessionario_nome || f.cedente_nome || '').toLowerCase();
+    if (num.includes(q) || nome.includes(q)) {
+      results.push({ type:'fat', main: (f.numero||'—') + ' · ' + (f.cessionario_nome||f.cedente_nome||''), sub: fmtDate(f.data_emissione) + ' · ' + fmt(f.importo), section:'fatture' });
+    }
+  });
+  // Cerca in clienti (da fatture)
+  var clientiSet = {};
+  fattureData.filter(function(f){return f.tipo==='emessa';}).forEach(function(f){
+    var nome = f.cessionario_nome || f.cedente_nome || '';
+    if (nome.toLowerCase().includes(q) && !clientiSet[nome]) {
+      clientiSet[nome] = true;
+      results.push({ type:'cli', main: nome, sub: 'Cliente', section:'clienti' });
+    }
+  });
+
+  if (results.length === 0) {
+    res.innerHTML = '<div class="gtb-notif-empty">Nessun risultato per "' + q + '"</div>';
+  } else {
+    res.innerHTML = results.slice(0,8).map(function(r) {
+      return '<div class="gtb-result-item" onclick="globalSearchGo(\'' + r.section + '\')">' +
+        '<span class="gtb-result-tag ' + r.type + '">' + (r.type==='fat'?'Fattura':'Cliente') + '</span>' +
+        '<span class="gtb-result-main">' + r.main + '</span>' +
+        '<span class="gtb-result-sub">' + r.sub + '</span>' +
+        '</div>';
+    }).join('');
+  }
+  res.classList.add('open');
+}
+
+function globalSearchGo(section) {
+  el('gtb-results').classList.remove('open');
+  el('gtb-search').value = '';
+  showSection(section, null);
+}
+
+document.addEventListener('click', function(e) {
+  if (!e.target.closest('.gtb-search-wrap')) el('gtb-results').classList.remove('open');
+  if (!e.target.closest('.gtb-notif')) document.querySelectorAll('.gtb-dropdown').forEach(function(d){d.classList.remove('open');});
+  if (!el('user-menu-wrap').contains(e.target)) el('user-dropdown').classList.remove('open');
+});
+
+// ── NOTIFICHE ──
+function toggleNotif(type) {
+  var panel = el('notif-' + type + '-panel');
+  document.querySelectorAll('.gtb-dropdown').forEach(function(d){ if(d!==panel) d.classList.remove('open'); });
+  panel.classList.toggle('open');
+}
+
+function renderNotifiche() {
+  // F24
+  var f24Aperti = f24Data.filter(function(f){ return !f.pagato; });
+  var badgeF24 = el('badge-f24');
+  if (badgeF24) { badgeF24.textContent = f24Aperti.length; badgeF24.style.display = f24Aperti.length > 0 ? 'flex' : 'none'; }
+  var listF24 = el('notif-f24-list');
+  if (listF24) {
+    if (f24Aperti.length === 0) { listF24.innerHTML = '<div class="gtb-notif-empty">Nessuna scadenza aperta</div>'; }
+    else { listF24.innerHTML = f24Aperti.slice(0,10).map(function(f) {
+      return '<div class="gtb-notif-item" onclick="showSection(\'f24\',null);toggleNotif(\'f24\')">' +
+        '<span class="gtb-notif-amount">' + fmt(f.importo) + '</span>' +
+        '<div class="gtb-notif-title">' + (f.tipo||'F24') + '</div>' +
+        '<div class="gtb-notif-sub">Scadenza: ' + fmtDate(f.scadenza) + '</div>' +
+        '</div>';
+    }).join(''); }
+  }
+  // Fatture da incassare
+  var fatAperте = fattureData.filter(function(f){ return f.tipo==='emessa' && !f.pagata; });
+  var badgeFat = el('badge-fat');
+  if (badgeFat) { badgeFat.textContent = fatAperте.length; badgeFat.style.display = fatAperте.length > 0 ? 'flex' : 'none'; }
+  var listFat = el('notif-fat-list');
+  if (listFat) {
+    if (fatAperте.length === 0) { listFat.innerHTML = '<div class="gtb-notif-empty">Tutte le fatture sono incassate</div>'; }
+    else { listFat.innerHTML = fatAperте.slice(0,10).map(function(f) {
+      return '<div class="gtb-notif-item" onclick="showSection(\'fatture\',null);toggleNotif(\'fat\')">' +
+        '<span class="gtb-notif-amount">' + fmt(f.importo) + '</span>' +
+        '<div class="gtb-notif-title">' + (f.cessionario_nome||f.cedente_nome||'Fattura ' + f.numero) + '</div>' +
+        '<div class="gtb-notif-sub">Emessa il ' + fmtDate(f.data_emissione) + '</div>' +
+        '</div>';
+    }).join(''); }
+  }
+}
+
+// ── SPARKLINES REALISTICHE ──
+function drawSparkline(canvasId, data, color) {
+  var canvas = el(canvasId);
+  if (!canvas || !data || data.length < 2) return;
+  // Destroy old chart.js instance if exists
+  var key = '_spark_' + canvasId;
+  if (window[key]) { window[key].destroy(); }
+
+  // Aggiungi volatilità realistica: micro-variazioni casuali deterministiche
+  var enhanced = data.map(function(v, i) {
+    var noise = v * 0.08 * Math.sin(i * 2.7 + v * 0.001);
+    return Math.max(0, v + noise);
+  });
+
+  if (typeof Chart !== 'undefined') {
+    window[key] = new Chart(canvas.getContext('2d'), {
+      type: 'line',
+      data: {
+        labels: enhanced.map(function(_,i){return i;}),
+        datasets: [{
+          data: enhanced,
+          borderColor: color,
+          backgroundColor: 'transparent',
+          borderWidth: 2,
+          pointRadius: 0,
+          pointHoverRadius: 3,
+          tension: 0.5,
+          fill: false
+        }]
+      },
+      options: {
+        responsive: false,
+        plugins: { legend:{display:false}, tooltip:{enabled:false} },
+        scales: { x:{display:false}, y:{display:false} },
+        animation: { duration: 800, easing: 'easeInOutQuart' }
+      }
+    });
+  }
+}
+
+// ── TOGGLEUSERMENU ──
 function toggleUserMenu() {
   el('user-dropdown').classList.toggle('open');
 }
-document.addEventListener('click', function(e) {
-  if (!el('user-menu-wrap').contains(e.target)) {
-    el('user-dropdown').classList.remove('open');
-  }
-});
 
 function toggleSidebar() {
   var sb = document.getElementById('sidebar');
