@@ -1200,6 +1200,38 @@ body.dark .calc-row .cr-value { color: #F9FAFB; }
         </div>
       </div>
 
+      <!-- Heatmap fatturato giornaliero -->
+      <div class="card fade-in" style="margin-bottom:1rem;">
+        <div class="card-header">
+          <h3>Attività di fatturazione</h3>
+          <span style="font-size:0.75rem;color:rgba(255,255,255,0.5);">ogni cella = 1 giorno</span>
+        </div>
+        <div style="padding:0.8rem 1.2rem 1rem;overflow-x:auto;">
+          <div id="heatmap-container"></div>
+        </div>
+      </div>
+
+      <!-- Fatture a rischio + Record personali -->
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;margin-bottom:1rem;">
+        <!-- Fatture a rischio -->
+        <div class="card fade-in" style="display:flex;flex-direction:column;max-height:260px;">
+          <div class="card-header">
+            <h3>⚠ Fatture a rischio</h3>
+            <span id="rischio-count" style="font-size:0.75rem;color:rgba(255,255,255,0.5);"></span>
+          </div>
+          <div id="fatture-rischio-body" style="overflow-y:auto;flex:1;">
+            <div class="loading-spinner"><div class="spinner"></div> Caricamento...</div>
+          </div>
+        </div>
+        <!-- Record personali -->
+        <div class="card fade-in" style="display:flex;flex-direction:column;max-height:260px;">
+          <div class="card-header"><h3>🏆 Record personali</h3></div>
+          <div id="record-body" style="padding:0.8rem 1rem;display:flex;flex-direction:column;gap:0.6rem;overflow-y:auto;flex:1;">
+            <div class="loading-spinner"><div class="spinner"></div> Caricamento...</div>
+          </div>
+        </div>
+      </div>
+
       <!-- KPI F24 (prima) + Contributi (dopo) — invertiti -->
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;margin-bottom:1rem;">
         <div class="kpi-card red clickable" onclick="showSection('f24',event)" title="Vai a F24">
@@ -1262,9 +1294,9 @@ body.dark .calc-row .cr-value { color: #F9FAFB; }
         <div class="kpi-card" style="border-top:3px solid #7C3AED;"><div class="kpi-label">N° fatture</div><div class="kpi-value" id="det-nfat">—</div><div class="kpi-sub">emesse anno</div></div>
       </div>
       <!-- Info row 2 — metriche avanzate -->
-      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:0.8rem;margin-bottom:1rem;">
+      <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:0.8rem;margin-bottom:1rem;">
         <div class="kpi-card" style="border-top:3px solid #0891B2;">
-          <div class="kpi-label">Incidenza sul fatturato</div>
+          <div class="kpi-label">Incidenza fatturato</div>
           <div class="kpi-value" id="det-incidenza">—</div>
           <div class="kpi-sub" id="det-incidenza-sub">% sul totale anno</div>
         </div>
@@ -1277,6 +1309,11 @@ body.dark .calc-row .cr-value { color: #F9FAFB; }
           <div class="kpi-label">Media per fattura</div>
           <div class="kpi-value" id="det-media-fat">—</div>
           <div class="kpi-sub" id="det-media-sub">importo medio</div>
+        </div>
+        <div class="kpi-card" style="border-top:3px solid #7C3AED;">
+          <div class="kpi-label">Velocità incasso</div>
+          <div class="kpi-value" id="det-velocita">—</div>
+          <div class="kpi-sub" id="det-velocita-sub">giorni medi</div>
         </div>
       </div>
       <!-- Grafico mensile cliente -->
@@ -1724,6 +1761,9 @@ function renderDashboard() {
 
   // Aggiorna notifiche
   renderNotifiche();
+  renderHeatmap();
+  renderFattureRischio();
+  renderRecord();
 
   var legEl = el('chart-legend');
   if (legEl) legEl.textContent = fmt(fatturato);
@@ -2218,6 +2258,181 @@ function renderFattureChart() {
   }
 }
 
+// ── HEATMAP FATTURAZIONE ──
+function renderHeatmap() {
+  var container = el('heatmap-container');
+  if (!container) return;
+  var anno = new Date().getFullYear();
+
+  // Mappa giorno -> importo
+  var dayMap = {};
+  fattureData.filter(function(f){ return f.tipo==='emessa' && new Date(f.data_emissione).getFullYear()===anno; }).forEach(function(f){
+    var d = f.data_emissione.slice(0,10);
+    dayMap[d] = (dayMap[d]||0) + parseFloat(f.importo||0);
+  });
+
+  var maxVal = Math.max.apply(null, Object.values(dayMap).concat([1]));
+  var mesiNomi = ['Gen','Feb','Mar','Apr','Mag','Giu','Lug','Ago','Set','Ott','Nov','Dic'];
+  var oggi = new Date();
+
+  var html = '<div style="display:flex;gap:3px;align-items:flex-start;">';
+  // Etichette giorni settimana
+  html += '<div style="display:flex;flex-direction:column;gap:1px;padding-top:18px;margin-right:2px;">';
+  ['L','M','M','G','V','S','D'].forEach(function(g){ html += '<div style="height:11px;font-size:0.55rem;color:var(--text-light);line-height:11px;">' + g + '</div>'; });
+  html += '</div>';
+
+  // Colonne per settimana
+  var startDate = new Date(anno, 0, 1);
+  // Partenza da lunedì
+  var startDay = startDate.getDay() || 7;
+  var offsetDays = startDay - 1;
+  var startWeek = new Date(startDate);
+  startWeek.setDate(startWeek.getDate() - offsetDays);
+
+  var currentDate = new Date(startWeek);
+  var prevMonth = -1;
+
+  while (currentDate.getFullYear() <= anno) {
+    html += '<div style="display:flex;flex-direction:column;gap:1px;">';
+    // Etichetta mese sopra prima settimana del mese
+    var weekMonth = -1;
+    for (var wd = 0; wd < 7; wd++) {
+      var d = new Date(currentDate); d.setDate(d.getDate() + wd);
+      if (d.getFullYear() === anno && d.getMonth() !== prevMonth && d.getDate() <= 7) { weekMonth = d.getMonth(); prevMonth = d.getMonth(); }
+    }
+    html += '<div style="height:14px;font-size:0.58rem;color:var(--text-mid);white-space:nowrap;">' + (weekMonth >= 0 ? mesiNomi[weekMonth] : '') + '</div>';
+    for (var di = 0; di < 7; di++) {
+      var cur = new Date(currentDate); cur.setDate(cur.getDate() + di);
+      var key = cur.toISOString().slice(0,10);
+      var isAnno = cur.getFullYear() === anno;
+      var isFuture = cur > oggi;
+      var val = dayMap[key] || 0;
+      var pct = isAnno && !isFuture && maxVal > 0 ? val/maxVal : 0;
+      var bg = !isAnno || isFuture ? '#f5f5f5' :
+               val === 0 ? '#EFF6FF' :
+               pct < 0.25 ? '#BFDBFE' :
+               pct < 0.5  ? '#60A5FA' :
+               pct < 0.75 ? '#2563EB' : '#1E3A8A';
+      var title = isAnno && val > 0 ? key + ': ' + fmt(val) : key;
+      html += '<div title="' + title + '" style="width:11px;height:11px;background:' + bg + ';border-radius:2px;cursor:' + (val>0?'pointer':'default') + ';" onclick="' + (val>0 ? 'setFiltroMeseHeatmap(' + cur.getMonth() + ')' : '') + '"></div>';
+    }
+    html += '</div>';
+    currentDate.setDate(currentDate.getDate() + 7);
+    if (currentDate.getFullYear() > anno) break;
+  }
+  html += '</div>';
+
+  // Legenda
+  html += '<div style="display:flex;align-items:center;gap:4px;margin-top:6px;justify-content:flex-end;">';
+  html += '<span style="font-size:0.6rem;color:var(--text-light);">Meno</span>';
+  ['#EFF6FF','#BFDBFE','#60A5FA','#2563EB','#1E3A8A'].forEach(function(c){
+    html += '<div style="width:11px;height:11px;background:'+c+';border-radius:2px;"></div>';
+  });
+  html += '<span style="font-size:0.6rem;color:var(--text-light);">Di più</span></div>';
+
+  container.innerHTML = html;
+}
+
+function setFiltroMeseHeatmap(mese) {
+  showSection('fatture', null);
+  setTimeout(function(){ setFiltroMese(mese); }, 100);
+}
+
+// ── FATTURE A RISCHIO ──
+function renderFattureRischio() {
+  var oggi = new Date();
+  var soglie = [{ giorni: 120, label: '>120gg', colore: '#DC2626' }, { giorni: 90, label: '>90gg', colore: '#EA580C' }, { giorni: 60, label: '>60gg', colore: '#D97706' }];
+  var aRischio = fattureData.filter(function(f){
+    if (f.tipo !== 'emessa' || f.pagata) return false;
+    var gg = Math.floor((oggi - new Date(f.data_emissione)) / (1000*60*60*24));
+    return gg >= 60;
+  }).map(function(f){
+    var gg = Math.floor((oggi - new Date(f.data_emissione)) / (1000*60*60*24));
+    var s = gg >= 120 ? soglie[0] : gg >= 90 ? soglie[1] : soglie[2];
+    return { f: f, gg: gg, soglia: s };
+  }).sort(function(a,b){ return b.gg - a.gg; });
+
+  var rc = el('rischio-count');
+  if (rc) rc.textContent = aRischio.length + ' fattur' + (aRischio.length===1?'a':'e');
+
+  var body = el('fatture-rischio-body');
+  if (!body) return;
+  if (aRischio.length === 0) {
+    body.innerHTML = '<div style="padding:1.2rem;text-align:center;font-size:0.78rem;color:var(--text-light);">✓ Nessuna fattura a rischio</div>';
+    return;
+  }
+  body.innerHTML = '<table class="data-table">' +
+    '<thead style="position:sticky;top:0;z-index:1;"><tr><th>N°</th><th>Cliente</th><th>Importo</th><th>Attesa</th></tr></thead><tbody>' +
+    aRischio.map(function(r){
+      var cp = (r.f.cessionario_nome || r.f.cedente_nome || '—');
+      if (cp.length > 16) cp = cp.slice(0,14) + '…';
+      return '<tr>' +
+        '<td class="mono" style="font-size:0.72rem;">' + (r.f.numero||'—') + '</td>' +
+        '<td style="font-size:0.78rem;font-weight:500;">' + cp + '</td>' +
+        '<td class="amount" style="font-size:0.78rem;">' + fmt(r.f.importo) + '</td>' +
+        '<td><span style="font-size:0.68rem;font-weight:700;color:' + r.soglia.colore + ';background:' + r.soglia.colore + '18;padding:0.15rem 0.4rem;border-radius:20px;">' + r.gg + 'gg</span></td>' +
+        '</tr>';
+    }).join('') + '</tbody></table>';
+}
+
+// ── RECORD PERSONALI ──
+function renderRecord() {
+  var body = el('record-body');
+  if (!body) return;
+  var anno = new Date().getFullYear();
+  var emesse = fattureData.filter(function(f){ return f.tipo==='emessa'; });
+  if (emesse.length === 0) { body.innerHTML = '<div style="font-size:0.78rem;color:var(--text-light);text-align:center;padding:1rem;">Nessun dato disponibile</div>'; return; }
+
+  // Miglior mese di sempre
+  var meseMap = {};
+  emesse.forEach(function(f){
+    var d = new Date(f.data_emissione);
+    var key = d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0');
+    meseMap[key] = (meseMap[key]||0) + parseFloat(f.importo||0);
+  });
+  var mesiNomiBrevi = ['Gen','Feb','Mar','Apr','Mag','Giu','Lug','Ago','Set','Ott','Nov','Dic'];
+  var bestMeseKey = Object.keys(meseMap).sort(function(a,b){ return meseMap[b]-meseMap[a]; })[0];
+  var bestMeseVal = meseMap[bestMeseKey] || 0;
+  var bestMeseParts = bestMeseKey ? bestMeseKey.split('-') : ['—','1'];
+  var bestMeseLabel = mesiNomiBrevi[parseInt(bestMeseParts[1])-1] + ' ' + bestMeseParts[0];
+
+  // Miglior cliente
+  var clienteMap = {};
+  emesse.forEach(function(f){ var n=f.cessionario_nome||f.cedente_nome||'—'; clienteMap[n]=(clienteMap[n]||0)+parseFloat(f.importo||0); });
+  var bestClienteKey = Object.keys(clienteMap).sort(function(a,b){ return clienteMap[b]-clienteMap[a]; })[0];
+
+  // Fattura più grande
+  var bestFat = emesse.reduce(function(best,f){ return parseFloat(f.importo||0) > parseFloat(best.importo||0) ? f : best; }, emesse[0]);
+
+  // Anno migliore
+  var annoMap = {};
+  emesse.forEach(function(f){ var y=new Date(f.data_emissione).getFullYear(); annoMap[y]=(annoMap[y]||0)+parseFloat(f.importo||0); });
+  var bestAnnoKey = Object.keys(annoMap).sort(function(a,b){ return annoMap[b]-annoMap[a]; })[0];
+
+  // Anno corrente vs anno scorso
+  var fatAnno = emesse.filter(function(f){ return new Date(f.data_emissione).getFullYear()===anno; }).reduce(function(s,f){return s+parseFloat(f.importo||0);},0);
+  var fatAnnoPre = emesse.filter(function(f){ return new Date(f.data_emissione).getFullYear()===anno-1; }).reduce(function(s,f){return s+parseFloat(f.importo||0);},0);
+  var crescita = fatAnnoPre > 0 ? Math.round(((fatAnno-fatAnnoPre)/fatAnnoPre)*100) : null;
+
+  function recordRow(emoji, label, value, sub) {
+    return '<div style="display:flex;align-items:center;gap:0.6rem;padding:0.45rem 0;border-bottom:1px solid #f5f5f5;">' +
+      '<span style="font-size:1rem;flex-shrink:0;">' + emoji + '</span>' +
+      '<div style="flex:1;min-width:0;">' +
+        '<div style="font-size:0.68rem;color:var(--text-light);text-transform:uppercase;letter-spacing:0.06em;">' + label + '</div>' +
+        '<div style="font-size:0.85rem;font-weight:700;color:var(--text);">' + value + '</div>' +
+      '</div>' +
+      '<div style="font-size:0.68rem;color:var(--text-mid);text-align:right;flex-shrink:0;">' + sub + '</div>' +
+      '</div>';
+  }
+
+  body.innerHTML =
+    recordRow('🏆', 'Miglior mese', fmt(bestMeseVal), bestMeseLabel) +
+    recordRow('⭐', 'Miglior anno', fmt(annoMap[bestAnnoKey]||0), bestAnnoKey) +
+    recordRow('💎', 'Fattura più grande', fmt(bestFat.importo), fmtDate(bestFat.data_emissione)) +
+    recordRow('🤝', 'Cliente top', bestClienteKey ? (bestClienteKey.length>20?bestClienteKey.slice(0,18)+'…':bestClienteKey) : '—', fmt(clienteMap[bestClienteKey]||0)) +
+    (crescita !== null ? recordRow(crescita>=0?'📈':'📉', 'Crescita vs ' + (anno-1), (crescita>=0?'+':'')+crescita+'%', fmt(fatAnno) + ' vs ' + fmt(fatAnnoPre)) : '');
+}
+
 function renderF24Bar() {
   var totPagati = f24Data.filter(function(f){return f.pagato;}).reduce(function(s,f){return s+parseFloat(f.importo||0);},0);
   var totDaPagare = f24Data.filter(function(f){return !f.pagato;}).reduce(function(s,f){return s+parseFloat(f.importo||0);},0);
@@ -2359,10 +2574,12 @@ function showSection(id, ev, skipHistory) {
   if (id === 'fatture') renderFattureChart();
   if (id === 'f24') renderF24Bar();
   if (!skipHistory) {
-    var hash = '#' + id;
-    if (window.location.hash !== hash) {
-      window.history.pushState({ section: id }, '', hash);
-    }
+    try {
+      var hash = '#' + id;
+      if (window.location.hash !== hash) {
+        window.history.pushState({ section: id }, '', hash);
+      }
+    } catch(e) {}
   }
 }
 
@@ -2392,13 +2609,14 @@ window.addEventListener('popstate', function(e) {
 
 // Al caricamento, leggi hash se presente
 window.addEventListener('load', function() {
-  var hash = window.location.hash.replace('#', '');
-  if (hash && el('section-' + hash)) {
-    // Sostituisci lo state iniziale con la sezione corrente
-    window.history.replaceState({ section: hash }, '', '#' + hash);
-  } else {
-    window.history.replaceState({ section: 'dashboard' }, '', window.location.pathname);
-  }
+  try {
+    var hash = window.location.hash.replace('#', '');
+    if (hash && el('section-' + hash)) {
+      window.history.replaceState({ section: hash }, '', '#' + hash);
+    } else {
+      window.history.replaceState({ section: 'dashboard' }, '', window.location.pathname);
+    }
+  } catch(e) {}
 });
 
 function apriClienteDetail(nome) {
@@ -2416,8 +2634,24 @@ function apriClienteDetail(nome) {
   el('det-daincassare').textContent = fmt(totDaInc);
   el('det-nfat').textContent = fatAnno.length;
   var dtot = el('det-chart-tot'); if (dtot) dtot.textContent = fmt(totFat);
-
-  // ── KPI avanzate ──
+  // Velocità di incasso (giorni medi emissione → incasso)
+  var fatPagate = fatCliente.filter(function(f){ return f.pagata && f.data_incasso && f.data_emissione; });
+  var velEl = el('det-velocita');
+  var velSubEl = el('det-velocita-sub');
+  if (fatPagate.length > 0) {
+    var totGiorni = fatPagate.reduce(function(s,f){
+      return s + Math.max(0, Math.floor((new Date(f.data_incasso)-new Date(f.data_emissione))/(1000*60*60*24)));
+    }, 0);
+    var mediaGiorni = Math.round(totGiorni / fatPagate.length);
+    if (velEl) {
+      velEl.textContent = mediaGiorni + 'gg';
+      velEl.style.color = mediaGiorni <= 30 ? '#059669' : mediaGiorni <= 60 ? '#EA580C' : '#DC2626';
+    }
+    if (velSubEl) velSubEl.textContent = 'su ' + fatPagate.length + ' pagate';
+  } else {
+    if (velEl) velEl.textContent = '—';
+    if (velSubEl) velSubEl.textContent = 'nessun incasso';
+  }
   // Incidenza sul fatturato totale anno
   var totFatturatoAnno = fattureData.filter(function(f){ return f.tipo==='emessa' && new Date(f.data_emissione).getFullYear()===anno; }).reduce(function(s,f){return s+parseFloat(f.importo||0);},0);
   var incidenza = totFatturatoAnno > 0 ? Math.round((totFat/totFatturatoAnno)*100) : 0;
