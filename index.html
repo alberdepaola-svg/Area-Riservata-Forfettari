@@ -954,8 +954,8 @@ body.dark .calc-row .cr-value { color: #F9FAFB; }
         </div>
       </div>
 
-      <!-- Grafico fatturato + soglia affiancati -->
-      <div style="display:grid;grid-template-columns:1fr 280px;gap:1.2rem;margin-bottom:1.2rem;">
+      <!-- Grafico fatturato + soglia ibrida -->
+      <div style="display:grid;grid-template-columns:1fr 300px;gap:1.2rem;margin-bottom:1rem;">
         <div class="card fade-in">
           <div class="card-header">
             <h3>Andamento fatturato mensile</h3>
@@ -965,20 +965,83 @@ body.dark .calc-row .cr-value { color: #F9FAFB; }
             <canvas id="chart-fatturato" height="80"></canvas>
           </div>
         </div>
-        <div class="card fade-in" style="display:flex;flex-direction:column;align-items:center;justify-content:center;padding:1.4rem;text-align:center;">
-          <div style="font-size:0.7rem;font-weight:600;text-transform:uppercase;letter-spacing:0.1em;color:var(--text-mid);margin-bottom:0.8rem;">Soglia forfettaria</div>
-          <div style="position:relative;width:140px;height:140px;">
-            <canvas id="chart-soglia" width="140" height="140"></canvas>
-            <div style="position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;">
-              <div style="font-size:1.4rem;font-weight:700;color:var(--text);line-height:1;" id="soglia-pct-num">0%</div>
-              <div style="font-size:0.68rem;color:var(--text-light);margin-top:0.2rem;">utilizzato</div>
+
+        <!-- Soglia: mix D + tondo -->
+        <div class="card fade-in" style="padding:1.2rem 1.4rem;">
+          <div style="font-size:0.62rem;font-weight:600;text-transform:uppercase;letter-spacing:0.12em;color:var(--text-mid);margin-bottom:0.9rem;">Soglia regime forfettario</div>
+          <!-- Numeri affiancati -->
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:0.6rem;margin-bottom:1rem;">
+            <div>
+              <div style="font-size:0.62rem;color:var(--text-light);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:0.25rem;">Fatturato</div>
+              <div style="font-size:1rem;font-weight:700;color:var(--text);" id="soglia-fatturato-val">—</div>
+            </div>
+            <div>
+              <div style="font-size:0.62rem;color:var(--text-light);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:0.25rem;">Residuo max</div>
+              <div style="font-size:1rem;font-weight:700;" id="soglia-residuo-small">—</div>
             </div>
           </div>
-          <div style="margin-top:0.8rem;">
-            <div style="font-size:0.78rem;font-weight:600;color:var(--text);" id="soglia-residuo-small">—</div>
-            <div style="font-size:0.68rem;color:var(--text-light);">residuo max fatturabile</div>
+          <!-- Grafico tondo centrato con barra sotto -->
+          <div style="display:flex;align-items:center;gap:1rem;">
+            <div style="position:relative;width:90px;height:90px;flex-shrink:0;">
+              <canvas id="chart-soglia" width="90" height="90"></canvas>
+              <div style="position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;">
+                <div style="font-size:1.1rem;font-weight:700;line-height:1;" id="soglia-pct-num">0%</div>
+                <div style="font-size:0.55rem;color:var(--text-light);margin-top:1px;">usato</div>
+              </div>
+            </div>
+            <div style="flex:1;">
+              <div style="font-size:0.62rem;color:var(--text-mid);margin-bottom:0.4rem;">Limite: <strong style="color:var(--text);">€ 85.000</strong></div>
+              <div style="height:8px;background:#F3F4F6;border-radius:4px;overflow:hidden;margin-bottom:0.6rem;">
+                <div id="soglia-bar-line" style="height:100%;width:0%;border-radius:4px;transition:width 1s ease;background:#059669;"></div>
+              </div>
+              <div id="soglia-alert" style="display:none;font-size:0.7rem;font-weight:600;"></div>
+              <canvas id="chart-soglia-line" height="36" style="width:100%;display:block;margin-top:0.4rem;"></canvas>
+            </div>
           </div>
-          <div id="soglia-alert" style="margin-top:0.6rem;display:none;font-size:0.72rem;"></div>
+        </div>
+      </div>
+
+      <!-- KPI mese corrente: fatturato mese + ft emesse mese -->
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;margin-bottom:1rem;">
+        <div class="card fade-in" style="padding:1rem 1.2rem;">
+          <div style="display:flex;justify-content:space-between;align-items:flex-start;">
+            <div>
+              <div style="display:flex;align-items:center;gap:0.4rem;margin-bottom:0.4rem;">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="var(--text-mid)" stroke-width="2"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+                <div style="font-size:0.62rem;font-weight:600;text-transform:uppercase;letter-spacing:0.1em;color:var(--text-mid);">Fatturato del mese</div>
+              </div>
+              <div style="font-size:1.4rem;font-weight:700;color:var(--text);letter-spacing:-0.02em;" id="kpi-mese-fat">—</div>
+              <div style="font-size:0.72rem;margin-top:0.25rem;" id="kpi-mese-fat-delta"></div>
+            </div>
+            <canvas id="chart-spark-fat" width="80" height="40" style="margin-top:0.2rem;"></canvas>
+          </div>
+        </div>
+        <div class="card fade-in" style="padding:1rem 1.2rem;">
+          <div style="display:flex;justify-content:space-between;align-items:flex-start;">
+            <div>
+              <div style="display:flex;align-items:center;gap:0.4rem;margin-bottom:0.4rem;">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="var(--text-mid)" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+                <div style="font-size:0.62rem;font-weight:600;text-transform:uppercase;letter-spacing:0.1em;color:var(--text-mid);">Fatture emesse (mese)</div>
+              </div>
+              <div style="font-size:1.4rem;font-weight:700;color:var(--text);letter-spacing:-0.02em;" id="kpi-mese-num">—</div>
+              <div style="font-size:0.72rem;margin-top:0.25rem;" id="kpi-mese-num-delta"></div>
+            </div>
+            <canvas id="chart-spark-num" width="80" height="40" style="margin-top:0.2rem;"></canvas>
+          </div>
+        </div>
+      </div>
+
+      <!-- KPI Contributi + F24 separate, stile kpi-card -->
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;margin-bottom:1rem;">
+        <div class="kpi-card" style="border-top:3px solid #0891B2;">
+          <div class="kpi-label">Contributi versati</div>
+          <div class="kpi-value" id="kpi-contributi">—</div>
+          <div class="kpi-sub">anno corrente</div>
+        </div>
+        <div class="kpi-card red">
+          <div class="kpi-label">F24 da pagare</div>
+          <div class="kpi-value" id="kpi-f24">—</div>
+          <div class="kpi-sub">scadenze aperte</div>
         </div>
       </div>
 
@@ -1014,23 +1077,10 @@ body.dark .calc-row .cr-value { color: #F9FAFB; }
 
       </div>
 
-      <!-- F24 — full width -->
-      <div class="card fade-in">
+      <!-- F24 scadenze senza KPI dentro -->
+      <div class="card fade-in" style="margin-top:1rem;">
         <div class="card-header">
           <h3>Prossime scadenze F24</h3>
-        </div>
-        <!-- KPI contributi + F24 sopra la tabella -->
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:0;border-bottom:1px solid var(--border);">
-          <div style="padding:0.8rem 1.2rem;border-right:1px solid var(--border);">
-            <div class="kpi-label" style="margin-bottom:0.2rem;">Contributi versati</div>
-            <div class="kpi-value" id="kpi-contributi" style="font-size:1rem;">—</div>
-            <div class="kpi-sub">anno corrente</div>
-          </div>
-          <div style="padding:0.8rem 1.2rem;">
-            <div class="kpi-label" style="margin-bottom:0.2rem;">F24 da pagare</div>
-            <div class="kpi-value" id="kpi-f24" style="font-size:1rem;color:var(--red);">—</div>
-            <div class="kpi-sub">scadenze aperte</div>
-          </div>
         </div>
         <div id="dash-f24-body">
           <div class="loading-spinner"><div class="spinner"></div> Caricamento...</div>
@@ -1038,7 +1088,7 @@ body.dark .calc-row .cr-value { color: #F9FAFB; }
       </div>
 
       <!-- Fatturato per cliente — altezza fissa con scroll interno -->
-      <div class="card fade-in">
+      <div class="card fade-in" style="margin-top:1rem;">
         <div class="card-header">
           <h3>Fatturato per cliente</h3>
           <span id="fatturato-clienti-tot" style="font-size:0.82rem;"></span>
@@ -1392,7 +1442,7 @@ function renderDashboard() {
   el('kpi-imposta-sub').textContent = 'aliquota ' + aliquota + '%';
   el('kpi-f24').textContent = f24Aperti;
 
-  // ── Grafico soglia circolare ──
+  // ── Grafico soglia ──
   var SOGLIA = 85000;
   var residuo = Math.max(0, SOGLIA - fatturato);
   var pct = Math.min(100, Math.round((fatturato / SOGLIA) * 100));
@@ -1402,7 +1452,12 @@ function renderDashboard() {
   if (pctEl) { pctEl.textContent = pct + '%'; pctEl.style.color = barColor; }
   var residuoSmEl = el('soglia-residuo-small');
   if (residuoSmEl) { residuoSmEl.textContent = fmt(residuo); residuoSmEl.style.color = barColor; }
+  var sfatEl = el('soglia-fatturato-val');
+  if (sfatEl) sfatEl.textContent = fmt(fatturato);
+  var barLine = el('soglia-bar-line');
+  if (barLine) { barLine.style.width = pct + '%'; barLine.style.background = barColor; }
 
+  // Doughnut soglia
   if (typeof Chart !== 'undefined') {
     var ctxSoglia = el('chart-soglia');
     if (ctxSoglia) {
@@ -1410,16 +1465,92 @@ function renderDashboard() {
       window.chartSoglia = new Chart(ctxSoglia.getContext('2d'), {
         type: 'doughnut',
         data: { datasets: [{ data: [pct, 100 - pct], backgroundColor: [barColor, '#F3F4F6'], borderWidth: 0, hoverOffset: 0 }] },
-        options: { responsive: false, cutout: '78%', plugins: { legend: { display: false }, tooltip: { enabled: false } }, animation: { duration: 800 } }
+        options: { responsive: false, cutout: '75%', plugins: { legend: { display: false }, tooltip: { enabled: false } }, animation: { duration: 800 } }
+      });
+    }
+    // Mini linea soglia (progressione cumulativa mesi)
+    var ctxSogliaLine = el('chart-soglia-line');
+    if (ctxSogliaLine) {
+      if (window.chartSogliaLine) window.chartSogliaLine.destroy();
+      var cumDati = [];
+      var cum = 0;
+      datiAnno.forEach(function(v) { cum += v; cumDati.push(cum); });
+      window.chartSogliaLine = new Chart(ctxSogliaLine.getContext('2d'), {
+        type: 'line',
+        data: { labels: ['G','F','M','A','M','G','L','A','S','O','N','D'], datasets: [{ data: cumDati, borderColor: barColor, backgroundColor: 'transparent', borderWidth: 1.5, pointRadius: 0, tension: 0.4 }, { data: Array(12).fill(SOGLIA), borderColor: 'rgba(0,0,0,0.1)', borderDash: [3,3], borderWidth: 1, pointRadius: 0 }] },
+        options: { responsive: true, plugins: { legend: { display: false }, tooltip: { enabled: false } }, scales: { x: { display: false }, y: { display: false, min: 0, max: SOGLIA * 1.05 } }, animation: { duration: 600 } }
       });
     }
   }
 
   var alertEl = el('soglia-alert');
   if (alertEl) {
-    if (pct >= 100) { alertEl.style.display = 'block'; alertEl.innerHTML = '<span style="color:#DC2626;font-weight:600;">\u26a0 Soglia superata — contatta lo studio</span>'; }
-    else if (pct >= 90) { alertEl.style.display = 'block'; alertEl.innerHTML = '<span style="color:#EA580C;font-weight:600;">\u26a0 ' + pct + '% raggiunto</span>'; }
+    if (pct >= 100) { alertEl.style.display = 'block'; alertEl.innerHTML = '\u26a0 Soglia superata'; alertEl.style.color = '#DC2626'; }
+    else if (pct >= 90) { alertEl.style.display = 'block'; alertEl.innerHTML = '\u26a0 ' + pct + '% raggiunto'; alertEl.style.color = '#EA580C'; }
     else { alertEl.style.display = 'none'; }
+  }
+
+  // ── KPI mese corrente ──
+  var meseCorrente = new Date().getMonth();
+  var mesePrecedente = meseCorrente === 0 ? 11 : meseCorrente - 1;
+  var annoPrecedenteMese = meseCorrente === 0 ? anno - 1 : anno;
+
+  var fatMese = 0, fatMesePrev = 0, numMese = 0, numMesePrev = 0;
+  fattureData.filter(function(f) { return f.tipo === 'emessa'; }).forEach(function(f) {
+    var d = new Date(f.data_emissione);
+    var y = d.getFullYear(), m = d.getMonth();
+    var v = parseFloat(f.importo || 0);
+    if (y === anno && m === meseCorrente) { fatMese += v; numMese++; }
+    if (y === annoPrecedenteMese && m === mesePrecedente) { fatMesePrev += v; numMesePrev++; }
+  });
+
+  var nomeMesi = ['Gennaio','Febbraio','Marzo','Aprile','Maggio','Giugno','Luglio','Agosto','Settembre','Ottobre','Novembre','Dicembre'];
+  var deltaPct = fatMesePrev > 0 ? Math.round(((fatMese - fatMesePrev) / fatMesePrev) * 100) : null;
+  var deltaNum = numMesePrev > 0 ? numMese - numMesePrev : null;
+
+  var kMF = el('kpi-mese-fat');
+  if (kMF) kMF.textContent = fmt(fatMese);
+  var kMFD = el('kpi-mese-fat-delta');
+  if (kMFD) {
+    if (deltaPct !== null) {
+      var up = deltaPct >= 0;
+      kMFD.innerHTML = '<span style="color:' + (up ? '#059669' : '#DC2626') + ';font-weight:600;">' + (up ? '↑' : '↓') + ' ' + Math.abs(deltaPct) + '% vs mese prec.</span>';
+    } else { kMFD.textContent = nomeMesi[meseCorrente]; }
+  }
+  var kMN = el('kpi-mese-num');
+  if (kMN) kMN.textContent = numMese;
+  var kMND = el('kpi-mese-num-delta');
+  if (kMND) {
+    if (deltaNum !== null) {
+      var upN = deltaNum >= 0;
+      kMND.innerHTML = '<span style="color:' + (upN ? '#059669' : '#DC2626') + ';font-weight:600;">' + (upN ? '↑' : '↓') + ' ' + Math.abs(deltaNum) + ' vs mese prec.</span>';
+    } else { kMND.textContent = nomeMesi[meseCorrente]; }
+  }
+
+  // Sparklines
+  if (typeof Chart !== 'undefined') {
+    var sparkFatData = datiAnno.slice(0, meseCorrente + 1);
+    var ctxSF = el('chart-spark-fat');
+    if (ctxSF) {
+      if (window.chartSparkFat) window.chartSparkFat.destroy();
+      window.chartSparkFat = new Chart(ctxSF.getContext('2d'), {
+        type: 'line',
+        data: { labels: sparkFatData.map(function(_,i){return i;}), datasets: [{ data: sparkFatData, borderColor: fatMese >= (fatMesePrev||0) ? '#059669' : '#DC2626', backgroundColor: 'transparent', borderWidth: 2, pointRadius: 0, tension: 0.4 }] },
+        options: { responsive: false, plugins: { legend:{display:false}, tooltip:{enabled:false} }, scales: { x:{display:false}, y:{display:false} }, animation:{duration:600} }
+      });
+    }
+    var sparkNumData = datiAnno.map(function(_, mi) {
+      return fattureData.filter(function(f) { return f.tipo==='emessa' && new Date(f.data_emissione).getFullYear()===anno && new Date(f.data_emissione).getMonth()===mi; }).length;
+    }).slice(0, meseCorrente + 1);
+    var ctxSN = el('chart-spark-num');
+    if (ctxSN) {
+      if (window.chartSparkNum) window.chartSparkNum.destroy();
+      window.chartSparkNum = new Chart(ctxSN.getContext('2d'), {
+        type: 'line',
+        data: { labels: sparkNumData.map(function(_,i){return i;}), datasets: [{ data: sparkNumData, borderColor: numMese >= (numMesePrev||0) ? '#059669' : '#DC2626', backgroundColor: 'transparent', borderWidth: 2, pointRadius: 0, tension: 0.4 }] },
+        options: { responsive: false, plugins: { legend:{display:false}, tooltip:{enabled:false} }, scales: { x:{display:false}, y:{display:false} }, animation:{duration:600} }
+      });
+    }
   }
 
   var mesi = ['Gen','Feb','Mar','Apr','Mag','Giu','Lug','Ago','Set','Ott','Nov','Dic'];
