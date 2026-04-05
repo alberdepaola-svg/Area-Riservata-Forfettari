@@ -229,74 +229,220 @@ html, body { height: 100%; font-family: var(--sans); }
 }
 
 /* ════════════════════════════════════════
-   APP SHELL — stile Fiscozen chiaro
+   APP SHELL — Sidebar layout
 ════════════════════════════════════════ */
 #app {
   display: none;
   min-height: 100vh;
-  flex-direction: column;
+  flex-direction: row;
   background: var(--app-bg);
   color: var(--text);
 }
 
-/* Topbar */
-.topbar {
+/* ── SIDEBAR ── */
+:root { --sb-w: 220px; --sb-w-collapsed: 60px; }
+
+.sidebar {
+  width: var(--sb-w);
+  min-height: 100vh;
   background: var(--navy);
-  height: 60px;
+  display: flex;
+  flex-direction: column;
+  position: fixed;
+  top: 0; left: 0; bottom: 0;
+  z-index: 200;
+  transition: width 0.25s cubic-bezier(.4,0,.2,1);
+  overflow: hidden;
+  border-right: 1px solid rgba(184,150,62,0.2);
+}
+.sidebar.collapsed { width: var(--sb-w-collapsed); }
+.sidebar.collapsed .sb-label,
+.sidebar.collapsed .sb-brand-text,
+.sidebar.collapsed .sb-brand-text2,
+.sidebar.collapsed .sb-section-label,
+.sidebar.collapsed .sb-sub,
+.sidebar.collapsed .sb-user-info { opacity:0; pointer-events:none; width:0; overflow:hidden; }
+.sidebar.collapsed .sb-toggle svg { transform: rotate(180deg); }
+.sidebar.collapsed .sb-user { justify-content:center; }
+
+.sb-top {
   display: flex;
   align-items: center;
-  padding: 0 2rem;
-  border-bottom: 1px solid rgba(184,150,62,0.4);
+  justify-content: space-between;
+  padding: 1.1rem 0.9rem 1rem;
+  border-bottom: 1px solid rgba(255,255,255,0.06);
+  min-height: 60px;
+  flex-shrink: 0;
+}
+.sb-brand { display:flex; align-items:center; gap:0.7rem; overflow:hidden; }
+.sb-logo {
+  width: 32px; height: 32px;
+  background: linear-gradient(135deg, var(--gold) 0%, var(--gold-light) 100%);
+  border-radius: 8px;
+  display: flex; align-items: center; justify-content: center;
+  font-family: var(--display);
+  font-size: 1rem;
+  font-style: italic;
+  color: var(--navy);
+  font-weight: 600;
+  flex-shrink: 0;
+}
+.sb-brand-text { overflow:hidden; white-space:nowrap; transition: opacity 0.2s, width 0.25s; }
+.sb-name { font-family: var(--display); font-size: 0.9rem; color:#fff; font-weight:400; line-height:1.2; white-space:nowrap; }
+.sb-name span { color: var(--gold-light); font-style:italic; }
+.sb-sub { font-size: 0.62rem; color: rgba(255,255,255,0.3); letter-spacing:0.08em; text-transform:uppercase; margin-top:1px; }
+
+.sb-toggle {
+  background: rgba(255,255,255,0.06);
+  border: none;
+  color: rgba(255,255,255,0.4);
+  width: 26px; height: 26px;
+  border-radius: 6px;
+  cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0;
+  transition: all 0.2s;
+}
+.sb-toggle:hover { background: rgba(255,255,255,0.12); color: #fff; }
+.sb-toggle svg { transition: transform 0.25s; }
+
+.sb-section-label {
+  font-size: 0.58rem;
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: rgba(255,255,255,0.2);
+  padding: 1rem 1rem 0.4rem;
+  white-space: nowrap;
+  overflow: hidden;
+  transition: opacity 0.2s;
+}
+
+.sb-nav { flex: 1; padding: 0.3rem 0.5rem; overflow-y: auto; }
+
+.sb-item {
+  display: flex;
+  align-items: center;
+  gap: 0.7rem;
+  width: 100%;
+  padding: 0.55rem 0.8rem;
+  border: none;
+  background: transparent;
+  color: rgba(255,255,255,0.5);
+  border-radius: 8px;
+  cursor: pointer;
+  font-family: var(--sans);
+  font-size: 0.78rem;
+  font-weight: 400;
+  transition: all 0.15s;
+  white-space: nowrap;
+  text-align: left;
+  margin-bottom: 2px;
+}
+.sb-item:hover { background: rgba(255,255,255,0.07); color: rgba(255,255,255,0.85); }
+.sb-item.active {
+  background: rgba(184,150,62,0.15);
+  color: var(--gold-light);
+  font-weight: 500;
+  border-left: 2px solid var(--gold);
+  padding-left: calc(0.8rem - 2px);
+}
+.sb-item svg { flex-shrink: 0; }
+.sb-label { white-space: nowrap; overflow: hidden; transition: opacity 0.2s, width 0.25s; }
+
+.sb-bottom {
+  border-top: 1px solid rgba(255,255,255,0.06);
+  padding: 0.5rem;
+}
+.sb-user {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.6rem 0.5rem;
+  cursor: pointer;
+  border-radius: 8px;
+  transition: background 0.15s;
+  overflow: hidden;
+}
+.sb-user:hover { background: rgba(255,255,255,0.06); }
+.sb-avatar {
+  width: 30px; height: 30px;
+  background: var(--gold);
+  border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 0.65rem;
+  font-weight: 700;
+  color: var(--navy);
+  flex-shrink: 0;
+  cursor: pointer;
+}
+.sb-user-info { overflow: hidden; transition: opacity 0.2s, width 0.25s; }
+.sb-user-name { font-size: 0.75rem; color: rgba(255,255,255,0.8); font-weight: 500; white-space: nowrap; }
+.sb-user-role { font-size: 0.62rem; color: rgba(255,255,255,0.3); white-space: nowrap; }
+
+/* ── APP BODY ── */
+.app-body {
+  margin-left: var(--sb-w);
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  transition: margin-left 0.25s cubic-bezier(.4,0,.2,1);
+}
+.sidebar.collapsed ~ .app-body { margin-left: var(--sb-w-collapsed); }
+
+/* ── APP TOPBAR ── */
+.app-topbar {
+  height: 52px;
+  background: var(--white);
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 1.8rem;
   position: sticky;
   top: 0;
   z-index: 100;
-  box-shadow: 0 2px 12px rgba(0,0,0,0.15);
+  box-shadow: 0 1px 4px rgba(0,0,0,0.04);
 }
-.topbar-brand {
-  font-family: 'Cormorant Garamond', serif;
-  font-size: 1.1rem;
-  font-weight: 400;
-  color: var(--white);
-  letter-spacing: 0.03em;
-  flex-shrink: 0;
-  margin-right: 2.5rem;
-}
-.topbar-brand span { color: var(--gold-light); font-style: italic; }
-.nav-tabs {
-  display: flex;
-  gap: 0;
-  flex: 1;
-  height: 100%;
-  overflow-x: auto;
-}
-.nav-tab {
-  padding: 0 1.2rem;
-  height: 100%;
-  font-size: 0.75rem;
-  font-weight: 500;
-  letter-spacing: 0.12em;
+.app-topbar-left { display: flex; align-items: center; gap: 0.8rem; }
+.app-topbar-title {
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--text);
+  letter-spacing: 0.02em;
   text-transform: uppercase;
-  color: rgba(255,255,255,0.55);
-  cursor: pointer;
-  border-bottom: 2px solid transparent;
-  transition: all 0.15s;
-  white-space: nowrap;
+  font-size: 0.7rem;
+  letter-spacing: 0.12em;
+}
+.sb-toggle-mobile {
   background: none;
-  border-top: none;
-  border-left: none;
-  border-right: none;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  width: 30px; height: 30px;
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer;
+  color: var(--text-mid);
+  transition: all 0.15s;
+}
+.sb-toggle-mobile:hover { background: var(--app-bg); color: var(--text); }
+.app-topbar-right { display: flex; align-items: center; gap: 1rem; }
+.app-topbar-date { font-size: 0.72rem; color: var(--text-light); font-family: var(--mono); }
+.btn-logout-top {
+  font-size: 0.65rem;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--text-mid);
+  background: transparent;
+  border: 1px solid var(--border);
+  padding: 0.28rem 0.8rem;
+  border-radius: 6px;
+  cursor: pointer;
   font-family: var(--sans);
-  display: flex;
-  align-items: center;
+  transition: all 0.15s;
 }
-.nav-tab:hover { color: rgba(255,255,255,0.85); }
-.nav-tab.active { color: var(--gold-light); border-bottom-color: var(--gold); font-weight: 600; }
-.topbar-user {
-  display: flex;
-  align-items: center;
-  gap: 0.8rem;
-  margin-left: auto;
-}
+.btn-logout-top:hover { border-color: var(--red); color: var(--red); }
 .user-menu { position: relative; }
 .user-avatar {
   width: 34px; height: 34px;
@@ -391,11 +537,9 @@ html, body { height: 100%; font-family: var(--sans); }
 /* Main */
 .main-content {
   flex: 1;
-  padding: 2rem 2.5rem;
-  max-width: 1250px;
-  margin: 0 auto;
+  padding: 1.6rem 2rem 3rem;
+  max-width: 1300px;
   width: 100%;
-  padding-top: 2rem;
 }
 .section-page { display: none; }
 .section-page.active { display: block; }
@@ -709,30 +853,83 @@ body.dark .calc-row .cr-value { color: #F9FAFB; }
 
 <!-- APP -->
 <div id="app">
-  <div class="topbar">
-    <div class="topbar-brand">Studio <span>De Paola</span></div>
-    <div class="nav-tabs">
-      <button class="nav-tab active" onclick="showSection('dashboard',event)">Dashboard</button>
-      <button class="nav-tab" onclick="showSection('fatture',event)">Fatture</button>
-      <button class="nav-tab" onclick="showSection('f24',event)">F24</button>
-      <button class="nav-tab" onclick="showSection('clienti',event)">Clienti</button>
-    </div>
-    <div class="topbar-user">
-      <div class="user-menu" id="user-menu-wrap">
-        <div class="user-avatar" id="user-avatar" onclick="toggleUserMenu()">?</div>
-        <div class="user-dropdown" id="user-dropdown">
-          <div class="user-dropdown-name" id="user-dropdown-name"></div>
-          <div class="user-dropdown-email" id="user-dropdown-email"></div>
-          <div class="user-dropdown-divider"></div>
-          <button class="user-dropdown-item" onclick="showSection('profilo',event);toggleUserMenu()">Profilo</button>
-          <div class="user-dropdown-divider"></div>
-          <button class="user-dropdown-item user-dropdown-logout" onclick="doLogout()">Esci</button>
+
+  <!-- SIDEBAR -->
+  <div class="sidebar" id="sidebar">
+    <div class="sb-top">
+      <div class="sb-brand">
+        <div class="sb-logo">D</div>
+        <div class="sb-brand-text" id="sb-brand-text">
+          <div class="sb-name">Studio <span>De Paola</span></div>
+          <div class="sb-sub">Area Riservata</div>
         </div>
       </div>
-      <span class="user-name" id="user-name-top"></span>
-      <button class="btn-logout" onclick="doLogout()">Esci</button>
+      <button class="sb-toggle" id="sb-toggle" onclick="toggleSidebar()" title="Comprimi">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>
+      </button>
+    </div>
+
+    <nav class="sb-nav">
+      <div class="sb-section-label" id="sbl-1">Menu</div>
+      <button class="sb-item active" id="nav-dashboard" onclick="showSection('dashboard',event)">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+        <span class="sb-label">Dashboard</span>
+      </button>
+      <button class="sb-item" id="nav-fatture" onclick="showSection('fatture',event)">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+        <span class="sb-label">Fatture</span>
+      </button>
+      <button class="sb-item" id="nav-f24" onclick="showSection('f24',event)">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+        <span class="sb-label">F24</span>
+      </button>
+      <button class="sb-item" id="nav-clienti" onclick="showSection('clienti',event)">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+        <span class="sb-label">Clienti</span>
+      </button>
+    </nav>
+
+    <div class="sb-bottom">
+      <button class="sb-item" id="nav-profilo" onclick="showSection('profilo',event)">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+        <span class="sb-label">Profilo</span>
+      </button>
+      <div class="sb-user" id="sb-user">
+        <div class="sb-avatar" id="user-avatar" onclick="toggleUserMenu()">?</div>
+        <div class="sb-user-info" id="sb-brand-text2">
+          <div class="sb-user-name" id="user-name-top"></div>
+          <div class="sb-user-role">Cliente forfettario</div>
+        </div>
+        <div class="user-menu" id="user-menu-wrap" style="position:relative;">
+          <div class="user-dropdown" id="user-dropdown" style="bottom:calc(100% + 8px);top:auto;left:0;right:auto;">
+            <div class="user-dropdown-name" id="user-dropdown-name"></div>
+            <div class="user-dropdown-email" id="user-dropdown-email"></div>
+            <div class="user-dropdown-divider"></div>
+            <button class="user-dropdown-item" onclick="showSection('profilo',event);toggleUserMenu()">Profilo</button>
+            <div class="user-dropdown-divider"></div>
+            <button class="user-dropdown-item user-dropdown-logout" onclick="doLogout()">Esci</button>
+          </div>
+        </div>
+      </div>
     </div>
   </div>
+
+  <!-- MAIN -->
+  <div class="app-body" id="app-body">
+
+    <!-- Topbar sottile -->
+    <div class="app-topbar">
+      <div class="app-topbar-left">
+        <button class="sb-toggle-mobile" onclick="toggleSidebar()">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+        </button>
+        <div class="app-topbar-title" id="app-topbar-title">Dashboard</div>
+      </div>
+      <div class="app-topbar-right">
+        <div class="app-topbar-date" id="app-topbar-date"></div>
+        <button class="btn-logout-top" onclick="doLogout()">Esci</button>
+      </div>
+    </div>
 
   <div class="main-content">
 
@@ -997,8 +1194,9 @@ body.dark .calc-row .cr-value { color: #F9FAFB; }
       </div>
     </div>
 
-  </div>
-</div>
+  </div><!-- /main-content -->
+  </div><!-- /app-body -->
+</div><!-- /app -->
 
 <script>
 const SUPABASE_URL = 'https://znjhrwrwgpzmfwewdbnm.supabase.co';
@@ -1133,13 +1331,25 @@ document.addEventListener('keydown', function(e) {
 async function initApp() {
   el('login-page').style.display = 'none';
   el('app').style.display = 'flex';
-  el('app').style.flexDirection = 'column';
+
+  // Restore sidebar collapsed state
+  var sidebarEl = document.getElementById('sidebar');
+  if (localStorage.getItem('sb_collapsed') === '1') sidebarEl.classList.add('collapsed');
+
+  // Date in topbar
+  var dateEl = el('app-topbar-date');
+  if (dateEl) {
+    var d = new Date();
+    dateEl.textContent = d.toLocaleDateString('it-IT', { weekday:'long', day:'2-digit', month:'long', year:'numeric' });
+  }
+
   var res = await sb.from('clienti').select('*').eq('email', currentUser.email).single();
   clienteData = res.data;
   if (clienteData) {
     var nomeCompleto = clienteData.nome + ' ' + clienteData.cognome;
+    var initials = (clienteData.nome[0] + clienteData.cognome[0]).toUpperCase();
     el('user-name-top').textContent = nomeCompleto;
-    el('user-avatar').textContent = (clienteData.nome[0] + clienteData.cognome[0]).toUpperCase();
+    document.querySelectorAll('#user-avatar, .sb-avatar').forEach(function(a) { a.textContent = initials; });
     el('user-dropdown-name').textContent = nomeCompleto;
     el('user-dropdown-email').textContent = clienteData.email;
     el('dashboard-welcome').textContent = 'Benvenuto, ' + clienteData.nome;
@@ -1715,11 +1925,22 @@ document.addEventListener('click', function(e) {
   }
 });
 
+function toggleSidebar() {
+  var sb = document.getElementById('sidebar');
+  sb.classList.toggle('collapsed');
+  localStorage.setItem('sb_collapsed', sb.classList.contains('collapsed') ? '1' : '0');
+}
+
+var _sectionTitles = { dashboard: 'Dashboard', fatture: 'Fatture', f24: 'Scadenzario F24', clienti: 'Clienti', profilo: 'Profilo' };
+
 function showSection(id, ev) {
   document.querySelectorAll('.section-page').forEach(function(e) { e.classList.remove('active'); });
-  document.querySelectorAll('.nav-tab').forEach(function(e) { e.classList.remove('active'); });
+  document.querySelectorAll('.sb-item').forEach(function(e) { e.classList.remove('active'); });
   el('section-' + id).classList.add('active');
-  if (ev && ev.currentTarget) ev.currentTarget.classList.add('active');
+  var navEl = el('nav-' + id);
+  if (navEl) navEl.classList.add('active');
+  var titleEl = el('app-topbar-title');
+  if (titleEl) titleEl.textContent = _sectionTitles[id] || id;
   if (id === 'clienti') renderClienti();
   if (id === 'fatture') renderFattureChart();
   if (id === 'f24') renderF24Bar();
