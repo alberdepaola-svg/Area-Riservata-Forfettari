@@ -1283,28 +1283,21 @@ body.dark .calc-row .cr-value { color: #F9FAFB; }
         <h2>Le mie fatture</h2>
         <p>Tutte le fatture emesse e ricevute</p>
       </div>
-      <!-- Grafico fatturate mensile -->
+      <!-- Grafico fatturate mensile — click per filtrare mese -->
       <div class="card fade-in" style="margin-bottom:1.2rem;">
         <div class="card-header">
           <h3>Fatturato mensile</h3>
-          <span id="fat-chart-tot" style="font-size:0.82rem;"></span>
+          <div style="display:flex;align-items:center;gap:0.8rem;">
+            <span id="fat-mese-attivo" style="font-size:0.75rem;color:var(--gold-light);display:none;"></span>
+            <button id="fat-reset-mese" onclick="resetFiltroMese()" style="display:none;font-size:0.68rem;color:rgba(255,255,255,0.5);background:none;border:1px solid rgba(255,255,255,0.2);border-radius:4px;padding:0.15rem 0.5rem;cursor:pointer;font-family:var(--sans);">× Tutti</button>
+            <span id="fat-chart-tot" style="font-size:0.82rem;"></span>
+          </div>
         </div>
         <div style="padding:1rem 1.4rem 0.5rem;">
           <canvas id="chart-fatture-mensile" height="50"></canvas>
         </div>
         <div style="display:flex;justify-content:space-between;padding:0 1.4rem 0.8rem;">
-          <span style="font-size:0.68rem;color:var(--text-light)">Gen</span>
-          <span style="font-size:0.68rem;color:var(--text-light)">Feb</span>
-          <span style="font-size:0.68rem;color:var(--text-light)">Mar</span>
-          <span style="font-size:0.68rem;color:var(--text-light)">Apr</span>
-          <span style="font-size:0.68rem;color:var(--text-light)">Mag</span>
-          <span style="font-size:0.68rem;color:var(--text-light)">Giu</span>
-          <span style="font-size:0.68rem;color:var(--text-light)">Lug</span>
-          <span style="font-size:0.68rem;color:var(--text-light)">Ago</span>
-          <span style="font-size:0.68rem;color:var(--text-light)">Set</span>
-          <span style="font-size:0.68rem;color:var(--text-light)">Ott</span>
-          <span style="font-size:0.68rem;color:var(--text-light)">Nov</span>
-          <span style="font-size:0.68rem;color:var(--text-light)">Dic</span>
+          <span style="font-size:0.68rem;color:var(--text-light)">Gen</span><span style="font-size:0.68rem;color:var(--text-light)">Feb</span><span style="font-size:0.68rem;color:var(--text-light)">Mar</span><span style="font-size:0.68rem;color:var(--text-light)">Apr</span><span style="font-size:0.68rem;color:var(--text-light)">Mag</span><span style="font-size:0.68rem;color:var(--text-light)">Giu</span><span style="font-size:0.68rem;color:var(--text-light)">Lug</span><span style="font-size:0.68rem;color:var(--text-light)">Ago</span><span style="font-size:0.68rem;color:var(--text-light)">Set</span><span style="font-size:0.68rem;color:var(--text-light)">Ott</span><span style="font-size:0.68rem;color:var(--text-light)">Nov</span><span style="font-size:0.68rem;color:var(--text-light)">Dic</span>
         </div>
       </div>
       <div class="filter-bar" style="display:flex;align-items:center;gap:0.5rem;">
@@ -1312,6 +1305,18 @@ body.dark .calc-row .cr-value { color: #F9FAFB; }
         <button class="filter-btn" onclick="filterFatture('emessa',this)">Emesse</button>
         <button class="filter-btn" onclick="filterFatture('ricevuta',this)">Ricevute</button>
         <div style="flex:1;"></div>
+        <!-- Filtro pagata -->
+        <div style="position:relative;">
+          <button id="btn-filter-pagata" onclick="toggleFilterPagata()" title="Filtra per stato" style="border:1px solid var(--border);border-radius:6px;padding:0.28rem 0.6rem;background:var(--white);cursor:pointer;display:flex;align-items:center;gap:0.3rem;font-size:0.72rem;font-family:var(--sans);color:var(--text-mid);transition:all 0.15s;">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/></svg>
+            <span id="filter-pagata-label">Stato</span>
+          </button>
+          <div id="filter-pagata-panel" style="display:none;position:absolute;top:calc(100%+6px);right:0;background:var(--white);border:1px solid var(--border);border-radius:8px;box-shadow:0 4px 16px rgba(0,0,0,0.1);min-width:130px;z-index:99;overflow:hidden;">
+            <button onclick="setFiltroStatoFattura(null)" class="fp-opt" style="display:block;width:100%;text-align:left;padding:0.5rem 0.8rem;background:none;border:none;cursor:pointer;font-size:0.78rem;font-family:var(--sans);color:var(--text);border-bottom:1px solid #f5f5f5;">Tutti gli stati</button>
+            <button onclick="setFiltroStatoFattura(true)" class="fp-opt" style="display:block;width:100%;text-align:left;padding:0.5rem 0.8rem;background:none;border:none;cursor:pointer;font-size:0.78rem;font-family:var(--sans);color:#065F46;">✓ Pagate</button>
+            <button onclick="setFiltroStatoFattura(false)" class="fp-opt" style="display:block;width:100%;text-align:left;padding:0.5rem 0.8rem;background:none;border:none;cursor:pointer;font-size:0.78rem;font-family:var(--sans);color:#9A3412;">✗ In attesa</button>
+          </div>
+        </div>
         <input type="text" id="search-fatture-num" placeholder="Cerca per numero..." oninput="filterFatture(currentFattureFilter,null)"
           style="border:1px solid var(--border);border-radius:6px;padding:0.28rem 0.7rem;font-size:0.75rem;font-family:var(--sans);color:var(--text);outline:none;width:180px;" />
       </div>
@@ -1905,11 +1910,41 @@ function filterClientiDash(query) {
   });
 }
 
+var _filtroMese = null; // null = tutti, 0-11 = mese specifico
+var _filtroStatoPagata = null; // null = tutti, true/false
+
+function setFiltroMese(mese) {
+  _filtroMese = mese;
+  var mesiNomi = ['Gennaio','Febbraio','Marzo','Aprile','Maggio','Giugno','Luglio','Agosto','Settembre','Ottobre','Novembre','Dicembre'];
+  var lbl = el('fat-mese-attivo'); if (lbl) { lbl.textContent = mese !== null ? mesiNomi[mese] : ''; lbl.style.display = mese !== null ? '' : 'none'; }
+  var rst = el('fat-reset-mese'); if (rst) rst.style.display = mese !== null ? '' : 'none';
+  renderFatture();
+}
+
+function resetFiltroMese() { setFiltroMese(null); }
+
+function toggleFilterPagata() {
+  var panel = el('filter-pagata-panel');
+  panel.style.display = panel.style.display === 'none' ? '' : 'none';
+}
+
+function setFiltroStatoFattura(val) {
+  _filtroStatoPagata = val;
+  var lbl = el('filter-pagata-label');
+  if (lbl) lbl.textContent = val === null ? 'Stato' : (val ? 'Pagate' : 'In attesa');
+  var btn = el('btn-filter-pagata');
+  if (btn) btn.style.borderColor = val !== null ? 'var(--blue)' : 'var(--border)';
+  el('filter-pagata-panel').style.display = 'none';
+  renderFatture();
+}
+
 function renderFatture() {
   var searchEl = el('search-fatture-num');
   var query = searchEl ? searchEl.value.toLowerCase().trim() : '';
   var list = currentFattureFilter === 'tutte' ? fattureData : fattureData.filter(function(f) { return f.tipo === currentFattureFilter; });
   if (query) list = list.filter(function(f) { return (f.numero || '').toLowerCase().includes(query) || (f.cessionario_nome || f.cedente_nome || '').toLowerCase().includes(query); });
+  if (_filtroMese !== null) list = list.filter(function(f) { return new Date(f.data_emissione).getMonth() === _filtroMese; });
+  if (_filtroStatoPagata !== null) list = list.filter(function(f) { return Boolean(f.pagata) === _filtroStatoPagata; });
   var fatEl = el('fatture-body');
   if (list.length === 0) { fatEl.innerHTML = emptyState('Nessuna fattura trovata'); return; }
   var rows = list.map(function(f) {
@@ -1939,7 +1974,7 @@ function renderFatture() {
 function filterFatture(tipo, btn) {
   currentFattureFilter = tipo;
   document.querySelectorAll('#section-fatture .filter-btn').forEach(function(b) { b.classList.remove('active'); });
-  btn.classList.add('active');
+  if (btn) btn.classList.add('active');
   renderFatture();
 }
 
@@ -2132,10 +2167,21 @@ function renderFattureChart() {
     type: 'bar',
     data: {
       labels: ['Gen','Feb','Mar','Apr','Mag','Giu','Lug','Ago','Set','Ott','Nov','Dic'],
-      datasets: [{ data: dati, backgroundColor: '#2563EB', borderRadius: 4, borderSkipped: false }]
+      datasets: [{ data: dati, backgroundColor: dati.map(function(){ return '#2563EB'; }), hoverBackgroundColor: '#1d4ed8', borderRadius: 4, borderSkipped: false }]
     },
     options: {
       responsive: true,
+      onClick: function(e, elements) {
+        if (elements.length > 0) {
+          var mese = elements[0].index;
+          setFiltroMese(_filtroMese === mese ? null : mese);
+          // Evidenzia barra selezionata
+          var ds = window.chartFattureMensili.data.datasets[0];
+          ds.backgroundColor = dati.map(function(_,i){ return i === _filtroMese ? '#b8963e' : '#2563EB'; });
+          window.chartFattureMensili.update();
+        }
+      },
+      cursor: 'pointer',
       plugins: { legend: { display: false }, tooltip: { backgroundColor: '#1a1d23', bodyColor: '#fff', padding: 10, callbacks: { label: function(c) { return ' ' + fmt(c.parsed.y); } } } },
       scales: {
         x: { grid: { display: false }, ticks: { display: false } },
@@ -2143,6 +2189,12 @@ function renderFattureChart() {
       }
     }
   });
+  // Aggiorna colori se c'è già un filtro mese attivo
+  if (_filtroMese !== null) {
+    var ds2 = window.chartFattureMensili.data.datasets[0];
+    ds2.backgroundColor = dati.map(function(_,i){ return i === _filtroMese ? '#b8963e' : '#2563EB'; });
+    window.chartFattureMensili.update();
+  }
 }
 
 function renderF24Bar() {
@@ -2207,9 +2259,10 @@ function globalSearchGo(section) {
 }
 
 document.addEventListener('click', function(e) {
-  if (!e.target.closest('.gtb-search-wrap')) el('gtb-results').classList.remove('open');
+  if (!e.target.closest('.gtb-search-wrap')) { var r = el('gtb-results'); if(r) r.classList.remove('open'); }
   if (!e.target.closest('.gtb-notif')) document.querySelectorAll('.gtb-dropdown').forEach(function(d){d.classList.remove('open');});
-  if (!el('user-menu-wrap').contains(e.target)) el('user-dropdown').classList.remove('open');
+  if (el('user-menu-wrap') && !el('user-menu-wrap').contains(e.target)) { var ud = el('user-dropdown'); if(ud) ud.classList.remove('open'); }
+  if (!e.target.closest('#btn-filter-pagata') && !e.target.closest('#filter-pagata-panel')) { var fp = el('filter-pagata-panel'); if(fp) fp.style.display = 'none'; }
 });
 
 // ── NOTIFICHE ──
@@ -2256,13 +2309,17 @@ function renderNotifiche() {
 function drawSparkline(canvasId, data, color) {
   var canvas = el(canvasId);
   if (!canvas || !data || data.length < 2) return;
-  // Destroy old chart.js instance if exists
   var key = '_spark_' + canvasId;
-  if (window[key]) { window[key].destroy(); }
+  if (window[key]) { window[key].destroy(); window[key] = null; }
 
-  // Aggiungi volatilità realistica: micro-variazioni casuali deterministiche
+  // Se tutti i valori sono zero non disegnare nulla
+  var maxVal = Math.max.apply(null, data);
+  if (maxVal === 0) { canvas.getContext('2d').clearRect(0, 0, canvas.width, canvas.height); return; }
+
+  // Micro-variazioni deterministiche solo se ci sono valori reali
   var enhanced = data.map(function(v, i) {
-    var noise = v * 0.08 * Math.sin(i * 2.7 + v * 0.001);
+    if (v === 0) return 0;
+    var noise = v * 0.06 * Math.sin(i * 2.7 + v * 0.001);
     return Math.max(0, v + noise);
   });
 
@@ -2277,16 +2334,15 @@ function drawSparkline(canvasId, data, color) {
           backgroundColor: 'transparent',
           borderWidth: 2,
           pointRadius: 0,
-          pointHoverRadius: 3,
-          tension: 0.5,
+          tension: 0.4,
           fill: false
         }]
       },
       options: {
         responsive: false,
         plugins: { legend:{display:false}, tooltip:{enabled:false} },
-        scales: { x:{display:false}, y:{display:false} },
-        animation: { duration: 800, easing: 'easeInOutQuart' }
+        scales: { x:{display:false}, y:{display:false, min: 0} },
+        animation: { duration: 600 }
       }
     });
   }
@@ -2376,9 +2432,10 @@ function switchChart(idx) {
   var d1 = el('dot-1'); if (d1) d1.style.background = idx === 1 ? 'var(--navy)' : '#d1d5db';
 }
 
-// Swipe touch/mouse su carousel
+// Swipe touch/mouse/wheel su carousel
 (function(){
   var startX = null;
+  var wheelTimeout = null;
   function onDown(e){ startX = (e.touches ? e.touches[0].clientX : e.clientX); }
   function onUp(e){
     if (startX === null) return;
@@ -2387,6 +2444,16 @@ function switchChart(idx) {
     if (Math.abs(diff) > 40) switchChart(diff > 0 ? 1 : 0);
     startX = null;
   }
+  function onWheel(e){
+    // Solo scroll orizzontale trackpad (deltaX)
+    if (Math.abs(e.deltaX) < Math.abs(e.deltaY)) return;
+    if (Math.abs(e.deltaX) < 20) return;
+    e.preventDefault();
+    clearTimeout(wheelTimeout);
+    wheelTimeout = setTimeout(function(){
+      switchChart(e.deltaX > 0 ? 1 : 0);
+    }, 80);
+  }
   document.addEventListener('DOMContentLoaded', function(){
     var c = el('chart-carousel');
     if (!c) return;
@@ -2394,6 +2461,7 @@ function switchChart(idx) {
     c.addEventListener('mouseup', onUp);
     c.addEventListener('touchstart', onDown, { passive: true });
     c.addEventListener('touchend', onUp);
+    c.addEventListener('wheel', onWheel, { passive: false });
   });
 })();
 
