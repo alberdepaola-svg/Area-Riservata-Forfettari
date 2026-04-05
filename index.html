@@ -977,6 +977,10 @@ body.dark .calc-row .cr-value { color: #F9FAFB; }
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
         <span class="sb-label">Clienti</span>
       </button>
+      <button class="sb-item" id="nav-cliente-detail" style="display:none;padding-left:calc(0.8rem + 20px);" onclick="showSection('cliente-detail',event)">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="5"/><path d="M3 21v-2a9 9 0 0 1 18 0v2"/></svg>
+        <span class="sb-label" id="nav-cliente-detail-label" style="font-size:0.72rem;">—</span>
+      </button>
     </nav>
 
     <div class="sb-bottom">
@@ -1013,16 +1017,7 @@ body.dark .calc-row .cr-value { color: #F9FAFB; }
 
   <!-- GLOBAL TOPBAR -->
   <div class="global-topbar" id="global-topbar">
-    <div class="gtb-left">
-      <button class="sb-toggle-mobile" onclick="toggleSidebar()" style="color:var(--text-mid);">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
-      </button>
-    </div>
-    <div class="gtb-search-wrap">
-      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="gtb-search-icon"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-      <input type="text" id="gtb-search" class="gtb-search" placeholder="Cerca fattura, cliente..." oninput="globalSearch(this.value)" autocomplete="off"/>
-      <div class="gtb-results" id="gtb-results"></div>
-    </div>
+    <div style="flex:1;"></div>
     <div class="gtb-right">
       <!-- Notifiche F24 -->
       <div class="gtb-notif" id="notif-f24-wrap">
@@ -1089,15 +1084,13 @@ body.dark .calc-row .cr-value { color: #F9FAFB; }
             <h3>Andamento fatturato mensile</h3>
             <span id="chart-legend" style="font-size:0.82rem;"></span>
           </div>
-          <div style="padding:1rem 1.4rem 0.8rem;">
-            <canvas id="chart-fatturato" height="80"></canvas>
+          <div style="padding:0.8rem 1.4rem 0.8rem;">
+            <canvas id="chart-fatturato" height="85"></canvas>
           </div>
         </div>
-
-        <!-- Soglia: mix D + tondo -->
+        <!-- Soglia -->
         <div class="card fade-in" style="padding:1.2rem 1.4rem;">
           <div style="font-size:0.62rem;font-weight:600;text-transform:uppercase;letter-spacing:0.12em;color:var(--text-mid);margin-bottom:0.8rem;">Soglia regime forfettario</div>
-          <!-- Doughnut grande centrato -->
           <div style="display:flex;align-items:center;justify-content:center;margin-bottom:0.8rem;">
             <div style="position:relative;width:110px;height:110px;">
               <canvas id="chart-soglia" width="110" height="110"></canvas>
@@ -1107,7 +1100,6 @@ body.dark .calc-row .cr-value { color: #F9FAFB; }
               </div>
             </div>
           </div>
-          <!-- Barra + numeri sotto -->
           <div style="height:6px;background:#F3F4F6;border-radius:3px;overflow:hidden;margin-bottom:0.7rem;">
             <div id="soglia-bar-line" style="height:100%;width:0%;border-radius:3px;transition:width 1s ease;background:#059669;"></div>
           </div>
@@ -1137,7 +1129,7 @@ body.dark .calc-row .cr-value { color: #F9FAFB; }
               <div style="font-size:1.4rem;font-weight:700;color:var(--text);letter-spacing:-0.02em;" id="kpi-mese-fat">—</div>
               <div style="font-size:0.72rem;margin-top:0.25rem;" id="kpi-mese-fat-delta"></div>
             </div>
-            <canvas id="chart-spark-fat" width="80" height="40" style="margin-top:0.2rem;"></canvas>
+            <canvas id="chart-spark-fat" width="90" height="44" style="margin-top:0.2rem;"></canvas>
           </div>
         </div>
         <div class="card fade-in clickable" style="padding:1rem 1.2rem;cursor:pointer;transition:transform 0.2s,box-shadow 0.2s;" onmouseover="this.style.transform='scale(1.025)';this.style.boxShadow='var(--shadow)'" onmouseout="this.style.transform='';this.style.boxShadow=''" onclick="showSection('fatture',event)">
@@ -1150,12 +1142,37 @@ body.dark .calc-row .cr-value { color: #F9FAFB; }
               <div style="font-size:1.4rem;font-weight:700;color:var(--text);letter-spacing:-0.02em;" id="kpi-mese-num">—</div>
               <div style="font-size:0.72rem;margin-top:0.25rem;" id="kpi-mese-num-delta"></div>
             </div>
-            <canvas id="chart-spark-num" width="80" height="40" style="margin-top:0.2rem;"></canvas>
+            <canvas id="chart-spark-num" width="90" height="44" style="margin-top:0.2rem;"></canvas>
           </div>
         </div>
       </div>
 
-      <!-- KPI Contributi + F24 separate, stile kpi-card -->
+      <!-- Fatture da incassare + Incassi per mese — tra le KPI piccole -->
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;margin-bottom:1rem;">
+        <div class="card fade-in" style="display:flex;flex-direction:column;max-height:300px;">
+          <div class="card-header">
+            <h3>Fatture da incassare</h3>
+            <span id="dash-da-incassare-count" style="font-size:0.78rem;color:rgba(255,255,255,0.6);"></span>
+          </div>
+          <div id="dash-fatture-body" style="overflow-y:auto;flex:1;">
+            <div class="loading-spinner"><div class="spinner"></div> Caricamento...</div>
+          </div>
+        </div>
+        <div class="card fade-in" style="display:flex;flex-direction:column;max-height:300px;">
+          <div class="card-header">
+            <h3>Incassi per mese</h3>
+            <span id="incassi-tot" style="font-size:0.85rem;font-weight:600;color:rgba(255,255,255,0.8);"></span>
+          </div>
+          <div style="overflow-y:auto;flex:1;">
+            <table class="data-table">
+              <thead style="position:sticky;top:0;z-index:1;"><tr><th>Mese</th><th>Incassato</th><th style="width:35%"></th></tr></thead>
+              <tbody id="dash-incassi-mese"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- KPI Contributi + F24 -->
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;margin-bottom:1rem;">
         <div class="kpi-card clickable" style="border-top:3px solid #0891B2;" onclick="showSection('f24',event)" title="Vai a F24">
           <div class="kpi-label">Contributi versati</div>
@@ -1169,75 +1186,68 @@ body.dark .calc-row .cr-value { color: #F9FAFB; }
         </div>
       </div>
 
-      <!-- Due colonne -->
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;">
-
-        <!-- Colonna sinistra: Fatture da incassare -->
-        <div class="card fade-in" style="display:flex;flex-direction:column;max-height:320px;">
-          <div class="card-header">
-            <h3>Fatture da incassare</h3>
-            <span id="dash-da-incassare-count" style="font-size:0.78rem;color:rgba(255,255,255,0.6);"></span>
-          </div>
-          <div id="dash-fatture-body" style="overflow-y:auto;flex:1;">
-            <div class="loading-spinner"><div class="spinner"></div> Caricamento...</div>
-          </div>
-        </div>
-
-        <!-- Colonna destra: Incassi per mese -->
-        <div class="card fade-in" style="display:flex;flex-direction:column;max-height:320px;">
-          <div class="card-header">
-            <h3>Incassi per mese</h3>
-            <span id="incassi-tot" style="font-size:0.85rem;font-weight:600;color:rgba(255,255,255,0.8);"></span>
-          </div>
-          <div style="overflow-y:auto;flex:1;">
-            <table class="data-table">
-              <thead style="position:sticky;top:0;z-index:1;"><tr><th>Mese</th><th>Incassato</th><th style="width:35%"></th></tr></thead>
-              <tbody id="dash-incassi-mese">
-                <tr><td colspan="3" style="text-align:center;color:var(--text-light);padding:2rem">Caricamento...</td></tr>
-              </tbody>
-            </table>
-          </div>
-        </div>
-
+      <!-- F24 scadenze -->
+      <div class="card fade-in" style="margin-bottom:1rem;">
+        <div class="card-header"><h3>Prossime scadenze F24</h3></div>
+        <div id="dash-f24-body"><div class="loading-spinner"><div class="spinner"></div> Caricamento...</div></div>
       </div>
 
-      <!-- F24 scadenze senza KPI dentro -->
-      <div class="card fade-in" style="margin-top:1rem;">
-        <div class="card-header">
-          <h3>Prossime scadenze F24</h3>
-        </div>
-        <div id="dash-f24-body">
-          <div class="loading-spinner"><div class="spinner"></div> Caricamento...</div>
-        </div>
-      </div>
-
-      <!-- Fatturato per cliente — altezza fissa con scroll interno -->
-      <div class="card fade-in" style="margin-top:1rem;">
+      <!-- Fatturato per cliente -->
+      <div class="card fade-in">
         <div class="card-header">
           <h3>Fatturato per cliente</h3>
           <span id="fatturato-clienti-tot" style="font-size:0.82rem;"></span>
         </div>
-        <!-- Search bar -->
         <div style="padding:0.6rem 1rem;border-bottom:1px solid var(--border);background:#fafafa;">
           <input type="text" id="search-clienti" placeholder="Cerca cliente..." oninput="filterClientiDash(this.value)"
             style="width:100%;border:1px solid var(--border);border-radius:6px;padding:0.35rem 0.7rem;font-size:0.78rem;font-family:var(--sans);color:var(--text);outline:none;background:var(--white);" />
         </div>
         <div style="display:grid;grid-template-columns:260px 1fr;gap:0;height:310px;">
-          <div style="padding:1.2rem;display:flex;flex-direction:column;align-items:center;justify-content:flex-start;border-right:1px solid var(--border);gap:0.8rem;overflow-y:auto;">
+          <div style="padding:1.2rem;display:flex;flex-direction:column;align-items:center;gap:0.8rem;overflow-y:auto;border-right:1px solid var(--border);">
             <canvas id="chart-clienti" width="180" height="180"></canvas>
             <div id="dash-clienti-legend" style="width:100%;display:flex;flex-direction:column;gap:0.35rem;"></div>
           </div>
           <div style="overflow-y:auto;">
             <table class="data-table">
               <thead style="position:sticky;top:0;z-index:1;"><tr><th>Cliente</th><th>Fatturato</th><th>Incidenza</th></tr></thead>
-              <tbody id="dash-clienti-body">
-                <tr><td colspan="3" style="text-align:center;color:var(--text-light);padding:2rem">Caricamento...</td></tr>
-              </tbody>
+              <tbody id="dash-clienti-body"></tbody>
             </table>
           </div>
         </div>
       </div>
 
+    </div>
+
+    <!-- CLIENTE DETAIL -->
+    <div class="section-page" id="section-cliente-detail">
+      <div style="display:flex;align-items:center;gap:0.8rem;margin-bottom:1.2rem;">
+        <button onclick="showSection('clienti',null)" style="background:none;border:1px solid var(--border);border-radius:8px;padding:0.3rem 0.7rem;cursor:pointer;font-size:0.75rem;color:var(--text-mid);font-family:var(--sans);display:flex;align-items:center;gap:0.4rem;">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 12H5"/><polyline points="12 19 5 12 12 5"/></svg> Clienti
+        </button>
+        <h2 id="det-nome" style="font-size:1.3rem;font-weight:700;color:var(--text);">—</h2>
+      </div>
+      <!-- Info row -->
+      <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:0.8rem;margin-bottom:1rem;">
+        <div class="kpi-card blue"><div class="kpi-label">Fatturato totale</div><div class="kpi-value" id="det-fat-tot">—</div><div class="kpi-sub" id="det-fat-sub"></div></div>
+        <div class="kpi-card green"><div class="kpi-label">Incassato</div><div class="kpi-value" id="det-incassato">—</div><div class="kpi-sub">anno corrente</div></div>
+        <div class="kpi-card" style="border-top:3px solid #EA580C;"><div class="kpi-label">Da incassare</div><div class="kpi-value" id="det-daincassare">—</div><div class="kpi-sub">in attesa</div></div>
+        <div class="kpi-card" style="border-top:3px solid #7C3AED;"><div class="kpi-label">N° fatture</div><div class="kpi-value" id="det-nfat">—</div><div class="kpi-sub">emesse anno</div></div>
+      </div>
+      <!-- Grafico mensile cliente -->
+      <div class="card fade-in" style="margin-bottom:1rem;">
+        <div class="card-header"><h3>Fatturato mensile</h3><span id="det-chart-tot" style="font-size:0.82rem;"></span></div>
+        <div style="padding:1rem 1.4rem 0.8rem;"><canvas id="det-chart-mensile" height="80"></canvas></div>
+      </div>
+      <!-- Lista fatture cliente -->
+      <div class="card fade-in">
+        <div class="card-header"><h3>Fatture emesse</h3></div>
+        <div style="max-height:400px;overflow-y:auto;">
+          <table class="data-table">
+            <thead style="position:sticky;top:0;z-index:1;"><tr><th>Numero</th><th>Data</th><th>Importo</th><th>Stato</th></tr></thead>
+            <tbody id="det-fatture-body"></tbody>
+          </table>
+        </div>
+      </div>
     </div>
 
     <!-- FATTURE -->
@@ -1665,43 +1675,7 @@ function renderDashboard() {
   var legEl = el('chart-legend');
   if (legEl) legEl.textContent = fmt(fatturato);
 
-  if (typeof Chart !== 'undefined') {
-    var ctx = el('chart-fatturato').getContext('2d');
-    if (chartInstance) chartInstance.destroy();
-    chartInstance = new Chart(ctx, {
-      type: 'line',
-      data: {
-        labels: mesi,
-        datasets: [{
-          data: datiAnno,
-          borderColor: '#2563EB',
-          backgroundColor: 'rgba(37,99,235,0.07)',
-          borderWidth: 2.5,
-          pointBackgroundColor: '#2563EB',
-          pointRadius: 4,
-          pointHoverRadius: 6,
-          fill: true,
-          tension: 0.4
-        }]
-      },
-      options: {
-        responsive: true,
-        interaction: { mode: 'index', intersect: false },
-        plugins: {
-          legend: { display: false },
-          tooltip: {
-            backgroundColor: '#1a1d23', borderColor: '#e5e7eb', borderWidth: 1,
-            titleColor: '#9ca3af', bodyColor: '#ffffff', padding: 12,
-            callbacks: { label: function(c) { return ' \u20ac ' + c.parsed.y.toLocaleString('it-IT', {minimumFractionDigits:2}); } }
-          }
-        },
-        scales: {
-          x: { grid: { color: '#f3f4f6' }, ticks: { color: '#9ca3af', font: { family: 'Inter', size: 11 } } },
-          y: { grid: { color: '#f3f4f6' }, ticks: { color: '#9ca3af', font: { family: 'Inter', size: 11 }, callback: function(v) { return '\u20ac ' + v.toLocaleString('it-IT'); } } }
-        }
-      }
-    });
-  }
+  renderChartWallStreet(datiAnno, mesi);
 
   // Incassi per mese — usa data_incasso per anno corretto
   var mesiNomi = ['Gennaio','Febbraio','Marzo','Aprile','Maggio','Giugno','Luglio','Agosto','Settembre','Ottobre','Novembre','Dicembre'];
@@ -1803,8 +1777,9 @@ function renderDashboard() {
       clientiEl.innerHTML = clientiList.map(function(c, i) {
         var pct = totClienti > 0 ? Math.round((c.totale / totClienti) * 100) : 0;
         var colore = palette[i % palette.length];
-        return '<tr>' +
-          '<td style="font-weight:500">' + c.nome + '</td>' +
+        var nomeEsc = c.nome.replace(/'/g, "\\'");
+        return '<tr style="cursor:pointer;" onclick="apriClienteDetail(\'' + nomeEsc + '\')" title="Apri scheda ' + c.nome + '">' +
+          '<td style="font-weight:500;color:var(--blue);text-decoration:underline;text-underline-offset:2px;">' + c.nome + '</td>' +
           '<td class="amount">' + fmt(c.totale) + '</td>' +
           '<td style="font-weight:700;color:' + colore + '">' + pct + '%</td>' +
           '</tr>';
@@ -2099,9 +2074,10 @@ function renderClienti() {
     var rows = list.map(function(c, i) {
       var pct = totFatturato > 0 ? Math.round((c.fatturato / totFatturato) * 100) : 0;
       var colore = palette[i % palette.length];
-      return '<tr>' +
+      var nomeEsc = c.nome.replace(/'/g, "\\'");
+      return '<tr style="cursor:pointer;" onclick="apriClienteDetail(\'' + nomeEsc + '\')" title="Apri scheda">' +
         '<td><div style="width:9px;height:9px;border-radius:50%;background:' + colore + ';"></div></td>' +
-        '<td style="font-weight:500">' + c.nome + '</td>' +
+        '<td style="font-weight:500;color:var(--blue);text-decoration:underline;text-underline-offset:2px;">' + c.nome + '</td>' +
         '<td class="amount">' + fmt(c.fatturato) + '</td>' +
         '<td style="font-weight:700;color:' + colore + '">' + pct + '%</td>' +
         '</tr>';
@@ -2298,19 +2274,87 @@ function toggleSidebar() {
   localStorage.setItem('sb_collapsed', sb.classList.contains('collapsed') ? '1' : '0');
 }
 
-var _sectionTitles = { dashboard: 'Dashboard', fatture: 'Fatture', f24: 'Scadenzario F24', clienti: 'Clienti', profilo: 'Profilo' };
+var _sectionTitles = { dashboard: 'Dashboard', fatture: 'Fatture', f24: 'Scadenzario F24', clienti: 'Clienti', profilo: 'Profilo', 'cliente-detail': 'Scheda Cliente' };
 
 function showSection(id, ev) {
   document.querySelectorAll('.section-page').forEach(function(e) { e.classList.remove('active'); });
   document.querySelectorAll('.sb-item').forEach(function(e) { e.classList.remove('active'); });
-  el('section-' + id).classList.add('active');
+  var secEl = el('section-' + id);
+  if (secEl) secEl.classList.add('active');
   var navEl = el('nav-' + id);
   if (navEl) navEl.classList.add('active');
-  var titleEl = el('app-topbar-title');
-  if (titleEl) titleEl.textContent = _sectionTitles[id] || id;
   if (id === 'clienti') renderClienti();
   if (id === 'fatture') renderFattureChart();
   if (id === 'f24') renderF24Bar();
+}
+
+function apriClienteDetail(nome) {
+  var detNav = el('nav-cliente-detail');
+  if (detNav) detNav.style.display = 'flex';
+  var detLabel = el('nav-cliente-detail-label');
+  if (detLabel) detLabel.textContent = nome.length > 18 ? nome.slice(0,16) + '…' : nome;
+
+  var anno = new Date().getFullYear();
+  var fatCliente = fattureData.filter(function(f) { return f.tipo === 'emessa' && (f.cessionario_nome || f.cedente_nome || '') === nome; });
+  var fatAnno = fatCliente.filter(function(f) { return new Date(f.data_emissione).getFullYear() === anno; });
+  var totFat = fatAnno.reduce(function(s,f){return s+parseFloat(f.importo||0);},0);
+  var totInc = fatAnno.filter(function(f){return f.pagata;}).reduce(function(s,f){return s+parseFloat(f.importo||0);},0);
+  var totDaInc = totFat - totInc;
+
+  el('det-nome').textContent = nome;
+  el('det-fat-tot').textContent = fmt(totFat);
+  el('det-fat-sub').textContent = fatAnno.length + ' fatture ' + anno;
+  el('det-incassato').textContent = fmt(totInc);
+  el('det-daincassare').textContent = fmt(totDaInc);
+  el('det-nfat').textContent = fatAnno.length;
+  var dtot = el('det-chart-tot'); if (dtot) dtot.textContent = fmt(totFat);
+
+  var datiMensili = Array(12).fill(0);
+  fatAnno.forEach(function(f){ datiMensili[new Date(f.data_emissione).getMonth()] += parseFloat(f.importo||0); });
+  var mesi = ['Gen','Feb','Mar','Apr','Mag','Giu','Lug','Ago','Set','Ott','Nov','Dic'];
+  var barColors = datiMensili.map(function(v,i){ return v >= (datiMensili[i-1]||0) ? '#059669' : '#DC2626'; });
+
+  if (typeof Chart !== 'undefined') {
+    var detCtx = el('det-chart-mensile');
+    if (detCtx) {
+      if (window.chartDetMensile) window.chartDetMensile.destroy();
+      window.chartDetMensile = new Chart(detCtx.getContext('2d'), {
+        type: 'bar',
+        data: { labels: mesi, datasets: [
+          { type:'bar', data: datiMensili, backgroundColor: barColors.map(function(c){return c+'22';}), borderColor: barColors, borderWidth:1.5, borderRadius:2, borderSkipped:false },
+          { type:'line', data: datiMensili, borderColor:'#b8963e', backgroundColor:'transparent', borderWidth:2, pointRadius: datiMensili.map(function(v){return v>0?3:0;}), pointBackgroundColor:'#b8963e', pointBorderColor:'#fff', pointBorderWidth:1.5, tension:0.35 }
+        ]},
+        options: { responsive:true, interaction:{mode:'index',intersect:false}, plugins:{legend:{display:false}, tooltip:{backgroundColor:'#0d1b2a',borderColor:'rgba(184,150,62,0.4)',borderWidth:1,titleColor:'#9ca3af',bodyColor:'#fff',padding:12, callbacks:{label:function(c){return ' '+fmt(c.parsed.y);}}}}, scales:{ x:{grid:{display:false},ticks:{color:'#9ca3af',font:{size:10}}}, y:{grid:{color:'#f5f5f5',lineWidth:0.8},ticks:{color:'#9ca3af',font:{size:10},callback:function(v){return '€'+v.toLocaleString('it-IT');}},border:{display:false}} }, animation:{duration:600,easing:'easeInOutQuart'} }
+      });
+    }
+  }
+
+  var detBody = el('det-fatture-body');
+  if (detBody) {
+    detBody.innerHTML = fatCliente.sort(function(a,b){return new Date(b.data_emissione)-new Date(a.data_emissione);}).map(function(f){
+      var stato = f.pagata
+        ? '<span style="background:#ECFDF5;color:#065F46;padding:0.2rem 0.5rem;border-radius:20px;font-size:0.7rem;font-weight:600;">Pagata</span>'
+        : '<span style="background:#FFF7ED;color:#9A3412;padding:0.2rem 0.5rem;border-radius:20px;font-size:0.7rem;font-weight:600;">In attesa</span>';
+      return '<tr><td style="font-family:var(--mono);font-size:0.78rem;">'+(f.numero||'—')+'</td><td>'+fmtDate(f.data_emissione)+'</td><td class="amount">'+fmt(f.importo)+'</td><td>'+stato+'</td></tr>';
+    }).join('') || '<tr><td colspan="4" style="text-align:center;padding:2rem;color:var(--text-light);">Nessuna fattura</td></tr>';
+  }
+  showSection('cliente-detail', null);
+}
+
+// ── MAIN CHART wall-street style ──
+function renderChartWallStreet(datiAnno, mesi) {
+  if (typeof Chart === 'undefined') return;
+  var ctx = el('chart-fatturato'); if (!ctx) return;
+  if (chartInstance) chartInstance.destroy();
+  var barColors = datiAnno.map(function(v,i){ return v >= (datiAnno[i-1]||0) ? '#059669' : '#DC2626'; });
+  chartInstance = new Chart(ctx.getContext('2d'), {
+    type: 'bar',
+    data: { labels: mesi, datasets: [
+      { type:'bar', label:'Fatturato', data:datiAnno, backgroundColor:barColors.map(function(c){return c+'33';}), borderColor:barColors, borderWidth:1.5, borderRadius:2, borderSkipped:false },
+      { type:'line', label:'Trend', data:datiAnno, borderColor:'#b8963e', backgroundColor:'transparent', borderWidth:2, pointRadius:datiAnno.map(function(v){return v>0?3:0;}), pointBackgroundColor:'#b8963e', pointBorderColor:'#fff', pointBorderWidth:1.5, tension:0.35, fill:false }
+    ]},
+    options: { responsive:true, interaction:{mode:'index',intersect:false}, plugins:{legend:{display:false}, tooltip:{backgroundColor:'#0d1b2a',borderColor:'rgba(184,150,62,0.4)',borderWidth:1,titleColor:'#9ca3af',bodyColor:'#fff',padding:12, callbacks:{label:function(c){return ' '+fmt(c.parsed.y);}}}}, scales:{ x:{grid:{display:false},ticks:{color:'#9ca3af',font:{size:10}}}, y:{grid:{color:'#f5f5f5',lineWidth:0.8},ticks:{color:'#9ca3af',font:{size:10},callback:function(v){return '€'+v.toLocaleString('it-IT');}},border:{display:false}} }, animation:{duration:600,easing:'easeInOutQuart'} }
+  });
 }
 </script>
 <!-- Modale data incasso -->
