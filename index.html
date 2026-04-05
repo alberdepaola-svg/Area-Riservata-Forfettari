@@ -1174,8 +1174,8 @@ body.dark .calc-row .cr-value { color: #F9FAFB; }
         </div>
       </div>
 
-      <!-- Fatture da incassare + Incassi per mese -->
-      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:1rem;margin-bottom:1rem;">
+      <!-- Fatture da incassare + Incassi per mese — riga 1 -->
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;margin-bottom:1rem;">
         <!-- Fatture da incassare -->
         <div class="card fade-in" style="display:flex;flex-direction:column;max-height:300px;overflow:hidden;">
           <div class="card-header" style="flex-shrink:0;">
@@ -1184,16 +1184,6 @@ body.dark .calc-row .cr-value { color: #F9FAFB; }
           </div>
           <div id="dash-fatture-banner" style="flex-shrink:0;"></div>
           <div id="dash-fatture-body" style="overflow-y:auto;flex:1;">
-            <div class="loading-spinner"><div class="spinner"></div> Caricamento...</div>
-          </div>
-        </div>
-        <!-- Fatture a rischio -->
-        <div class="card fade-in" style="display:flex;flex-direction:column;max-height:300px;">
-          <div class="card-header" style="flex-shrink:0;">
-            <h3>⚠ Fatture a rischio</h3>
-            <span id="rischio-count" style="font-size:0.75rem;color:rgba(255,255,255,0.5);"></span>
-          </div>
-          <div id="fatture-rischio-body" style="overflow-y:auto;flex:1;">
             <div class="loading-spinner"><div class="spinner"></div> Caricamento...</div>
           </div>
         </div>
@@ -1208,6 +1198,59 @@ body.dark .calc-row .cr-value { color: #F9FAFB; }
               <thead style="position:sticky;top:0;z-index:1;"><tr><th>Mese</th><th>Incassato</th><th style="width:35%"></th></tr></thead>
               <tbody id="dash-incassi-mese"></tbody>
             </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- Fatture a rischio + Grafico incassato vs fatturato — riga 2 -->
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;margin-bottom:1rem;">
+        <!-- Fatture a rischio -->
+        <div class="card fade-in" style="display:flex;flex-direction:column;max-height:280px;">
+          <div class="card-header" style="flex-shrink:0;">
+            <h3>⚠ Fatture a rischio</h3>
+            <span id="rischio-count" style="font-size:0.75rem;color:rgba(255,255,255,0.5);"></span>
+          </div>
+          <div id="fatture-rischio-body" style="overflow-y:auto;flex:1;">
+            <div class="loading-spinner"><div class="spinner"></div> Caricamento...</div>
+          </div>
+        </div>
+        <!-- Grafico incassato vs da incassare -->
+        <div class="card fade-in" style="padding:1rem 1.4rem;display:flex;flex-direction:column;justify-content:space-between;max-height:280px;">
+          <div style="font-size:0.62rem;font-weight:600;text-transform:uppercase;letter-spacing:0.12em;color:var(--text-mid);margin-bottom:0.6rem;">Incassato vs da incassare</div>
+          <div style="display:flex;align-items:center;gap:1.2rem;flex:1;">
+            <!-- Doughnut -->
+            <div style="position:relative;width:110px;height:110px;flex-shrink:0;">
+              <canvas id="chart-incasso-ratio" width="110" height="110"></canvas>
+              <div style="position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;">
+                <div style="font-size:1.1rem;font-weight:700;line-height:1;color:var(--green);" id="incasso-pct-num">0%</div>
+                <div style="font-size:0.55rem;color:var(--text-light);margin-top:2px;">incassato</div>
+              </div>
+            </div>
+            <!-- Valori e barre -->
+            <div style="flex:1;">
+              <div style="margin-bottom:0.7rem;">
+                <div style="display:flex;justify-content:space-between;margin-bottom:0.25rem;">
+                  <span style="font-size:0.68rem;color:var(--green);font-weight:600;">Incassato</span>
+                  <span style="font-size:0.72rem;font-family:var(--mono);font-weight:600;color:var(--text);" id="incasso-val">—</span>
+                </div>
+                <div style="height:6px;background:#F3F4F6;border-radius:3px;overflow:hidden;">
+                  <div id="bar-incassato" style="height:100%;width:0%;background:var(--green);border-radius:3px;transition:width 0.9s ease;"></div>
+                </div>
+              </div>
+              <div>
+                <div style="display:flex;justify-content:space-between;margin-bottom:0.25rem;">
+                  <span style="font-size:0.68rem;color:var(--orange);font-weight:600;">Da incassare</span>
+                  <span style="font-size:0.72rem;font-family:var(--mono);font-weight:600;color:var(--text);" id="daincasso-val">—</span>
+                </div>
+                <div style="height:6px;background:#F3F4F6;border-radius:3px;overflow:hidden;">
+                  <div id="bar-daincassato" style="height:100%;width:0%;background:var(--orange);border-radius:3px;transition:width 0.9s ease;"></div>
+                </div>
+              </div>
+              <div style="margin-top:0.8rem;padding-top:0.7rem;border-top:1px solid var(--border);">
+                <div style="font-size:0.6rem;color:var(--text-light);text-transform:uppercase;letter-spacing:0.07em;margin-bottom:0.15rem;">Fatturato totale anno</div>
+                <div style="font-size:1rem;font-weight:700;color:var(--text);" id="incasso-tot-val">—</div>
+              </div>
+            </div>
           </div>
         </div>
       </div>
@@ -1749,6 +1792,9 @@ function renderDashboard() {
   // Aggiorna notifiche
   renderNotifiche();
   renderFattureRischio();
+  renderHeatmap();
+  renderRecord();
+  renderIncassoRatio();
 
   var legEl = el('chart-legend');
   if (legEl) legEl.textContent = fmt(fatturato);
@@ -2416,6 +2462,54 @@ function renderRecord() {
     recordRow('💎', 'Fattura più grande', fmt(bestFat.importo), fmtDate(bestFat.data_emissione)) +
     recordRow('🤝', 'Cliente top', bestClienteKey ? (bestClienteKey.length>20?bestClienteKey.slice(0,18)+'…':bestClienteKey) : '—', fmt(clienteMap[bestClienteKey]||0)) +
     (crescita !== null ? recordRow(crescita>=0?'📈':'📉', 'Crescita vs ' + (anno-1), (crescita>=0?'+':'')+crescita+'%', fmt(fatAnno) + ' vs ' + fmt(fatAnnoPre)) : '');
+}
+
+// ── GRAFICO INCASSATO VS DA INCASSARE ──
+function renderIncassoRatio() {
+  var anno = new Date().getFullYear();
+  var emesse = fattureData.filter(function(f){ return f.tipo==='emessa' && new Date(f.data_emissione).getFullYear()===anno; });
+  var totFat = emesse.reduce(function(s,f){ return s+parseFloat(f.importo||0); }, 0);
+  var totInc = emesse.filter(function(f){ return f.pagata; }).reduce(function(s,f){ return s+parseFloat(f.importo||0); }, 0);
+  var totDaInc = totFat - totInc;
+  var pctInc = totFat > 0 ? Math.round((totInc/totFat)*100) : 0;
+  var pctDaInc = 100 - pctInc;
+
+  // Valori
+  var pctEl = el('incasso-pct-num'); if (pctEl) { pctEl.textContent = pctInc + '%'; pctEl.style.color = pctInc >= 70 ? '#059669' : pctInc >= 40 ? '#EA580C' : '#DC2626'; }
+  var incEl = el('incasso-val'); if (incEl) incEl.textContent = fmt(totInc);
+  var daEl = el('daincasso-val'); if (daEl) daEl.textContent = fmt(totDaInc);
+  var totEl = el('incasso-tot-val'); if (totEl) totEl.textContent = fmt(totFat);
+
+  // Barre animate
+  setTimeout(function(){
+    var bi = el('bar-incassato'); if (bi) bi.style.width = pctInc + '%';
+    var bd = el('bar-daincassato'); if (bd) bd.style.width = pctDaInc + '%';
+  }, 100);
+
+  // Doughnut
+  if (typeof Chart === 'undefined') return;
+  var ctx = el('chart-incasso-ratio');
+  if (!ctx) return;
+  if (window.chartIncassoRatio) window.chartIncassoRatio.destroy();
+  window.chartIncassoRatio = new Chart(ctx.getContext('2d'), {
+    type: 'doughnut',
+    data: {
+      datasets: [{
+        data: totFat > 0 ? [totInc, totDaInc] : [1, 0],
+        backgroundColor: totFat > 0 ? ['#059669', '#EA580C'] : ['#F3F4F6', '#F3F4F6'],
+        borderWidth: 0,
+        hoverOffset: 4
+      }]
+    },
+    options: {
+      responsive: false, cutout: '72%',
+      plugins: { legend: { display: false }, tooltip: {
+        backgroundColor: '#1a1d23', bodyColor: '#fff', padding: 10,
+        callbacks: { label: function(c){ var label = c.dataIndex===0?'Incassato':'Da incassare'; return ' '+label+': '+fmt(c.parsed); } }
+      }},
+      animation: { duration: 800, easing: 'easeInOutQuart' }
+    }
+  });
 }
 
 function renderF24Bar() {
