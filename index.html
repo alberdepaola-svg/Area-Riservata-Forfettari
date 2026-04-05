@@ -1176,11 +1176,12 @@ body.dark .calc-row .cr-value { color: #F9FAFB; }
 
       <!-- Fatture da incassare + Incassi per mese -->
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;margin-bottom:1rem;">
-        <div class="card fade-in" style="display:flex;flex-direction:column;max-height:300px;">
-          <div class="card-header">
+        <div class="card fade-in" style="display:flex;flex-direction:column;max-height:300px;overflow:hidden;">
+          <div class="card-header" style="flex-shrink:0;">
             <h3>Fatture da incassare</h3>
             <span id="dash-da-incassare-count" style="font-size:0.78rem;color:rgba(255,255,255,0.6);"></span>
           </div>
+          <div id="dash-fatture-banner" style="flex-shrink:0;"></div>
           <div id="dash-fatture-body" style="overflow-y:auto;flex:1;">
             <div class="loading-spinner"><div class="spinner"></div> Caricamento...</div>
           </div>
@@ -1253,12 +1254,30 @@ body.dark .calc-row .cr-value { color: #F9FAFB; }
         </button>
         <h2 id="det-nome" style="font-size:1.3rem;font-weight:700;color:var(--text);">—</h2>
       </div>
-      <!-- Info row -->
-      <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:0.8rem;margin-bottom:1rem;">
+      <!-- Info row 1 -->
+      <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:0.8rem;margin-bottom:0.8rem;">
         <div class="kpi-card blue"><div class="kpi-label">Fatturato totale</div><div class="kpi-value" id="det-fat-tot">—</div><div class="kpi-sub" id="det-fat-sub"></div></div>
         <div class="kpi-card green"><div class="kpi-label">Incassato</div><div class="kpi-value" id="det-incassato">—</div><div class="kpi-sub">anno corrente</div></div>
         <div class="kpi-card" style="border-top:3px solid #EA580C;"><div class="kpi-label">Da incassare</div><div class="kpi-value" id="det-daincassare">—</div><div class="kpi-sub">in attesa</div></div>
         <div class="kpi-card" style="border-top:3px solid #7C3AED;"><div class="kpi-label">N° fatture</div><div class="kpi-value" id="det-nfat">—</div><div class="kpi-sub">emesse anno</div></div>
+      </div>
+      <!-- Info row 2 — metriche avanzate -->
+      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:0.8rem;margin-bottom:1rem;">
+        <div class="kpi-card" style="border-top:3px solid #0891B2;">
+          <div class="kpi-label">Incidenza sul fatturato</div>
+          <div class="kpi-value" id="det-incidenza">—</div>
+          <div class="kpi-sub" id="det-incidenza-sub">% sul totale anno</div>
+        </div>
+        <div class="kpi-card" style="border-top:3px solid #059669;">
+          <div class="kpi-label">Tasso di incasso</div>
+          <div class="kpi-value" id="det-tasso-incasso">—</div>
+          <div class="kpi-sub" id="det-tasso-sub">incassato / fatturato</div>
+        </div>
+        <div class="kpi-card" style="border-top:3px solid #b8963e;">
+          <div class="kpi-label">Media per fattura</div>
+          <div class="kpi-value" id="det-media-fat">—</div>
+          <div class="kpi-sub" id="det-media-sub">importo medio</div>
+        </div>
       </div>
       <!-- Grafico mensile cliente -->
       <div class="card fade-in" style="margin-bottom:1rem;">
@@ -1741,16 +1760,18 @@ function renderDashboard() {
   var totDaInc = daIncassare.reduce(function(s,f){ return s + parseFloat(f.importo||0); }, 0);
   var countEl = el('dash-da-incassare-count');
   if (countEl) countEl.textContent = daIncassare.length + ' fatture \u00b7 ' + fmt(totDaInc);
+  var bannerEl = el('dash-fatture-banner');
   var fb = el('dash-fatture-body');
   var banner = daIncassare.length > 0 ? '<div class="info-banner">Ci sono <strong>' + daIncassare.length + ' fatture</strong> da incassare per un totale di <strong>' + fmt(totDaInc) + '</strong></div>' : '';
+  if (bannerEl) bannerEl.innerHTML = banner;
   if (daIncassare.length === 0) {
-    fb.innerHTML = banner + emptyState('Tutte le fatture risultano incassate');
+    fb.innerHTML = emptyState('Tutte le fatture risultano incassate');
   } else {
-    var tbody = daIncassare.slice(0,6).map(function(f) {
+    var tbody = daIncassare.map(function(f) {
       var cp = f.cessionario_nome || f.cedente_nome || '\u2014';
       return '<tr><td class="mono" style="color:var(--text-mid);font-size:0.78rem;white-space:nowrap">' + (f.numero||'\u2014') + '</td><td style="font-weight:500">' + cp + '</td><td style="color:var(--text-mid);white-space:nowrap">' + fmtDate(f.data_emissione) + '</td><td class="amount" style="white-space:nowrap">' + fmt(f.importo) + '</td><td><button class="dash-incassa-btn incassa-btn" data-id="' + f.id + '" data-pagata="' + f.pagata + '">Incassa</button></td></tr>';
     }).join('');
-    fb.innerHTML = banner + '<table class="data-table"><thead><tr><th>N°</th><th>Cliente</th><th>Data</th><th>Importo</th><th></th></tr></thead><tbody>' + tbody + '</tbody></table>';
+    fb.innerHTML = '<table class="data-table"><thead style="position:sticky;top:0;z-index:1;"><tr><th>N°</th><th>Cliente</th><th>Data</th><th>Importo</th><th></th></tr></thead><tbody>' + tbody + '</tbody></table>';
     document.querySelectorAll('.incassa-btn').forEach(function(b) {
       b.addEventListener('click', function() { togglePagata(this.dataset.id, this.dataset.pagata === 'true'); });
     });
@@ -2327,7 +2348,7 @@ function toggleSidebar() {
 
 var _sectionTitles = { dashboard: 'Dashboard', fatture: 'Fatture', f24: 'Scadenzario F24', clienti: 'Clienti', profilo: 'Profilo', 'cliente-detail': 'Scheda Cliente' };
 
-function showSection(id, ev) {
+function showSection(id, ev, skipHistory) {
   document.querySelectorAll('.section-page').forEach(function(e) { e.classList.remove('active'); });
   document.querySelectorAll('.sb-item').forEach(function(e) { e.classList.remove('active'); });
   var secEl = el('section-' + id);
@@ -2337,7 +2358,48 @@ function showSection(id, ev) {
   if (id === 'clienti') renderClienti();
   if (id === 'fatture') renderFattureChart();
   if (id === 'f24') renderF24Bar();
+  if (!skipHistory) {
+    var hash = '#' + id;
+    if (window.location.hash !== hash) {
+      window.history.pushState({ section: id }, '', hash);
+    }
+  }
 }
+
+// Gestione back/forward browser (trackpad swipe incluso)
+window.addEventListener('popstate', function(e) {
+  var id = (e.state && e.state.section) ? e.state.section : 'dashboard';
+  showSection(id, null, true);
+});
+
+// Al caricamento: ripristina sezione dall'hash se presente
+window.addEventListener('load', function() {
+  var hash = window.location.hash.replace('#','');
+  var valid = ['dashboard','fatture','f24','clienti','profilo','cliente-detail'];
+  if (hash && valid.indexOf(hash) !== -1) {
+    // Rimanda dopo initApp
+    window._initialSection = hash;
+  }
+});
+
+// Gestione back/forward browser (trackpad swipe, tasto indietro)
+window.addEventListener('popstate', function(e) {
+  var id = (e.state && e.state.section) ? e.state.section : (window.location.hash.replace('#','') || 'dashboard');
+  // Verifica che la sezione esista
+  if (!el('section-' + id)) id = 'dashboard';
+  showSection(id, null, true);
+});
+
+// Al caricamento, leggi hash se presente
+window.addEventListener('load', function() {
+  var hash = window.location.hash.replace('#', '');
+  if (hash && el('section-' + hash)) {
+    // Sostituisci lo state iniziale con la sezione corrente
+    window.history.replaceState({ section: hash }, '', '#' + hash);
+  } else {
+    window.history.replaceState({ section: 'dashboard' }, '', window.location.pathname);
+  }
+});
 
 function apriClienteDetail(nome) {
   var anno = new Date().getFullYear();
@@ -2354,6 +2416,35 @@ function apriClienteDetail(nome) {
   el('det-daincassare').textContent = fmt(totDaInc);
   el('det-nfat').textContent = fatAnno.length;
   var dtot = el('det-chart-tot'); if (dtot) dtot.textContent = fmt(totFat);
+
+  // ── KPI avanzate ──
+  // Incidenza sul fatturato totale anno
+  var totFatturatoAnno = fattureData.filter(function(f){ return f.tipo==='emessa' && new Date(f.data_emissione).getFullYear()===anno; }).reduce(function(s,f){return s+parseFloat(f.importo||0);},0);
+  var incidenza = totFatturatoAnno > 0 ? Math.round((totFat/totFatturatoAnno)*100) : 0;
+  var incidenzaEl = el('det-incidenza');
+  if (incidenzaEl) {
+    incidenzaEl.textContent = incidenza + '%';
+    incidenzaEl.style.color = incidenza >= 20 ? '#2563EB' : incidenza >= 10 ? '#0891B2' : 'var(--text)';
+  }
+  var incSubEl = el('det-incidenza-sub');
+  if (incSubEl) incSubEl.textContent = fmt(totFat) + ' su ' + fmt(totFatturatoAnno);
+
+  // Tasso di incasso
+  var tassoIncasso = totFat > 0 ? Math.round((totInc/totFat)*100) : 0;
+  var tassoEl = el('det-tasso-incasso');
+  if (tassoEl) {
+    tassoEl.textContent = tassoIncasso + '%';
+    tassoEl.style.color = tassoIncasso >= 80 ? '#059669' : tassoIncasso >= 50 ? '#EA580C' : '#DC2626';
+  }
+  var tassoSubEl = el('det-tasso-sub');
+  if (tassoSubEl) tassoSubEl.textContent = fmt(totInc) + ' incassati';
+
+  // Media importo per fattura
+  var mediaImporto = fatAnno.length > 0 ? totFat / fatAnno.length : 0;
+  var mediaEl = el('det-media-fat');
+  if (mediaEl) mediaEl.textContent = fmt(mediaImporto);
+  var mediaSubEl = el('det-media-sub');
+  if (mediaSubEl) mediaSubEl.textContent = 'su ' + fatAnno.length + ' fatt' + (fatAnno.length !== 1 ? 'ure' : 'ura');
 
   var datiMensili = Array(12).fill(0);
   fatAnno.forEach(function(f){ datiMensili[new Date(f.data_emissione).getMonth()] += parseFloat(f.importo||0); });
