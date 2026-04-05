@@ -2308,54 +2308,10 @@ function renderNotifiche() {
 // ── SPARKLINES REALISTICHE ──
 function drawSparkline(canvasId, data, color) {
   var canvas = el(canvasId);
-  if (!canvas || !data || data.length < 2) return;
+  if (!canvas) return;
   var key = '_spark_' + canvasId;
   if (window[key]) { window[key].destroy(); window[key] = null; }
-
-  // Se tutti i valori sono zero non disegnare nulla
-  var maxVal = Math.max.apply(null, data);
-  if (maxVal === 0) { canvas.getContext('2d').clearRect(0, 0, canvas.width, canvas.height); return; }
-
-  // Micro-variazioni deterministiche solo se ci sono valori reali
-  var enhanced = data.map(function(v, i) {
-    if (v === 0) return 0;
-    var noise = v * 0.06 * Math.sin(i * 2.7 + v * 0.001);
-    return Math.max(0, v + noise);
-  });
-
-  if (typeof Chart !== 'undefined') {
-    window[key] = new Chart(canvas.getContext('2d'), {
-      type: 'line',
-      data: {
-        labels: enhanced.map(function(_,i){return i;}),
-        datasets: [{
-          data: enhanced,
-          borderColor: color,
-          backgroundColor: 'transparent',
-          borderWidth: 2,
-          pointRadius: enhanced.map(function(v, i){
-            // Mostra punto solo su massimo, minimo e ultimo valore
-            var isLast = i === enhanced.length - 1;
-            var isMax = v === Math.max.apply(null, enhanced);
-            var isMin = v === Math.min.apply(null, enhanced) && v > 0;
-            return (isLast || isMax || isMin) ? 3 : 0;
-          }),
-          pointBackgroundColor: color,
-          pointBorderColor: '#fff',
-          pointBorderWidth: 1.5,
-          tension: 0,
-          fill: false,
-          stepped: false
-        }]
-      },
-      options: {
-        responsive: false,
-        plugins: { legend:{display:false}, tooltip:{enabled:false} },
-        scales: { x:{display:false}, y:{display:false, min: 0} },
-        animation: { duration: 500 }
-      }
-    });
-  }
+  canvas.getContext('2d').clearRect(0, 0, canvas.width, canvas.height);
 }
 
 // ── TOGGLEUSERMENU ──
