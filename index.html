@@ -1175,7 +1175,8 @@ body.dark .calc-row .cr-value { color: #F9FAFB; }
       </div>
 
       <!-- Fatture da incassare + Incassi per mese -->
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;margin-bottom:1rem;">
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:1rem;margin-bottom:1rem;">
+        <!-- Fatture da incassare -->
         <div class="card fade-in" style="display:flex;flex-direction:column;max-height:300px;overflow:hidden;">
           <div class="card-header" style="flex-shrink:0;">
             <h3>Fatture da incassare</h3>
@@ -1186,6 +1187,17 @@ body.dark .calc-row .cr-value { color: #F9FAFB; }
             <div class="loading-spinner"><div class="spinner"></div> Caricamento...</div>
           </div>
         </div>
+        <!-- Fatture a rischio -->
+        <div class="card fade-in" style="display:flex;flex-direction:column;max-height:300px;">
+          <div class="card-header" style="flex-shrink:0;">
+            <h3>⚠ Fatture a rischio</h3>
+            <span id="rischio-count" style="font-size:0.75rem;color:rgba(255,255,255,0.5);"></span>
+          </div>
+          <div id="fatture-rischio-body" style="overflow-y:auto;flex:1;">
+            <div class="loading-spinner"><div class="spinner"></div> Caricamento...</div>
+          </div>
+        </div>
+        <!-- Incassi per mese -->
         <div class="card fade-in" style="display:flex;flex-direction:column;max-height:300px;">
           <div class="card-header">
             <h3>Incassi per mese</h3>
@@ -1196,38 +1208,6 @@ body.dark .calc-row .cr-value { color: #F9FAFB; }
               <thead style="position:sticky;top:0;z-index:1;"><tr><th>Mese</th><th>Incassato</th><th style="width:35%"></th></tr></thead>
               <tbody id="dash-incassi-mese"></tbody>
             </table>
-          </div>
-        </div>
-      </div>
-
-      <!-- Heatmap fatturato giornaliero -->
-      <div class="card fade-in" style="margin-bottom:1rem;">
-        <div class="card-header">
-          <h3>Attività di fatturazione</h3>
-          <span style="font-size:0.75rem;color:rgba(255,255,255,0.5);">ogni cella = 1 giorno</span>
-        </div>
-        <div style="padding:0.8rem 1.2rem 1rem;overflow-x:auto;">
-          <div id="heatmap-container"></div>
-        </div>
-      </div>
-
-      <!-- Fatture a rischio + Record personali -->
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;margin-bottom:1rem;">
-        <!-- Fatture a rischio -->
-        <div class="card fade-in" style="display:flex;flex-direction:column;max-height:260px;">
-          <div class="card-header">
-            <h3>⚠ Fatture a rischio</h3>
-            <span id="rischio-count" style="font-size:0.75rem;color:rgba(255,255,255,0.5);"></span>
-          </div>
-          <div id="fatture-rischio-body" style="overflow-y:auto;flex:1;">
-            <div class="loading-spinner"><div class="spinner"></div> Caricamento...</div>
-          </div>
-        </div>
-        <!-- Record personali -->
-        <div class="card fade-in" style="display:flex;flex-direction:column;max-height:260px;">
-          <div class="card-header"><h3>🏆 Record personali</h3></div>
-          <div id="record-body" style="padding:0.8rem 1rem;display:flex;flex-direction:column;gap:0.6rem;overflow-y:auto;flex:1;">
-            <div class="loading-spinner"><div class="spinner"></div> Caricamento...</div>
           </div>
         </div>
       </div>
@@ -1451,7 +1431,7 @@ body.dark .calc-row .cr-value { color: #F9FAFB; }
         <h2>Il mio profilo</h2>
         <p>I tuoi dati anagrafici e fiscali</p>
       </div>
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:1.2rem;max-width:900px;">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:1.2rem;max-width:900px;margin-bottom:1.2rem;">
         <div class="card fade-in">
           <div class="card-header"><h3>Dati anagrafici</h3></div>
           <div style="padding:1.8rem 2rem;">
@@ -1463,6 +1443,13 @@ body.dark .calc-row .cr-value { color: #F9FAFB; }
           <div style="padding:1.8rem 2rem;">
             <div id="profilo-fiscale" style="display:grid;grid-template-columns:1fr 1fr;gap:1.6rem;"></div>
           </div>
+        </div>
+      </div>
+      <!-- Record personali -->
+      <div class="card fade-in" style="max-width:900px;">
+        <div class="card-header"><h3>🏆 Record personali</h3></div>
+        <div id="record-body" style="padding:0.8rem 1rem;display:flex;flex-direction:column;gap:0.6rem;">
+          <div class="loading-spinner"><div class="spinner"></div> Caricamento...</div>
         </div>
       </div>
     </div>
@@ -1761,9 +1748,7 @@ function renderDashboard() {
 
   // Aggiorna notifiche
   renderNotifiche();
-  renderHeatmap();
   renderFattureRischio();
-  renderRecord();
 
   var legEl = el('chart-legend');
   if (legEl) legEl.textContent = fmt(fatturato);
@@ -2573,6 +2558,7 @@ function showSection(id, ev, skipHistory) {
   if (id === 'clienti') renderClienti();
   if (id === 'fatture') renderFattureChart();
   if (id === 'f24') renderF24Bar();
+  if (id === 'profilo') renderRecord();
   if (!skipHistory) {
     try {
       var hash = '#' + id;
