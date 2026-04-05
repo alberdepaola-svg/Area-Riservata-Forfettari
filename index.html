@@ -596,9 +596,11 @@ html, body { height: 100%; font-family: var(--sans); }
   box-shadow: var(--shadow-sm);
   position: relative;
   overflow: hidden;
-  transition: box-shadow 0.2s;
+  transition: box-shadow 0.2s, transform 0.2s;
+  cursor: default;
 }
-.kpi-card:hover { box-shadow: var(--shadow); }
+.kpi-card:hover { box-shadow: var(--shadow); transform: scale(1.025); }
+.kpi-card.clickable { cursor: pointer; }
 .kpi-card::before {
   content: '';
   position: absolute;
@@ -932,22 +934,22 @@ body.dark .calc-row .cr-value { color: #F9FAFB; }
 
       <!-- KPI — riga unica 4 card -->
       <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:0.8rem;margin-bottom:0.9rem;">
-        <div class="kpi-card blue">
+        <div class="kpi-card blue clickable" onclick="showSection('fatture',event)" title="Vai a Fatture">
           <div class="kpi-label">Fatturato</div>
           <div class="kpi-value" id="kpi-fatturato">—</div>
           <div class="kpi-sub" id="kpi-fatturato-sub"></div>
         </div>
-        <div class="kpi-card" style="border-top:3px solid #7C3AED;">
+        <div class="kpi-card clickable" style="border-top:3px solid #7C3AED;" onclick="showSection('fatture',event)" title="Vai a Fatture">
           <div class="kpi-label">Reddito lordo</div>
           <div class="kpi-value" id="kpi-reddito-lordo">—</div>
           <div class="kpi-sub" id="kpi-reddito-lordo-sub"></div>
         </div>
-        <div class="kpi-card green">
+        <div class="kpi-card green clickable" onclick="showSection('fatture',event)" title="Vai a Fatture">
           <div class="kpi-label">Reddito imponibile</div>
           <div class="kpi-value" id="kpi-reddito">—</div>
           <div class="kpi-sub" id="kpi-reddito-sub"></div>
         </div>
-        <div class="kpi-card gold">
+        <div class="kpi-card gold clickable" onclick="showSection('fatture',event)" title="Vai a Fatture">
           <div class="kpi-label">Imposta sostitutiva</div>
           <div class="kpi-value" id="kpi-imposta">—</div>
           <div class="kpi-sub" id="kpi-imposta-sub"></div>
@@ -1003,7 +1005,7 @@ body.dark .calc-row .cr-value { color: #F9FAFB; }
 
       <!-- KPI mese corrente: fatturato mese + ft emesse mese -->
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;margin-bottom:1rem;">
-        <div class="card fade-in" style="padding:1rem 1.2rem;">
+        <div class="card fade-in clickable" style="padding:1rem 1.2rem;cursor:pointer;transition:transform 0.2s,box-shadow 0.2s;" onmouseover="this.style.transform='scale(1.025)';this.style.boxShadow='var(--shadow)'" onmouseout="this.style.transform='';this.style.boxShadow=''" onclick="showSection('fatture',event)">
           <div style="display:flex;justify-content:space-between;align-items:flex-start;">
             <div>
               <div style="display:flex;align-items:center;gap:0.4rem;margin-bottom:0.4rem;">
@@ -1016,7 +1018,7 @@ body.dark .calc-row .cr-value { color: #F9FAFB; }
             <canvas id="chart-spark-fat" width="80" height="40" style="margin-top:0.2rem;"></canvas>
           </div>
         </div>
-        <div class="card fade-in" style="padding:1rem 1.2rem;">
+        <div class="card fade-in clickable" style="padding:1rem 1.2rem;cursor:pointer;transition:transform 0.2s,box-shadow 0.2s;" onmouseover="this.style.transform='scale(1.025)';this.style.boxShadow='var(--shadow)'" onmouseout="this.style.transform='';this.style.boxShadow=''" onclick="showSection('fatture',event)">
           <div style="display:flex;justify-content:space-between;align-items:flex-start;">
             <div>
               <div style="display:flex;align-items:center;gap:0.4rem;margin-bottom:0.4rem;">
@@ -1033,12 +1035,12 @@ body.dark .calc-row .cr-value { color: #F9FAFB; }
 
       <!-- KPI Contributi + F24 separate, stile kpi-card -->
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;margin-bottom:1rem;">
-        <div class="kpi-card" style="border-top:3px solid #0891B2;">
+        <div class="kpi-card clickable" style="border-top:3px solid #0891B2;" onclick="showSection('f24',event)" title="Vai a F24">
           <div class="kpi-label">Contributi versati</div>
           <div class="kpi-value" id="kpi-contributi">—</div>
           <div class="kpi-sub">anno corrente</div>
         </div>
-        <div class="kpi-card red">
+        <div class="kpi-card red clickable" onclick="showSection('f24',event)" title="Vai a F24">
           <div class="kpi-label">F24 da pagare</div>
           <div class="kpi-value" id="kpi-f24">—</div>
           <div class="kpi-sub">scadenze aperte</div>
@@ -1093,7 +1095,12 @@ body.dark .calc-row .cr-value { color: #F9FAFB; }
           <h3>Fatturato per cliente</h3>
           <span id="fatturato-clienti-tot" style="font-size:0.82rem;"></span>
         </div>
-        <div style="display:grid;grid-template-columns:260px 1fr;gap:0;height:340px;">
+        <!-- Search bar -->
+        <div style="padding:0.6rem 1rem;border-bottom:1px solid var(--border);background:#fafafa;">
+          <input type="text" id="search-clienti" placeholder="Cerca cliente..." oninput="filterClientiDash(this.value)"
+            style="width:100%;border:1px solid var(--border);border-radius:6px;padding:0.35rem 0.7rem;font-size:0.78rem;font-family:var(--sans);color:var(--text);outline:none;background:var(--white);" />
+        </div>
+        <div style="display:grid;grid-template-columns:260px 1fr;gap:0;height:310px;">
           <div style="padding:1.2rem;display:flex;flex-direction:column;align-items:center;justify-content:flex-start;border-right:1px solid var(--border);gap:0.8rem;overflow-y:auto;">
             <canvas id="chart-clienti" width="180" height="180"></canvas>
             <div id="dash-clienti-legend" style="width:100%;display:flex;flex-direction:column;gap:0.35rem;"></div>
@@ -1141,10 +1148,13 @@ body.dark .calc-row .cr-value { color: #F9FAFB; }
           <span style="font-size:0.68rem;color:var(--text-light)">Dic</span>
         </div>
       </div>
-      <div class="filter-bar">
+      <div class="filter-bar" style="display:flex;align-items:center;gap:0.5rem;">
         <button class="filter-btn active" onclick="filterFatture('tutte',this)">Tutte</button>
         <button class="filter-btn" onclick="filterFatture('emessa',this)">Emesse</button>
         <button class="filter-btn" onclick="filterFatture('ricevuta',this)">Ricevute</button>
+        <div style="flex:1;"></div>
+        <input type="text" id="search-fatture-num" placeholder="Cerca per numero..." oninput="filterFatture(currentFattureFilter,null)"
+          style="border:1px solid var(--border);border-radius:6px;padding:0.28rem 0.7rem;font-size:0.75rem;font-family:var(--sans);color:var(--text);outline:none;width:180px;" />
       </div>
       <div class="card fade-in">
         <div id="fatture-body">
@@ -1442,7 +1452,12 @@ function renderDashboard() {
   el('kpi-imposta-sub').textContent = 'aliquota ' + aliquota + '%';
   el('kpi-f24').textContent = f24Aperti;
 
-  // ── Grafico soglia ──
+  // ── datiAnno definito QUI, prima di tutto il resto ──
+  var mesi = ['Gen','Feb','Mar','Apr','Mag','Giu','Lug','Ago','Set','Ott','Nov','Dic'];
+  var datiAnno = Array(12).fill(0);
+  fattureData.filter(function(f) { return f.tipo === 'emessa' && new Date(f.data_emissione).getFullYear() === anno; }).forEach(function(f) {
+    datiAnno[new Date(f.data_emissione).getMonth()] += parseFloat(f.importo || 0);
+  });
   var SOGLIA = 85000;
   var residuo = Math.max(0, SOGLIA - fatturato);
   var pct = Math.min(100, Math.round((fatturato / SOGLIA) * 100));
@@ -1552,12 +1567,6 @@ function renderDashboard() {
       });
     }
   }
-
-  var mesi = ['Gen','Feb','Mar','Apr','Mag','Giu','Lug','Ago','Set','Ott','Nov','Dic'];
-  var datiAnno = Array(12).fill(0);
-  fattureData.filter(function(f) { return f.tipo === 'emessa' && new Date(f.data_emissione).getFullYear() === anno; }).forEach(function(f) {
-    datiAnno[new Date(f.data_emissione).getMonth()] += parseFloat(f.importo || 0);
-  });
 
   var legEl = el('chart-legend');
   if (legEl) legEl.textContent = fmt(fatturato);
@@ -1788,8 +1797,21 @@ async function _eseguiTogglePagata(id, nuovoStato, dataIncasso) {
   renderDashboard();
 }
 
+function filterClientiDash(query) {
+  var q = (query || '').toLowerCase().trim();
+  var rows = document.querySelectorAll('#dash-clienti-body tr');
+  rows.forEach(function(row) {
+    var nome = row.querySelector('td:first-child');
+    if (!nome) return;
+    row.style.display = !q || nome.textContent.toLowerCase().includes(q) ? '' : 'none';
+  });
+}
+
 function renderFatture() {
+  var searchEl = el('search-fatture-num');
+  var query = searchEl ? searchEl.value.toLowerCase().trim() : '';
   var list = currentFattureFilter === 'tutte' ? fattureData : fattureData.filter(function(f) { return f.tipo === currentFattureFilter; });
+  if (query) list = list.filter(function(f) { return (f.numero || '').toLowerCase().includes(query) || (f.cessionario_nome || f.cedente_nome || '').toLowerCase().includes(query); });
   var fatEl = el('fatture-body');
   if (list.length === 0) { fatEl.innerHTML = emptyState('Nessuna fattura trovata'); return; }
   var rows = list.map(function(f) {
