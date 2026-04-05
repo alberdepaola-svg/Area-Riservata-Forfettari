@@ -977,7 +977,7 @@ body.dark .calc-row .cr-value { color: #F9FAFB; }
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
         <span class="sb-label">Clienti</span>
       </button>
-      <button class="sb-item" id="nav-cliente-detail" style="display:none;padding-left:calc(0.8rem + 20px);" onclick="showSection('cliente-detail',event)">
+      <button class="sb-item" id="nav-cliente-detail" style="display:none;" onclick="showSection('cliente-detail',event)">
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="5"/><path d="M3 21v-2a9 9 0 0 1 18 0v2"/></svg>
         <span class="sb-label" id="nav-cliente-detail-label" style="font-size:0.72rem;">—</span>
       </button>
@@ -1084,70 +1084,91 @@ body.dark .calc-row .cr-value { color: #F9FAFB; }
             <h3>Andamento fatturato mensile</h3>
             <span id="chart-legend" style="font-size:0.82rem;"></span>
           </div>
-          <div style="padding:0.8rem 1.4rem 0.8rem;">
-            <canvas id="chart-fatturato" height="85"></canvas>
+          <!-- Carousel: due grafici con dot navigation -->
+          <div style="position:relative;">
+            <div id="chart-panel-0" style="padding:0.8rem 1.4rem 0.4rem;">
+              <canvas id="chart-fatturato" height="85"></canvas>
+            </div>
+            <div id="chart-panel-1" style="padding:0.8rem 1.4rem 0.4rem;display:none;">
+              <canvas id="chart-fatturato-line" height="85"></canvas>
+            </div>
+            <!-- Dot navigation -->
+            <div style="display:flex;justify-content:center;gap:6px;padding:0.5rem 0 0.7rem;">
+              <button id="dot-0" onclick="switchChart(0)" style="width:7px;height:7px;border-radius:50%;border:none;background:var(--navy);cursor:pointer;padding:0;transition:all 0.2s;"></button>
+              <button id="dot-1" onclick="switchChart(1)" style="width:7px;height:7px;border-radius:50%;border:none;background:#d1d5db;cursor:pointer;padding:0;transition:all 0.2s;"></button>
+            </div>
           </div>
         </div>
-        <!-- Soglia -->
-        <div class="card fade-in" style="padding:1.2rem 1.4rem;">
-          <div style="font-size:0.62rem;font-weight:600;text-transform:uppercase;letter-spacing:0.12em;color:var(--text-mid);margin-bottom:0.8rem;">Soglia regime forfettario</div>
-          <div style="display:flex;align-items:center;justify-content:center;margin-bottom:0.8rem;">
-            <div style="position:relative;width:110px;height:110px;">
-              <canvas id="chart-soglia" width="110" height="110"></canvas>
+
+        <!-- Soglia: design professionale full-size -->
+        <div class="card fade-in" style="padding:0;overflow:hidden;display:flex;flex-direction:column;">
+          <!-- Header navy -->
+          <div style="background:var(--navy);padding:0.8rem 1.2rem;border-bottom:1px solid rgba(184,150,62,0.25);">
+            <div style="font-size:0.6rem;font-weight:600;text-transform:uppercase;letter-spacing:0.14em;color:rgba(255,255,255,0.45);">Regime forfettario</div>
+            <div style="font-size:0.82rem;font-weight:600;color:rgba(255,255,255,0.9);margin-top:1px;">Soglia annuale</div>
+          </div>
+          <!-- Corpo -->
+          <div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:1rem 1.4rem;">
+            <!-- Doughnut grande -->
+            <div style="position:relative;width:130px;height:130px;margin-bottom:1rem;">
+              <canvas id="chart-soglia" width="130" height="130"></canvas>
               <div style="position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;">
-                <div style="font-size:1.3rem;font-weight:700;line-height:1;" id="soglia-pct-num">0%</div>
-                <div style="font-size:0.58rem;color:var(--text-light);margin-top:2px;">utilizzato</div>
+                <div style="font-size:1.6rem;font-weight:700;line-height:1;letter-spacing:-0.02em;" id="soglia-pct-num">0%</div>
+                <div style="font-size:0.58rem;color:var(--text-light);margin-top:3px;text-transform:uppercase;letter-spacing:0.08em;">utilizzato</div>
               </div>
             </div>
-          </div>
-          <div style="height:6px;background:#F3F4F6;border-radius:3px;overflow:hidden;margin-bottom:0.7rem;">
-            <div id="soglia-bar-line" style="height:100%;width:0%;border-radius:3px;transition:width 1s ease;background:#059669;"></div>
-          </div>
-          <div style="display:grid;grid-template-columns:1fr 1fr;gap:0.4rem;">
-            <div>
-              <div style="font-size:0.58rem;color:var(--text-light);text-transform:uppercase;letter-spacing:0.07em;">Fatturato</div>
-              <div style="font-size:0.85rem;font-weight:700;color:var(--text);" id="soglia-fatturato-val">—</div>
+            <!-- Barra -->
+            <div style="width:100%;margin-bottom:0.9rem;">
+              <div style="display:flex;justify-content:space-between;margin-bottom:0.3rem;">
+                <span style="font-size:0.6rem;color:var(--text-light);text-transform:uppercase;letter-spacing:0.07em;">€ 0</span>
+                <span style="font-size:0.6rem;color:var(--text-light);text-transform:uppercase;letter-spacing:0.07em;">€ 85.000</span>
+              </div>
+              <div style="height:5px;background:#F3F4F6;border-radius:0;overflow:hidden;">
+                <div id="soglia-bar-line" style="height:100%;width:0%;border-radius:0;transition:width 1s ease;background:#059669;"></div>
+              </div>
             </div>
-            <div style="text-align:right;">
-              <div style="font-size:0.58rem;color:var(--text-light);text-transform:uppercase;letter-spacing:0.07em;">Residuo max</div>
-              <div style="font-size:0.85rem;font-weight:700;" id="soglia-residuo-small">—</div>
+            <!-- Due valori affiancati con divisore -->
+            <div style="width:100%;display:grid;grid-template-columns:1fr 1px 1fr;gap:0.6rem;align-items:center;">
+              <div>
+                <div style="font-size:0.58rem;color:var(--text-light);text-transform:uppercase;letter-spacing:0.07em;margin-bottom:0.2rem;">Fatturato</div>
+                <div style="font-size:1rem;font-weight:700;color:var(--text);letter-spacing:-0.02em;" id="soglia-fatturato-val">—</div>
+              </div>
+              <div style="background:var(--border);height:30px;"></div>
+              <div style="text-align:right;">
+                <div style="font-size:0.58rem;color:var(--text-light);text-transform:uppercase;letter-spacing:0.07em;margin-bottom:0.2rem;">Residuo max</div>
+                <div style="font-size:1rem;font-weight:700;letter-spacing:-0.02em;" id="soglia-residuo-small">—</div>
+              </div>
             </div>
+            <div id="soglia-alert" style="display:none;font-size:0.7rem;font-weight:600;margin-top:0.6rem;width:100%;text-align:center;"></div>
           </div>
-          <div id="soglia-alert" style="display:none;font-size:0.7rem;font-weight:600;margin-top:0.5rem;"></div>
         </div>
       </div>
 
-      <!-- KPI mese corrente: fatturato mese + ft emesse mese -->
+      <!-- KPI mese corrente: angolari, stile professionale -->
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;margin-bottom:1rem;">
-        <div class="card fade-in clickable" style="padding:1rem 1.2rem;cursor:pointer;transition:transform 0.2s,box-shadow 0.2s;" onmouseover="this.style.transform='scale(1.025)';this.style.boxShadow='var(--shadow)'" onmouseout="this.style.transform='';this.style.boxShadow=''" onclick="showSection('fatture',event)">
+        <div onclick="showSection('fatture',event)" style="background:var(--white);border:1px solid var(--border);border-radius:0;border-left:3px solid #2563EB;padding:0.9rem 1.1rem;cursor:pointer;transition:transform 0.18s,box-shadow 0.18s;box-shadow:var(--shadow-sm);" onmouseover="this.style.transform='scale(1.02)';this.style.boxShadow='var(--shadow)'" onmouseout="this.style.transform='';this.style.boxShadow='var(--shadow-sm)'">
           <div style="display:flex;justify-content:space-between;align-items:flex-start;">
-            <div>
-              <div style="display:flex;align-items:center;gap:0.4rem;margin-bottom:0.4rem;">
-                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="var(--text-mid)" stroke-width="2"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
-                <div style="font-size:0.62rem;font-weight:600;text-transform:uppercase;letter-spacing:0.1em;color:var(--text-mid);">Fatturato del mese</div>
-              </div>
-              <div style="font-size:1.4rem;font-weight:700;color:var(--text);letter-spacing:-0.02em;" id="kpi-mese-fat">—</div>
-              <div style="font-size:0.72rem;margin-top:0.25rem;" id="kpi-mese-fat-delta"></div>
+            <div style="flex:1;">
+              <div style="font-size:0.6rem;font-weight:700;text-transform:uppercase;letter-spacing:0.12em;color:#2563EB;margin-bottom:0.35rem;">$ Fatturato del mese</div>
+              <div style="font-size:1.5rem;font-weight:700;color:var(--text);letter-spacing:-0.03em;line-height:1;" id="kpi-mese-fat">—</div>
+              <div style="font-size:0.72rem;margin-top:0.3rem;" id="kpi-mese-fat-delta"></div>
             </div>
-            <canvas id="chart-spark-fat" width="90" height="44" style="margin-top:0.2rem;"></canvas>
+            <canvas id="chart-spark-fat" width="90" height="42" style="margin-top:0.1rem;flex-shrink:0;"></canvas>
           </div>
         </div>
-        <div class="card fade-in clickable" style="padding:1rem 1.2rem;cursor:pointer;transition:transform 0.2s,box-shadow 0.2s;" onmouseover="this.style.transform='scale(1.025)';this.style.boxShadow='var(--shadow)'" onmouseout="this.style.transform='';this.style.boxShadow=''" onclick="showSection('fatture',event)">
+        <div onclick="showSection('fatture',event)" style="background:var(--white);border:1px solid var(--border);border-radius:0;border-left:3px solid #7C3AED;padding:0.9rem 1.1rem;cursor:pointer;transition:transform 0.18s,box-shadow 0.18s;box-shadow:var(--shadow-sm);" onmouseover="this.style.transform='scale(1.02)';this.style.boxShadow='var(--shadow)'" onmouseout="this.style.transform='';this.style.boxShadow='var(--shadow-sm)'">
           <div style="display:flex;justify-content:space-between;align-items:flex-start;">
-            <div>
-              <div style="display:flex;align-items:center;gap:0.4rem;margin-bottom:0.4rem;">
-                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="var(--text-mid)" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
-                <div style="font-size:0.62rem;font-weight:600;text-transform:uppercase;letter-spacing:0.1em;color:var(--text-mid);">Fatture emesse (mese)</div>
-              </div>
-              <div style="font-size:1.4rem;font-weight:700;color:var(--text);letter-spacing:-0.02em;" id="kpi-mese-num">—</div>
-              <div style="font-size:0.72rem;margin-top:0.25rem;" id="kpi-mese-num-delta"></div>
+            <div style="flex:1;">
+              <div style="font-size:0.6rem;font-weight:700;text-transform:uppercase;letter-spacing:0.12em;color:#7C3AED;margin-bottom:0.35rem;">&#9632; Fatture emesse (mese)</div>
+              <div style="font-size:1.5rem;font-weight:700;color:var(--text);letter-spacing:-0.03em;line-height:1;" id="kpi-mese-num">—</div>
+              <div style="font-size:0.72rem;margin-top:0.3rem;" id="kpi-mese-num-delta"></div>
             </div>
-            <canvas id="chart-spark-num" width="90" height="44" style="margin-top:0.2rem;"></canvas>
+            <canvas id="chart-spark-num" width="90" height="42" style="margin-top:0.1rem;flex-shrink:0;"></canvas>
           </div>
         </div>
       </div>
 
-      <!-- Fatture da incassare + Incassi per mese — tra le KPI piccole -->
+      <!-- Fatture da incassare + Incassi per mese -->
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;margin-bottom:1rem;">
         <div class="card fade-in" style="display:flex;flex-direction:column;max-height:300px;">
           <div class="card-header">
@@ -1172,17 +1193,17 @@ body.dark .calc-row .cr-value { color: #F9FAFB; }
         </div>
       </div>
 
-      <!-- KPI Contributi + F24 -->
+      <!-- KPI F24 (prima) + Contributi (dopo) — invertiti -->
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;margin-bottom:1rem;">
-        <div class="kpi-card clickable" style="border-top:3px solid #0891B2;" onclick="showSection('f24',event)" title="Vai a F24">
-          <div class="kpi-label">Contributi versati</div>
-          <div class="kpi-value" id="kpi-contributi">—</div>
-          <div class="kpi-sub">anno corrente</div>
-        </div>
         <div class="kpi-card red clickable" onclick="showSection('f24',event)" title="Vai a F24">
           <div class="kpi-label">F24 da pagare</div>
           <div class="kpi-value" id="kpi-f24">—</div>
           <div class="kpi-sub">scadenze aperte</div>
+        </div>
+        <div class="kpi-card clickable" style="border-top:3px solid #0891B2;" onclick="showSection('f24',event)" title="Vai a F24">
+          <div class="kpi-label">Contributi versati</div>
+          <div class="kpi-value" id="kpi-contributi">—</div>
+          <div class="kpi-sub">anno corrente</div>
         </div>
       </div>
 
@@ -1386,7 +1407,6 @@ body.dark .calc-row .cr-value { color: #F9FAFB; }
 <script>
 const SUPABASE_URL = 'https://znjhrwrwgpzmfwewdbnm.supabase.co';
 const SUPABASE_KEY = 'sb_publishable_TMbin3rxRij58V_Wquk5_Q_z375MFUz';
-
 const { createClient } = supabase;
 const sb = createClient(SUPABASE_URL, SUPABASE_KEY);
 
@@ -2342,6 +2362,16 @@ function apriClienteDetail(nome) {
 }
 
 // ── MAIN CHART wall-street style ──
+// ── CHART CAROUSEL ──
+var _currentChart = 0;
+function switchChart(idx) {
+  _currentChart = idx;
+  var p0 = el('chart-panel-0'); if (p0) p0.style.display = idx === 0 ? '' : 'none';
+  var p1 = el('chart-panel-1'); if (p1) p1.style.display = idx === 1 ? '' : 'none';
+  var d0 = el('dot-0'); if (d0) d0.style.background = idx === 0 ? 'var(--navy)' : '#d1d5db';
+  var d1 = el('dot-1'); if (d1) d1.style.background = idx === 1 ? 'var(--navy)' : '#d1d5db';
+}
+
 function renderChartWallStreet(datiAnno, mesi) {
   if (typeof Chart === 'undefined') return;
   var ctx = el('chart-fatturato'); if (!ctx) return;
@@ -2355,6 +2385,35 @@ function renderChartWallStreet(datiAnno, mesi) {
     ]},
     options: { responsive:true, interaction:{mode:'index',intersect:false}, plugins:{legend:{display:false}, tooltip:{backgroundColor:'#0d1b2a',borderColor:'rgba(184,150,62,0.4)',borderWidth:1,titleColor:'#9ca3af',bodyColor:'#fff',padding:12, callbacks:{label:function(c){return ' '+fmt(c.parsed.y);}}}}, scales:{ x:{grid:{display:false},ticks:{color:'#9ca3af',font:{size:10}}}, y:{grid:{color:'#f5f5f5',lineWidth:0.8},ticks:{color:'#9ca3af',font:{size:10},callback:function(v){return '€'+v.toLocaleString('it-IT');}},border:{display:false}} }, animation:{duration:600,easing:'easeInOutQuart'} }
   });
+
+  // Grafico a linea (pannello 1)
+  var ctxLine = el('chart-fatturato-line');
+  if (ctxLine) {
+    if (window.chartFatturatoLine) window.chartFatturatoLine.destroy();
+    // Crea dati con area gradiente
+    window.chartFatturatoLine = new Chart(ctxLine.getContext('2d'), {
+      type: 'line',
+      data: { labels: mesi, datasets: [{
+        data: datiAnno,
+        borderColor: '#2563EB',
+        backgroundColor: function(context) {
+          var gradient = context.chart.ctx.createLinearGradient(0, 0, 0, context.chart.height);
+          gradient.addColorStop(0, 'rgba(37,99,235,0.18)');
+          gradient.addColorStop(1, 'rgba(37,99,235,0)');
+          return gradient;
+        },
+        borderWidth: 2.5,
+        pointRadius: datiAnno.map(function(v){ return v > 0 ? 4 : 0; }),
+        pointBackgroundColor: '#2563EB',
+        pointBorderColor: '#fff',
+        pointBorderWidth: 2,
+        pointHoverRadius: 6,
+        fill: true,
+        tension: 0.4
+      }]},
+      options: { responsive:true, interaction:{mode:'index',intersect:false}, plugins:{legend:{display:false}, tooltip:{backgroundColor:'#0d1b2a',borderColor:'rgba(37,99,235,0.3)',borderWidth:1,titleColor:'#9ca3af',bodyColor:'#fff',padding:12, callbacks:{label:function(c){return ' '+fmt(c.parsed.y);}}}}, scales:{ x:{grid:{display:false},ticks:{color:'#9ca3af',font:{size:10}}}, y:{grid:{color:'#f5f5f5',lineWidth:0.8},ticks:{color:'#9ca3af',font:{size:10},callback:function(v){return '€'+v.toLocaleString('it-IT');}},border:{display:false}} }, animation:{duration:700,easing:'easeInOutQuart'} }
+    });
+  }
 }
 </script>
 <!-- Modale data incasso -->
