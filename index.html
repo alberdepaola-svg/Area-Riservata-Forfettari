@@ -1740,8 +1740,15 @@ async function initApp() {
     dateEl.textContent = d.toLocaleDateString('it-IT', { weekday:'long', day:'2-digit', month:'long', year:'numeric' });
   }
 
-  var res = await sb.from('clienti').select('*').eq('email', currentUser.email).single();
-  clienteData = res.data;
+  var res2 = await sb.from('clienti').select('*').eq('email', currentUser.email).single();
+  clienteData = res2.data;
+
+  // ── REDIRECT automatico in base al tipo_cliente ──
+  if (clienteData && clienteData.tipo_cliente === 'ordinario') {
+    window.location.href = 'ordinario.html';
+    return;
+  }
+
   if (clienteData) {
     var nomeCompleto = clienteData.nome + ' ' + clienteData.cognome;
     var initials = (clienteData.nome[0] + clienteData.cognome[0]).toUpperCase();
