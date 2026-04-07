@@ -1451,17 +1451,90 @@ body.dark .calc-row .cr-value { color: #F9FAFB; }
     <div class="section-page" id="section-clienti">
       <div class="page-header fade-in">
         <h2>I miei clienti</h2>
-        <p>Fatturato e incidenza per ogni cliente · 2026</p>
+        <p id="clienti-page-sub">Fatturato e incidenza per ogni cliente</p>
       </div>
-      <div style="display:grid;grid-template-columns:280px 1fr;gap:1.2rem;">
-        <!-- Doughnut + legenda -->
-        <div class="card fade-in" style="padding:1.4rem;display:flex;flex-direction:column;align-items:center;gap:1rem;">
-          <canvas id="chart-clienti-section" width="200" height="200"></canvas>
-          <div id="clienti-legend" style="width:100%;display:flex;flex-direction:column;gap:0.5rem;"></div>
+
+      <!-- Barra ricerca -->
+      <div style="margin-bottom:1rem;">
+        <div style="position:relative;max-width:340px;">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--text-light)" stroke-width="2" style="position:absolute;left:0.7rem;top:50%;transform:translateY(-50%);pointer-events:none;"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+          <input type="text" id="search-clienti-section" placeholder="Cerca cliente..." oninput="filterClientiSection(this.value)"
+            style="width:100%;padding:0.42rem 0.8rem 0.42rem 2.2rem;border:1px solid var(--border);border-radius:20px;font-size:0.8rem;font-family:var(--sans);color:var(--text);outline:none;background:var(--white);transition:border-color 0.2s;" onfocus="this.style.borderColor='var(--gold)'" onblur="this.style.borderColor='var(--border)'"/>
         </div>
-        <!-- Tabella -->
-        <div class="card fade-in">
-          <div id="clienti-body">
+      </div>
+
+      <!-- KPI row 1: metriche aggregate -->
+      <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:0.8rem;margin-bottom:0.8rem;">
+        <div class="kpi-card blue clickable" onclick="showSection('fatture',event)">
+          <div class="kpi-label">Clienti attivi</div>
+          <div class="kpi-value" id="cl-kpi-num">—</div>
+          <div class="kpi-sub" id="cl-kpi-num-sub">anno corrente</div>
+        </div>
+        <div class="kpi-card green clickable" onclick="showSection('fatture',event)">
+          <div class="kpi-label">Fatturato totale</div>
+          <div class="kpi-value" id="cl-kpi-fat">—</div>
+          <div class="kpi-sub" id="cl-kpi-fat-sub">emesso anno</div>
+        </div>
+        <div class="kpi-card" style="border-top:3px solid #EA580C;">
+          <div class="kpi-label">Da incassare</div>
+          <div class="kpi-value" id="cl-kpi-daincassare">—</div>
+          <div class="kpi-sub" id="cl-kpi-daincassare-sub">su tutti i clienti</div>
+        </div>
+        <div class="kpi-card" style="border-top:3px solid #7C3AED;">
+          <div class="kpi-label">Media per cliente</div>
+          <div class="kpi-value" id="cl-kpi-media">—</div>
+          <div class="kpi-sub">fatturato medio</div>
+        </div>
+      </div>
+
+      <!-- Grafico distribuzione + KPI top clienti -->
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:0.8rem;margin-bottom:0.8rem;">
+
+        <!-- Grafico barre orizzontali top clienti -->
+        <div class="card fade-in" style="padding:1rem 1.2rem;">
+          <div style="font-size:0.62rem;font-weight:600;text-transform:uppercase;letter-spacing:0.12em;color:var(--text-mid);margin-bottom:0.8rem;">Top clienti per fatturato</div>
+          <div id="cl-top-fat-chart" style="display:flex;flex-direction:column;gap:0.5rem;"></div>
+        </div>
+
+        <!-- Grafico barre top incasso + da saldare -->
+        <div class="card fade-in" style="padding:1rem 1.2rem;">
+          <div style="font-size:0.62rem;font-weight:600;text-transform:uppercase;letter-spacing:0.12em;color:var(--text-mid);margin-bottom:0.8rem;">Maggiore esposizione (da saldare)</div>
+          <div id="cl-top-daincassare-chart" style="display:flex;flex-direction:column;gap:0.5rem;"></div>
+        </div>
+      </div>
+
+      <!-- KPI row 2: crescita e best performer -->
+      <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:0.8rem;margin-bottom:0.8rem;">
+        <div class="kpi-card" style="border-top:3px solid #059669;">
+          <div class="kpi-label">Miglior incassatore</div>
+          <div class="kpi-value" id="cl-best-incasso-val" style="font-size:0.9rem;">—</div>
+          <div class="kpi-sub" id="cl-best-incasso-nome" style="font-weight:500;color:var(--text);font-size:0.72rem;margin-top:0.1rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;"></div>
+        </div>
+        <div class="kpi-card" style="border-top:3px solid #2563EB;">
+          <div class="kpi-label">Top fatturato</div>
+          <div class="kpi-value" id="cl-top-fat-val" style="font-size:0.9rem;">—</div>
+          <div class="kpi-sub" id="cl-top-fat-nome" style="font-weight:500;color:var(--text);font-size:0.72rem;margin-top:0.1rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;"></div>
+        </div>
+        <div class="kpi-card" style="border-top:3px solid #DC2626;">
+          <div class="kpi-label">Maggiore esposizione</div>
+          <div class="kpi-value" id="cl-max-exp-val" style="font-size:0.9rem;">—</div>
+          <div class="kpi-sub" id="cl-max-exp-nome" style="font-weight:500;color:var(--text);font-size:0.72rem;margin-top:0.1rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;"></div>
+        </div>
+        <div class="kpi-card" style="border-top:3px solid #b8963e;">
+          <div class="kpi-label">Concentrazione top 3</div>
+          <div class="kpi-value" id="cl-conc-top3">—</div>
+          <div class="kpi-sub">del fatturato totale</div>
+        </div>
+      </div>
+
+      <!-- Doughnut + tabella clienti scrollabile -->
+      <div style="display:grid;grid-template-columns:240px 1fr;gap:1rem;">
+        <div class="card fade-in" style="padding:1rem;display:flex;flex-direction:column;align-items:center;gap:0.8rem;overflow-y:auto;max-height:420px;">
+          <canvas id="chart-clienti-section" width="180" height="180"></canvas>
+          <div id="clienti-legend" style="width:100%;display:flex;flex-direction:column;gap:0.4rem;"></div>
+        </div>
+        <div class="card fade-in" style="overflow:hidden;display:flex;flex-direction:column;max-height:420px;">
+          <div id="clienti-body" style="overflow-y:auto;flex:1;">
             <div class="loading-spinner"><div class="spinner"></div> Caricamento...</div>
           </div>
         </div>
@@ -1565,23 +1638,44 @@ window.addEventListener('load', async function() {
   sb.auth.onAuthStateChange(async function(event, session) {
     if (event === 'PASSWORD_RECOVERY') {
       mostraFormNuovaPassword();
+    } else if (event === 'TOKEN_REFRESHED' && session) {
+      // Token rinnovato automaticamente — aggiorna utente corrente
+      currentUser = session.user;
+    } else if (event === 'SIGNED_OUT') {
+      currentUser = null; clienteData = null;
+      el('login-page').style.display = 'flex';
+      el('app').style.display = 'none';
     }
   });
 
-  // Se era un link di recovery (hash letto prima che Supabase lo pulisse)
+  // Se era un link di recovery
   if (_isPasswordRecovery) {
-    // Aspetta che Supabase processi il token e crei la sessione
     await new Promise(function(r){ setTimeout(r, 500); });
     mostraFormNuovaPassword();
     return;
   }
 
-  // Login normale: controlla sessione esistente
+  // Controlla sessione — getSession() la rinnova automaticamente se scaduta
   var res = await sb.auth.getSession();
   if (res.data.session) {
     currentUser = res.data.session.user;
     await initApp();
   }
+
+  // Quando l'utente torna sulla tab dopo lunga assenza, ricontrolla la sessione
+  document.addEventListener('visibilitychange', async function() {
+    if (document.visibilityState === 'visible' && currentUser) {
+      var check = await sb.auth.getSession();
+      if (!check.data.session) {
+        // Sessione scaduta — mostra login
+        currentUser = null;
+        el('login-page').style.display = 'flex';
+        el('app').style.display = 'none';
+      } else if (check.data.session.user) {
+        currentUser = check.data.session.user;
+      }
+    }
+  });
 });
 
 function mostraFormNuovaPassword() {
@@ -2174,11 +2268,19 @@ function renderProfilo() {
     campo('Soglia massima', '\u20ac 85.000');
 }
 
+var _clientiSectionQuery = '';
+
+function filterClientiSection(q) {
+  _clientiSectionQuery = (q || '').toLowerCase().trim();
+  renderClientiTabella();
+}
+
 function renderClienti() {
   var anno = new Date().getFullYear();
   var emesse = fattureData.filter(function(f) { return f.tipo === 'emessa' && f.anno === anno; });
   var totFatturato = emesse.reduce(function(s,f) { return s + parseFloat(f.importo||0); }, 0);
 
+  // Costruisci mappa clienti
   var map = {};
   emesse.forEach(function(f) {
     var nome = f.cessionario_nome || f.cedente_nome || 'Sconosciuto';
@@ -2188,22 +2290,75 @@ function renderClienti() {
   });
 
   var list = Object.keys(map).map(function(nome) {
-    return { nome: nome, fatturato: map[nome].fatturato, incassato: map[nome].incassato };
+    var daIncassare = map[nome].fatturato - map[nome].incassato;
+    return { nome: nome, fatturato: map[nome].fatturato, incassato: map[nome].incassato, daIncassare: daIncassare };
   }).sort(function(a,b) { return b.fatturato - a.fatturato; });
 
   var palette = ['#2563EB','#059669','#EA580C','#7C3AED','#0891B2','#DC2626','#D97706','#65A30D',
     '#10B981','#F59E0B','#6366F1','#EC4899','#14B8A6','#8B5CF6','#F97316','#06B6D4'];
 
-  // Doughnut sezione clienti
+  // ── KPI aggregate ──
+  var totDaIncassare = list.reduce(function(s,c){return s+c.daIncassare;},0);
+  var media = list.length > 0 ? totFatturato / list.length : 0;
+  var top3 = list.slice(0,3).reduce(function(s,c){return s+c.fatturato;},0);
+  var conc = totFatturato > 0 ? Math.round((top3/totFatturato)*100) : 0;
+
+  var clNum = el('cl-kpi-num'); if (clNum) clNum.textContent = list.length;
+  var clNSub = el('cl-kpi-num-sub'); if (clNSub) clNSub.textContent = list.length + ' clienti · anno ' + anno;
+  var clFat = el('cl-kpi-fat'); if (clFat) clFat.textContent = fmt(totFatturato);
+  var clDa = el('cl-kpi-daincassare'); if (clDa) { clDa.textContent = fmt(totDaIncassare); clDa.style.color = totDaIncassare > 0 ? '#EA580C' : '#059669'; }
+  var clMedia = el('cl-kpi-media'); if (clMedia) clMedia.textContent = fmt(media);
+  var sub = el('clienti-page-sub'); if (sub) sub.textContent = list.length + ' clienti · anno ' + anno;
+
+  // KPI best performer
+  var sortedInc = list.slice().sort(function(a,b){return b.incassato-a.incassato;});
+  var sortedExp = list.slice().sort(function(a,b){return b.daIncassare-a.daIncassare;});
+  var bestInc = sortedInc[0];
+  var topFat = list[0];
+  var maxExp = sortedExp[0];
+
+  if (bestInc) {
+    var biv = el('cl-best-incasso-val'); if(biv) biv.textContent = fmt(bestInc.incassato);
+    var bin = el('cl-best-incasso-nome'); if(bin) bin.textContent = bestInc.nome;
+  }
+  if (topFat) {
+    var tfv = el('cl-top-fat-val'); if(tfv) tfv.textContent = fmt(topFat.fatturato);
+    var tfn = el('cl-top-fat-nome'); if(tfn) tfn.textContent = topFat.nome;
+  }
+  if (maxExp) {
+    var mev = el('cl-max-exp-val'); if(mev) { mev.textContent = fmt(maxExp.daIncassare); mev.style.color = '#DC2626'; }
+    var men = el('cl-max-exp-nome'); if(men) men.textContent = maxExp.nome;
+  }
+  var concEl = el('cl-conc-top3'); if (concEl) { concEl.textContent = conc + '%'; concEl.style.color = conc >= 60 ? '#DC2626' : conc >= 40 ? '#EA580C' : '#059669'; }
+
+  // ── Grafici barre orizzontali ──
+  function barChart(containerId, data, color) {
+    var cont = el(containerId); if (!cont) return;
+    var maxV = data.length > 0 ? data[0].val : 1;
+    cont.innerHTML = data.slice(0,6).map(function(d) {
+      var pct = maxV > 0 ? Math.round((d.val/maxV)*100) : 0;
+      var nomeShort = d.nome.length > 22 ? d.nome.slice(0,20)+'…' : d.nome;
+      return '<div style="margin-bottom:0.3rem;">' +
+        '<div style="display:flex;justify-content:space-between;margin-bottom:0.2rem;">' +
+          '<span style="font-size:0.7rem;color:var(--text);font-weight:500;">' + nomeShort + '</span>' +
+          '<span style="font-size:0.68rem;font-family:var(--mono);color:var(--text-mid);">' + fmt(d.val) + '</span>' +
+        '</div>' +
+        '<div style="height:5px;background:#F3F4F6;border-radius:3px;overflow:hidden;">' +
+          '<div style="height:100%;width:' + pct + '%;background:' + color + ';border-radius:3px;transition:width 0.8s;"></div>' +
+        '</div></div>';
+    }).join('');
+  }
+
+  barChart('cl-top-fat-chart', list.map(function(c){return{nome:c.nome,val:c.fatturato};}), '#2563EB');
+  barChart('cl-top-daincassare-chart', sortedExp.map(function(c){return{nome:c.nome,val:c.daIncassare};}), '#DC2626');
+
+  // ── Doughnut ──
   var ctxSec = el('chart-clienti-section');
   if (ctxSec && typeof Chart !== 'undefined' && list.length > 0) {
     if (window.chartClientiSection) window.chartClientiSection.destroy();
     window.chartClientiSection = new Chart(ctxSec.getContext('2d'), {
       type: 'doughnut',
-      data: {
-        labels: list.map(function(c) { return c.nome; }),
-        datasets: [{ data: list.map(function(c) { return c.fatturato; }), backgroundColor: list.map(function(_,i) { return palette[i % palette.length]; }), borderWidth: 2, borderColor: '#fff', hoverOffset: 6 }]
-      },
+      data: { labels: list.map(function(c){return c.nome;}), datasets: [{ data: list.map(function(c){return c.fatturato;}), backgroundColor: list.map(function(_,i){return palette[i%palette.length];}), borderWidth: 2, borderColor: '#fff', hoverOffset: 6 }] },
       options: { responsive: false, cutout: '65%', plugins: { legend: { display: false }, tooltip: { backgroundColor: '#1a1d23', bodyColor: '#fff', padding: 10, callbacks: { label: function(c) { var pct = totFatturato > 0 ? Math.round((c.parsed/totFatturato)*100) : 0; return ' ' + fmt(c.parsed) + ' (' + pct + '%)'; } } } } }
     });
   }
@@ -2211,35 +2366,57 @@ function renderClienti() {
   // Legenda
   var legendEl = el('clienti-legend');
   if (legendEl) {
-    legendEl.innerHTML = list.slice(0, 8).map(function(c, i) {
-      var pct = totFatturato > 0 ? Math.round((c.fatturato / totFatturato) * 100) : 0;
-      var colore = palette[i % palette.length];
-      return '<div style="display:flex;align-items:center;gap:0.5rem;font-size:0.72rem;">' +
-        '<div style="width:8px;height:8px;border-radius:50%;background:' + colore + ';flex-shrink:0;"></div>' +
-        '<span style="flex:1;color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">' + c.nome + '</span>' +
+    legendEl.innerHTML = list.slice(0,8).map(function(c,i) {
+      var pct = totFatturato > 0 ? Math.round((c.fatturato/totFatturato)*100) : 0;
+      var colore = palette[i%palette.length];
+      return '<div style="display:flex;align-items:center;gap:0.4rem;font-size:0.68rem;">' +
+        '<div style="width:7px;height:7px;border-radius:50%;background:' + colore + ';flex-shrink:0;"></div>' +
+        '<span style="flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--text);">' + c.nome + '</span>' +
         '<span style="font-weight:700;color:' + colore + ';">' + pct + '%</span>' +
         '</div>';
     }).join('');
-    if (list.length > 8) legendEl.innerHTML += '<div style="font-size:0.68rem;color:var(--text-light);margin-top:0.3rem;">+ altri ' + (list.length - 8) + ' clienti</div>';
+    if (list.length > 8) legendEl.innerHTML += '<div style="font-size:0.66rem;color:var(--text-light);margin-top:0.3rem;">+ altri ' + (list.length-8) + ' clienti</div>';
   }
 
-  // Tabella
+  // Salva lista per search
+  window._clientiList = list;
+  window._clientiPalette = palette;
+  window._clientiTotFatturato = totFatturato;
+
+  renderClientiTabella();
+}
+
+function renderClientiTabella() {
+  var list = window._clientiList || [];
+  var palette = window._clientiPalette || [];
+  var totFatturato = window._clientiTotFatturato || 0;
+  var anno = new Date().getFullYear();
+  var q = _clientiSectionQuery;
+
+  var filtered = q ? list.filter(function(c){ return c.nome.toLowerCase().includes(q); }) : list;
+
   var el2 = el('clienti-body');
-  if (el2) {
-    if (list.length === 0) { el2.innerHTML = emptyState('Nessun cliente trovato per ' + anno); return; }
-    var rows = list.map(function(c, i) {
-      var pct = totFatturato > 0 ? Math.round((c.fatturato / totFatturato) * 100) : 0;
-      var colore = palette[i % palette.length];
-      var nomeEsc = c.nome.replace(/'/g, "\\'");
-      return '<tr style="cursor:pointer;" onclick="apriClienteDetail(\'' + nomeEsc + '\')" title="Apri scheda">' +
-        '<td><div style="width:9px;height:9px;border-radius:50%;background:' + colore + ';"></div></td>' +
-        '<td style="font-weight:500;color:var(--blue);text-decoration:underline;text-underline-offset:2px;">' + c.nome + '</td>' +
-        '<td class="amount">' + fmt(c.fatturato) + '</td>' +
-        '<td style="font-weight:700;color:' + colore + '">' + pct + '%</td>' +
-        '</tr>';
-    }).join('');
-    el2.innerHTML = '<table class="data-table"><thead><tr><th></th><th>Cliente</th><th>Fatturato ' + anno + '</th><th>Incidenza</th></tr></thead><tbody>' + rows + '</tbody></table>';
-  }
+  if (!el2) return;
+  if (filtered.length === 0) { el2.innerHTML = emptyState('Nessun cliente trovato'); return; }
+  var rows = filtered.map(function(c, i) {
+    var origIdx = list.indexOf(c);
+    var pct = totFatturato > 0 ? Math.round((c.fatturato/totFatturato)*100) : 0;
+    var colore = palette[origIdx % palette.length];
+    var nomeEsc = c.nome.replace(/'/g, "\\'");
+    var tassoInc = c.fatturato > 0 ? Math.round((c.incassato/c.fatturato)*100) : 0;
+    return '<tr style="cursor:pointer;" onclick="apriClienteDetail(\'' + nomeEsc + '\')" title="Apri scheda">' +
+      '<td><div style="width:8px;height:8px;border-radius:50%;background:' + colore + ';"></div></td>' +
+      '<td style="font-weight:500;color:var(--blue);text-decoration:underline;text-underline-offset:2px;">' + c.nome + '</td>' +
+      '<td class="amount">' + fmt(c.fatturato) + '</td>' +
+      '<td class="amount" style="color:#059669;">' + fmt(c.incassato) + '</td>' +
+      '<td class="amount" style="color:' + (c.daIncassare>0?'#EA580C':'#059669') + ';">' + fmt(c.daIncassare) + '</td>' +
+      '<td style="font-size:0.72rem;font-weight:700;color:' + (tassoInc>=80?'#059669':tassoInc>=50?'#EA580C':'#DC2626') + ';">' + tassoInc + '%</td>' +
+      '<td style="font-weight:700;color:' + colore + '">' + pct + '%</td>' +
+      '</tr>';
+  }).join('');
+  el2.innerHTML = '<table class="data-table" style="width:100%;">' +
+    '<thead style="position:sticky;top:0;z-index:1;"><tr><th></th><th>Cliente</th><th>Fatturato ' + anno + '</th><th>Incassato</th><th>Da incassare</th><th>Tasso incasso</th><th>Incidenza</th></tr></thead>' +
+    '<tbody>' + rows + '</tbody></table>';
 }
 
 function renderFattureChart() {
