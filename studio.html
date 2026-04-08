@@ -1,0 +1,986 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Studio De Paola — Pannello Studio</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Cormorant+Garamond:ital,wght@0,400;0,500;1,400&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+:root{
+  --navy:#0d1b2a;
+  --navy2:#162032;
+  --navy3:#1e2d40;
+  --gold:#B8963E;
+  --gold-l:#D4AF6A;
+  --white:#ffffff;
+  --bg:#F4F5F7;
+  --text:#1a1d23;
+  --text-mid:#6b7280;
+  --text-light:#9ca3af;
+  --border:#e5e7eb;
+  --green:#059669;
+  --green-l:#ECFDF5;
+  --red:#DC2626;
+  --red-l:#FEF2F2;
+  --orange:#EA580C;
+  --orange-l:#FFF7ED;
+  --blue:#2563EB;
+  --blue-l:#EFF6FF;
+  --cyan:#0891B2;
+  --violet:#7C3AED;
+  --shadow-sm:0 1px 3px rgba(0,0,0,0.07);
+  --shadow:0 4px 16px rgba(0,0,0,0.09);
+  --radius:10px;
+  --sans:'Inter',sans-serif;
+  --serif:'Cormorant Garamond',serif;
+  --mono:'DM Mono',monospace;
+  --sb-w:240px;
+  --sb-collapsed:60px;
+}
+html,body{height:100%;font-family:var(--sans);background:var(--bg);color:var(--text);}
+
+/* ══ LOGIN ══ */
+#login-page{
+  min-height:100vh; display:flex; align-items:center; justify-content:center;
+  background:var(--navy);
+  background-image: radial-gradient(ellipse at 20% 50%, rgba(184,150,62,0.08) 0%, transparent 60%),
+                    radial-gradient(ellipse at 80% 20%, rgba(37,99,235,0.06) 0%, transparent 50%);
+}
+.login-box{
+  background:rgba(255,255,255,0.04); border:1px solid rgba(255,255,255,0.08);
+  border-radius:16px; padding:2.5rem 2.8rem; width:100%; max-width:400px;
+  backdrop-filter:blur(10px);
+}
+.login-logo{
+  font-family:var(--serif); font-size:1.6rem; color:#fff; margin-bottom:0.3rem;
+}
+.login-logo span{color:var(--gold-l);font-style:italic;}
+.login-sub-title{font-size:0.72rem;color:rgba(255,255,255,0.35);text-transform:uppercase;letter-spacing:0.14em;margin-bottom:2rem;}
+.login-label{font-size:0.7rem;font-weight:600;text-transform:uppercase;letter-spacing:0.1em;color:rgba(255,255,255,0.45);margin-bottom:0.4rem;display:block;}
+.login-input{
+  width:100%;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.1);
+  border-radius:8px;padding:0.75rem 1rem;font-size:0.88rem;color:#fff;font-family:var(--sans);
+  outline:none;transition:border-color 0.2s;margin-bottom:1rem;
+}
+.login-input:focus{border-color:rgba(184,150,62,0.5);}
+.login-input::placeholder{color:rgba(255,255,255,0.2);}
+.login-btn{
+  width:100%;padding:0.85rem;background:var(--gold);color:var(--navy);
+  border:none;border-radius:8px;font-size:0.85rem;font-weight:700;
+  font-family:var(--sans);cursor:pointer;letter-spacing:0.04em;transition:opacity 0.2s;
+}
+.login-btn:hover{opacity:0.88;}
+.login-err{color:#F87171;font-size:0.8rem;margin-bottom:0.8rem;display:none;}
+.login-badge{
+  display:inline-block;background:rgba(184,150,62,0.15);border:1px solid rgba(184,150,62,0.25);
+  color:var(--gold-l);font-size:0.65rem;font-weight:600;letter-spacing:0.1em;
+  text-transform:uppercase;padding:0.2rem 0.6rem;border-radius:20px;margin-bottom:1.5rem;
+}
+
+/* ══ APP SHELL ══ */
+#app{display:none;min-height:100vh;flex-direction:row;}
+
+/* ══ SIDEBAR ══ */
+.sidebar{
+  width:var(--sb-w); min-height:100vh; background:var(--navy);
+  position:fixed; top:0; left:0; bottom:0; z-index:200;
+  display:flex; flex-direction:column;
+  border-right:1px solid rgba(255,255,255,0.05);
+  transition:width 0.25s cubic-bezier(.4,0,.2,1);
+  overflow:hidden;
+}
+.sidebar.collapsed{width:var(--sb-collapsed);}
+.sidebar.collapsed .sb-label,
+.sidebar.collapsed .sb-brand-text,
+.sidebar.collapsed .sb-section-label{opacity:0;pointer-events:none;width:0;overflow:hidden;}
+.sidebar.collapsed .sb-user-info{opacity:0;pointer-events:none;width:0;overflow:hidden;}
+.sidebar.collapsed .sb-user{justify-content:center;}
+.sidebar.collapsed .sb-toggle svg{transform:rotate(180deg);}
+
+.sb-top{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:1.1rem 0.9rem 1rem;border-bottom:1px solid rgba(255,255,255,0.05);
+  min-height:60px;flex-shrink:0;
+}
+.sb-brand{display:flex;align-items:center;gap:0.7rem;overflow:hidden;}
+.sb-logo{
+  width:32px;height:32px;background:linear-gradient(135deg,var(--gold),var(--gold-l));
+  border-radius:8px;display:flex;align-items:center;justify-content:center;
+  font-family:var(--serif);font-size:1rem;font-style:italic;color:var(--navy);font-weight:600;flex-shrink:0;
+}
+.sb-brand-text{overflow:hidden;white-space:nowrap;transition:opacity 0.2s,width 0.25s;}
+.sb-name{font-family:var(--serif);font-size:0.88rem;color:#fff;white-space:nowrap;}
+.sb-name span{color:var(--gold-l);font-style:italic;}
+.sb-sub-text{font-size:0.58rem;color:rgba(255,255,255,0.28);letter-spacing:0.1em;text-transform:uppercase;}
+.sb-toggle{
+  background:rgba(255,255,255,0.06);border:none;color:rgba(255,255,255,0.4);
+  width:26px;height:26px;border-radius:6px;cursor:pointer;
+  display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:all 0.2s;
+}
+.sb-toggle:hover{background:rgba(255,255,255,0.12);color:#fff;}
+.sb-toggle svg{transition:transform 0.25s;}
+
+.sb-section-label{
+  font-size:0.58rem;font-weight:600;letter-spacing:0.14em;text-transform:uppercase;
+  color:rgba(255,255,255,0.18);padding:1rem 1rem 0.4rem;white-space:nowrap;overflow:hidden;
+  transition:opacity 0.2s;
+}
+.sb-nav{flex:1;padding:0.3rem 0.5rem;overflow-y:auto;}
+.sb-item{
+  display:flex;align-items:center;gap:0.7rem;width:100%;
+  padding:0.55rem 0.8rem;border:none;background:transparent;
+  color:rgba(255,255,255,0.45);border-radius:8px;cursor:pointer;
+  font-family:var(--sans);font-size:0.78rem;font-weight:400;
+  transition:all 0.15s;white-space:nowrap;text-align:left;margin-bottom:2px;
+}
+.sb-item:hover{background:rgba(255,255,255,0.07);color:rgba(255,255,255,0.85);}
+.sb-item.active{
+  background:rgba(184,150,62,0.15);color:var(--gold-l);font-weight:500;
+  border-left:2px solid var(--gold);padding-left:calc(0.8rem - 2px);
+}
+.sb-item svg{flex-shrink:0;}
+.sb-label{white-space:nowrap;overflow:hidden;transition:opacity 0.2s,width 0.25s;}
+
+.sb-bottom{border-top:1px solid rgba(255,255,255,0.05);padding:0.5rem;}
+.sb-user{
+  display:flex;align-items:center;gap:0.6rem;padding:0.6rem 0.5rem;
+  cursor:pointer;border-radius:8px;transition:background 0.15s;min-width:0;
+}
+.sb-user:hover{background:rgba(255,255,255,0.06);}
+.sb-avatar{
+  width:32px;height:32px;background:var(--gold);border-radius:50%;
+  display:flex;align-items:center;justify-content:center;
+  font-size:0.68rem;font-weight:700;color:var(--navy);flex-shrink:0;
+}
+.sb-user-info{overflow:hidden;transition:opacity 0.2s,width 0.25s;}
+.sb-user-name{font-size:0.75rem;color:rgba(255,255,255,0.8);font-weight:500;white-space:nowrap;}
+.sb-user-role{font-size:0.6rem;color:rgba(255,255,255,0.3);white-space:nowrap;}
+
+/* ══ APP BODY ══ */
+.app-body{
+  margin-left:var(--sb-w);flex:1;display:flex;flex-direction:column;
+  min-height:100vh;transition:margin-left 0.25s cubic-bezier(.4,0,.2,1);
+}
+.sidebar.collapsed~.app-body{margin-left:var(--sb-collapsed);}
+
+/* ══ TOPBAR ══ */
+.topbar{
+  height:52px;background:var(--white);border-bottom:1px solid var(--border);
+  display:flex;align-items:center;justify-content:space-between;
+  padding:0 1.6rem;position:sticky;top:0;z-index:100;
+  box-shadow:0 1px 4px rgba(0,0,0,0.04);flex-shrink:0;
+}
+.topbar-left{display:flex;align-items:center;gap:0.8rem;}
+.topbar-section{font-size:0.68rem;font-weight:600;text-transform:uppercase;letter-spacing:0.12em;color:var(--text-mid);}
+.topbar-right{display:flex;align-items:center;gap:0.8rem;}
+.topbar-date{font-size:0.72rem;color:var(--text-light);font-family:var(--mono);}
+.btn-logout{
+  font-size:0.65rem;font-weight:600;letter-spacing:0.1em;text-transform:uppercase;
+  color:var(--text-mid);background:transparent;border:1px solid var(--border);
+  padding:0.28rem 0.8rem;border-radius:6px;cursor:pointer;font-family:var(--sans);transition:all 0.15s;
+}
+.btn-logout:hover{border-color:var(--red);color:var(--red);}
+.topbar-search{
+  display:flex;align-items:center;gap:0.4rem;background:var(--bg);
+  border:1px solid var(--border);border-radius:20px;padding:0.3rem 0.8rem;
+}
+.topbar-search input{
+  border:none;background:transparent;font-size:0.78rem;color:var(--text);
+  font-family:var(--sans);outline:none;width:180px;
+}
+.topbar-search input::placeholder{color:var(--text-light);}
+
+/* ══ MAIN ══ */
+.main{flex:1;padding:1.5rem 1.8rem 3rem;}
+.section-page{display:none;}
+.section-page.active{display:block;}
+.page-header{margin-bottom:1.2rem;}
+.page-header h2{font-size:1.4rem;font-weight:700;letter-spacing:-0.02em;color:var(--text);margin-bottom:0.2rem;}
+.page-header p{font-size:0.82rem;color:var(--text-mid);}
+
+/* ══ CARDS ══ */
+.card{
+  background:var(--white);border:1px solid var(--border);border-radius:var(--radius);
+  box-shadow:var(--shadow-sm);margin-bottom:1rem;overflow:hidden;
+}
+.card-header{
+  padding:0.8rem 1.2rem;border-bottom:1px solid var(--border);
+  display:flex;align-items:center;justify-content:space-between;
+  background:var(--navy);border-radius:var(--radius) var(--radius) 0 0;
+}
+.card-header h3{font-size:0.78rem;font-weight:600;color:#fff;text-transform:uppercase;letter-spacing:0.1em;}
+.card-header span{font-size:0.75rem;color:rgba(255,255,255,0.5);}
+
+/* ══ KPI ══ */
+.kpi-grid{display:grid;gap:0.8rem;margin-bottom:1rem;}
+.kpi-grid-4{grid-template-columns:repeat(4,1fr);}
+.kpi-grid-5{grid-template-columns:repeat(5,1fr);}
+.kpi-card{
+  background:var(--white);border:1px solid var(--border);border-radius:var(--radius);
+  padding:0.9rem 1rem;box-shadow:var(--shadow-sm);position:relative;overflow:hidden;
+  transition:transform 0.18s,box-shadow 0.18s;
+}
+.kpi-card:hover{transform:scale(1.02);box-shadow:var(--shadow);}
+.kpi-card.clickable{cursor:pointer;}
+.kpi-label{font-size:0.62rem;font-weight:600;text-transform:uppercase;letter-spacing:0.1em;color:var(--text-mid);margin-bottom:0.35rem;}
+.kpi-value{font-size:1.3rem;font-weight:700;color:var(--text);letter-spacing:-0.02em;line-height:1;margin-bottom:0.2rem;}
+.kpi-sub{font-size:0.68rem;color:var(--text-light);}
+.kpi-card.blue{border-top:3px solid var(--blue);}
+.kpi-card.green{border-top:3px solid var(--green);}
+.kpi-card.red{border-top:3px solid var(--red);}
+.kpi-card.orange{border-top:3px solid var(--orange);}
+.kpi-card.gold{border-top:3px solid var(--gold);}
+.kpi-card.violet{border-top:3px solid var(--violet);}
+.kpi-card.cyan{border-top:3px solid var(--cyan);}
+
+/* ══ TABELLA ══ */
+.data-table{width:100%;border-collapse:collapse;font-size:0.8rem;}
+.data-table thead th{
+  padding:0.55rem 0.9rem;text-align:left;font-size:0.62rem;font-weight:600;
+  text-transform:uppercase;letter-spacing:0.08em;color:var(--text-mid);
+  background:var(--bg);border-bottom:1px solid var(--border);white-space:nowrap;
+}
+.data-table tbody tr{border-bottom:1px solid #f5f5f5;transition:background 0.12s;}
+.data-table tbody tr:hover{background:#fafafa;}
+.data-table tbody tr:last-child{border-bottom:none;}
+.data-table td{padding:0.6rem 0.9rem;vertical-align:middle;}
+td.mono{font-family:var(--mono);font-size:0.75rem;}
+td.amount{font-family:var(--mono);font-weight:600;text-align:right;}
+
+/* ══ GRIGLIA CLIENTI ══ */
+.clienti-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:1rem;}
+.cliente-card{
+  background:var(--white);border:1px solid var(--border);border-radius:var(--radius);
+  padding:1rem 1.1rem;box-shadow:var(--shadow-sm);cursor:pointer;
+  transition:transform 0.18s,box-shadow 0.18s;position:relative;overflow:hidden;
+}
+.cliente-card:hover{transform:translateY(-2px);box-shadow:var(--shadow);}
+.cliente-card::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;}
+.cliente-card.ok::before{background:var(--green);}
+.cliente-card.warning::before{background:var(--orange);}
+.cliente-card.danger::before{background:var(--red);}
+.cliente-card.neutral::before{background:var(--border);}
+.cc-nome{font-size:0.88rem;font-weight:600;color:var(--text);margin-bottom:0.2rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.cc-piva{font-size:0.68rem;color:var(--text-light);font-family:var(--mono);margin-bottom:0.8rem;}
+.cc-kpi{display:grid;grid-template-columns:1fr 1fr;gap:0.4rem 0.6rem;margin-bottom:0.7rem;}
+.cc-kpi-item{font-size:0.68rem;}
+.cc-kpi-label{color:var(--text-light);text-transform:uppercase;letter-spacing:0.06em;margin-bottom:0.1rem;}
+.cc-kpi-val{font-family:var(--mono);font-weight:600;font-size:0.8rem;color:var(--text);}
+.cc-badges{display:flex;gap:0.4rem;flex-wrap:wrap;}
+.badge-pill{
+  font-size:0.6rem;font-weight:700;padding:0.15rem 0.5rem;border-radius:20px;
+  letter-spacing:0.05em;white-space:nowrap;
+}
+.badge-ok{background:var(--green-l);color:#065F46;}
+.badge-warn{background:var(--orange-l);color:#9A3412;}
+.badge-danger{background:var(--red-l);color:#7F1D1D;}
+.badge-info{background:var(--blue-l);color:#1E40AF;}
+
+/* ══ SEMAFORO SOGLIA ══ */
+.soglia-bar-wrap{margin-top:0.6rem;}
+.soglia-bar-track{height:4px;background:#F3F4F6;border-radius:2px;overflow:hidden;margin-bottom:0.25rem;}
+.soglia-bar-fill{height:100%;border-radius:2px;transition:width 0.8s ease;}
+.soglia-labels{display:flex;justify-content:space-between;font-size:0.6rem;color:var(--text-light);}
+
+/* ══ SEARCH BAR ══ */
+.search-row{display:flex;align-items:center;gap:0.8rem;margin-bottom:1rem;}
+.search-input{
+  flex:1;max-width:340px;padding:0.45rem 0.9rem 0.45rem 2.2rem;
+  border:1px solid var(--border);border-radius:20px;font-size:0.8rem;
+  font-family:var(--sans);color:var(--text);background:var(--white);outline:none;
+  transition:border-color 0.2s;position:relative;
+}
+.search-input:focus{border-color:var(--gold);}
+.search-wrap{position:relative;flex:1;max-width:340px;}
+.search-wrap svg{position:absolute;left:0.7rem;top:50%;transform:translateY(-50%);color:var(--text-light);pointer-events:none;}
+.filter-btn{
+  padding:0.35rem 0.8rem;border:1px solid var(--border);border-radius:6px;
+  background:var(--white);font-size:0.72rem;font-family:var(--sans);
+  color:var(--text-mid);cursor:pointer;transition:all 0.15s;font-weight:500;
+}
+.filter-btn:hover{border-color:var(--text-mid);color:var(--text);}
+.filter-btn.active{background:var(--navy);color:#fff;border-color:var(--navy);}
+
+/* ══ SCHEDA CLIENTE ══ */
+.back-btn{
+  display:inline-flex;align-items:center;gap:0.4rem;font-size:0.75rem;
+  color:var(--text-mid);background:none;border:1px solid var(--border);
+  border-radius:8px;padding:0.3rem 0.7rem;cursor:pointer;font-family:var(--sans);
+  transition:all 0.15s;margin-bottom:1rem;
+}
+.back-btn:hover{color:var(--text);border-color:var(--text-mid);}
+
+/* ══ ALERT ══ */
+.alert-box{
+  padding:0.7rem 1rem;border-radius:8px;font-size:0.8rem;
+  display:flex;align-items:center;gap:0.6rem;margin-bottom:0.8rem;
+}
+.alert-warning{background:#FFF7ED;border:1px solid #FED7AA;color:#9A3412;}
+.alert-danger{background:#FEF2F2;border:1px solid #FECACA;color:#7F1D1D;}
+.alert-ok{background:#ECFDF5;border:1px solid #6EE7B7;color:#065F46;}
+
+/* ══ SPINNER ══ */
+.spinner{width:20px;height:20px;border:2px solid var(--border);border-top-color:var(--blue);border-radius:50%;animation:spin 0.7s linear infinite;margin:0 auto;}
+@keyframes spin{to{transform:rotate(360deg);}}
+.loading-spinner{padding:2rem;text-align:center;color:var(--text-light);font-size:0.8rem;display:flex;align-items:center;justify-content:center;gap:0.6rem;}
+
+/* ══ SWITCH ANNO ══ */
+.anno-switch{display:flex;align-items:center;gap:0.5rem;font-size:0.78rem;color:var(--text-mid);}
+.anno-btn{background:none;border:1px solid var(--border);border-radius:6px;padding:0.2rem 0.5rem;cursor:pointer;font-size:0.75rem;color:var(--text-mid);transition:all 0.15s;}
+.anno-btn:hover{border-color:var(--text-mid);}
+.anno-val{font-weight:600;color:var(--text);min-width:36px;text-align:center;}
+
+/* ══ FATTURA RISCHIO BADGE ══ */
+.rischio-badge{display:inline-block;font-size:0.65rem;font-weight:700;padding:0.15rem 0.45rem;border-radius:20px;}
+
+.fade-in{animation:fadeIn 0.3s ease both;}
+@keyframes fadeIn{from{opacity:0;transform:translateY(6px);}to{opacity:1;transform:none;}}
+</style>
+</head>
+<body>
+
+<!-- LOGIN -->
+<div id="login-page">
+  <div class="login-box">
+    <div class="login-logo">Studio <span>De Paola</span></div>
+    <div class="login-sub-title">Pannello Studio</div>
+    <div class="login-badge">Accesso riservato allo studio</div>
+    <div class="login-err" id="login-err"></div>
+    <label class="login-label">Email</label>
+    <input type="email" id="login-email" class="login-input" placeholder="email@studio.it" autocomplete="email"/>
+    <label class="login-label">Password</label>
+    <input type="password" id="login-password" class="login-input" placeholder="••••••••" autocomplete="current-password"/>
+    <button class="login-btn" id="login-btn" onclick="doLogin()">Accedi al pannello</button>
+  </div>
+</div>
+
+<!-- APP -->
+<div id="app">
+  <!-- SIDEBAR -->
+  <div class="sidebar" id="sidebar">
+    <div class="sb-top">
+      <div class="sb-brand">
+        <div class="sb-logo">D</div>
+        <div class="sb-brand-text">
+          <div class="sb-name">Studio <span>De Paola</span></div>
+          <div class="sb-sub-text">Pannello Studio</div>
+        </div>
+      </div>
+      <button class="sb-toggle" onclick="toggleSidebar()">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 18l-6-6 6-6"/></svg>
+      </button>
+    </div>
+    <nav class="sb-nav">
+      <div class="sb-section-label">Gestione</div>
+      <button class="sb-item active" id="nav-overview" onclick="showSection('overview')">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+        <span class="sb-label">Overview clienti</span>
+      </button>
+      <button class="sb-item" id="nav-scadenze" onclick="showSection('scadenze')">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+        <span class="sb-label">Scadenze F24</span>
+      </button>
+      <button class="sb-item" id="nav-rischio" onclick="showSection('rischio')">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+        <span class="sb-label">Fatture a rischio</span>
+      </button>
+      <button class="sb-item" id="nav-soglie" onclick="showSection('soglie')">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 20V10"/><path d="M12 20V4"/><path d="M6 20v-6"/></svg>
+        <span class="sb-label">Monitor soglie</span>
+      </button>
+      <div class="sb-section-label">Cliente</div>
+      <button class="sb-item" id="nav-cliente" style="display:none;" onclick="showSection('cliente')">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+        <span class="sb-label" id="nav-cliente-label">—</span>
+      </button>
+    </nav>
+    <div class="sb-bottom">
+      <button class="sb-item" onclick="doLogout()" style="color:rgba(220,38,38,0.7);">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+        <span class="sb-label">Esci</span>
+      </button>
+      <div class="sb-user">
+        <div class="sb-avatar" id="user-avatar">S</div>
+        <div class="sb-user-info">
+          <div class="sb-user-name" id="user-name">Studio</div>
+          <div class="sb-user-role">Commercialista</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- BODY -->
+  <div class="app-body">
+    <div class="topbar">
+      <div class="topbar-left">
+        <div class="topbar-section" id="topbar-title">Overview clienti</div>
+      </div>
+      <div class="topbar-right">
+        <div class="topbar-search">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#9ca3af" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+          <input type="text" id="search-global" placeholder="Cerca cliente..." oninput="filterClientiGrid(this.value)"/>
+        </div>
+        <div class="topbar-date" id="topbar-date"></div>
+        <button class="btn-logout" onclick="doLogout()">Esci</button>
+      </div>
+    </div>
+
+    <div class="main">
+
+      <!-- OVERVIEW -->
+      <div class="section-page active" id="section-overview">
+        <div class="page-header fade-in">
+          <h2>Overview clienti</h2>
+          <p id="overview-sub">Tutti i clienti forfettari</p>
+        </div>
+        <!-- KPI studio -->
+        <div class="kpi-grid kpi-grid-5 fade-in" style="margin-bottom:1rem;">
+          <div class="kpi-card blue"><div class="kpi-label">Clienti attivi</div><div class="kpi-value" id="kpi-tot-clienti">—</div><div class="kpi-sub">in gestione</div></div>
+          <div class="kpi-card green"><div class="kpi-label">Fatturato totale</div><div class="kpi-value" id="kpi-tot-fat">—</div><div class="kpi-sub" id="kpi-tot-fat-sub">anno corrente</div></div>
+          <div class="kpi-card orange"><div class="kpi-label">Da incassare</div><div class="kpi-value" id="kpi-tot-daincassare">—</div><div class="kpi-sub">su tutti i clienti</div></div>
+          <div class="kpi-card red"><div class="kpi-label">F24 aperti</div><div class="kpi-value" id="kpi-tot-f24">—</div><div class="kpi-sub">scadenze aperte</div></div>
+          <div class="kpi-card gold"><div class="kpi-label">Vicini soglia</div><div class="kpi-value" id="kpi-tot-soglia">—</div><div class="kpi-sub">>75% del limite</div></div>
+        </div>
+        <!-- Filtri -->
+        <div class="search-row">
+          <div class="search-wrap">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+            <input type="text" class="search-input" id="search-clienti" placeholder="Cerca per nome o P.IVA..." oninput="filterClientiGrid(this.value)" style="padding-left:2.2rem;max-width:100%;"/>
+          </div>
+          <button class="filter-btn active" onclick="setFiltroCliente('tutti',this)">Tutti</button>
+          <button class="filter-btn" onclick="setFiltroCliente('rischio',this)">⚠ A rischio</button>
+          <button class="filter-btn" onclick="setFiltroCliente('soglia',this)">📊 Soglia alta</button>
+          <button class="filter-btn" onclick="setFiltroCliente('f24',this)">📅 F24 aperti</button>
+        </div>
+        <div class="clienti-grid fade-in" id="clienti-grid">
+          <div class="loading-spinner"><div class="spinner"></div> Caricamento clienti...</div>
+        </div>
+      </div>
+
+      <!-- SCADENZE F24 -->
+      <div class="section-page" id="section-scadenze">
+        <div class="page-header fade-in">
+          <h2>Scadenze F24</h2>
+          <p>Tutte le scadenze aperte — ordinati per urgenza</p>
+        </div>
+        <div class="kpi-grid kpi-grid-4 fade-in">
+          <div class="kpi-card red"><div class="kpi-label">Scadute</div><div class="kpi-value" id="f24-scadute">—</div><div class="kpi-sub">già in ritardo</div></div>
+          <div class="kpi-card orange"><div class="kpi-label">Entro 15 giorni</div><div class="kpi-value" id="f24-15g">—</div><div class="kpi-sub">urgenti</div></div>
+          <div class="kpi-card cyan"><div class="kpi-label">Entro 30 giorni</div><div class="kpi-value" id="f24-30g">—</div><div class="kpi-sub">in arrivo</div></div>
+          <div class="kpi-card blue"><div class="kpi-label">Importo totale</div><div class="kpi-value" id="f24-importo-tot">—</div><div class="kpi-sub">da versare</div></div>
+        </div>
+        <div class="card fade-in">
+          <div class="card-header"><h3>Scadenzario completo</h3></div>
+          <div style="overflow-y:auto;max-height:500px;">
+            <table class="data-table">
+              <thead style="position:sticky;top:0;z-index:1;"><tr><th>Scadenza</th><th>Cliente</th><th>Tipo</th><th>Cod. Tributo</th><th>Importo</th><th>Urgenza</th></tr></thead>
+              <tbody id="f24-table-body"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- FATTURE A RISCHIO -->
+      <div class="section-page" id="section-rischio">
+        <div class="page-header fade-in">
+          <h2>Fatture a rischio</h2>
+          <p>Fatture emesse non incassate da oltre 60 giorni</p>
+        </div>
+        <div class="kpi-grid kpi-grid-4 fade-in">
+          <div class="kpi-card" style="border-top:3px solid #D97706;"><div class="kpi-label">>60 giorni</div><div class="kpi-value" id="ris-60">—</div><div class="kpi-sub">attenzione</div></div>
+          <div class="kpi-card orange"><div class="kpi-label">>90 giorni</div><div class="kpi-value" id="ris-90">—</div><div class="kpi-sub">sollecitare</div></div>
+          <div class="kpi-card red"><div class="kpi-label">>120 giorni</div><div class="kpi-value" id="ris-120">—</div><div class="kpi-sub">critico</div></div>
+          <div class="kpi-card" style="border-top:3px solid var(--violet);"><div class="kpi-label">Importo a rischio</div><div class="kpi-value" id="ris-importo">—</div><div class="kpi-sub">totale esposto</div></div>
+        </div>
+        <div class="card fade-in">
+          <div class="card-header"><h3>Dettaglio fatture a rischio</h3></div>
+          <div style="overflow-y:auto;max-height:500px;">
+            <table class="data-table">
+              <thead style="position:sticky;top:0;z-index:1;"><tr><th>N°</th><th>Cliente</th><th>Data emissione</th><th>Importo</th><th>Giorni attesa</th><th>Stato</th></tr></thead>
+              <tbody id="rischio-table-body"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- MONITOR SOGLIE -->
+      <div class="section-page" id="section-soglie">
+        <div class="page-header fade-in">
+          <h2>Monitor soglie forfettarie</h2>
+          <p>Stato avanzamento verso il limite di €85.000</p>
+        </div>
+        <div class="card fade-in">
+          <div class="card-header"><h3>Tutti i clienti — avanzamento soglia</h3></div>
+          <div style="overflow-y:auto;max-height:600px;">
+            <table class="data-table">
+              <thead style="position:sticky;top:0;z-index:1;"><tr><th>Cliente</th><th>Fatturato</th><th>Residuo</th><th>Avanzamento</th><th>Stato</th></tr></thead>
+              <tbody id="soglie-table-body"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- SCHEDA CLIENTE -->
+      <div class="section-page" id="section-cliente">
+        <button class="back-btn" onclick="showSection('overview')">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 12H5"/><polyline points="12 19 5 12 12 5"/></svg>
+          Torna all'overview
+        </button>
+        <div class="page-header">
+          <h2 id="det-cliente-nome">—</h2>
+          <p id="det-cliente-piva" style="font-family:var(--mono);font-size:0.78rem;"></p>
+        </div>
+        <div class="kpi-grid kpi-grid-4 fade-in">
+          <div class="kpi-card blue"><div class="kpi-label">Fatturato anno</div><div class="kpi-value" id="det-fatturato">—</div><div class="kpi-sub" id="det-anno-label"></div></div>
+          <div class="kpi-card green"><div class="kpi-label">Incassato</div><div class="kpi-value" id="det-incassato">—</div><div class="kpi-sub" id="det-tasso-label"></div></div>
+          <div class="kpi-card orange"><div class="kpi-label">Da incassare</div><div class="kpi-value" id="det-daincassare">—</div><div class="kpi-sub" id="det-nfat-label"></div></div>
+          <div class="kpi-card gold"><div class="kpi-label">Soglia %</div><div class="kpi-value" id="det-soglia-pct">—</div><div class="kpi-sub" id="det-soglia-sub"></div></div>
+        </div>
+        <div class="kpi-grid" style="grid-template-columns:repeat(3,1fr);">
+          <div class="kpi-card cyan"><div class="kpi-label">Media per fattura</div><div class="kpi-value" id="det-media">—</div><div class="kpi-sub">importo medio</div></div>
+          <div class="kpi-card violet"><div class="kpi-label">Velocità incasso</div><div class="kpi-value" id="det-velocita">—</div><div class="kpi-sub">giorni medi</div></div>
+          <div class="kpi-card red"><div class="kpi-label">F24 aperti</div><div class="kpi-value" id="det-f24">—</div><div class="kpi-sub">scadenze</div></div>
+        </div>
+        <div id="det-alerts"></div>
+        <!-- Grafico mensile -->
+        <div class="card fade-in" style="margin-bottom:1rem;">
+          <div class="card-header"><h3>Andamento fatturato mensile</h3><span id="det-chart-label"></span></div>
+          <div style="padding:1rem 1.4rem 0.8rem;"><canvas id="det-chart" height="80"></canvas></div>
+        </div>
+        <!-- Due colonne: fatture + F24 -->
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;">
+          <div class="card fade-in" style="display:flex;flex-direction:column;max-height:340px;">
+            <div class="card-header"><h3>Fatture emesse</h3><span id="det-fat-count"></span></div>
+            <div style="overflow-y:auto;flex:1;">
+              <table class="data-table">
+                <thead style="position:sticky;top:0;z-index:1;"><tr><th>N°</th><th>Data</th><th>Cliente/Desc.</th><th>Importo</th><th>Stato</th></tr></thead>
+                <tbody id="det-fatture-body"></tbody>
+              </table>
+            </div>
+          </div>
+          <div class="card fade-in" style="display:flex;flex-direction:column;max-height:340px;">
+            <div class="card-header"><h3>Scadenze F24</h3><span id="det-f24-count"></span></div>
+            <div style="overflow-y:auto;flex:1;">
+              <table class="data-table">
+                <thead style="position:sticky;top:0;z-index:1;"><tr><th>Scadenza</th><th>Tipo</th><th>Importo</th><th>Stato</th></tr></thead>
+                <tbody id="det-f24-body"></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div><!-- /main -->
+  </div><!-- /app-body -->
+</div><!-- /app -->
+
+<script>
+const SUPABASE_URL = 'https://znjhrwrwgpzmfwewdbnm.supabase.co';
+const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inpuamhyd3J3Z3B6bWZ3ZXdkYm5tIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzUxMjc0NzMsImV4cCI6MjA5MDcwMzQ3M30.5TZIf8JzQrnpsVmW_O7bEezTW3KlIsHdxc8CQJUsE-Y';
+const { createClient } = supabase;
+const sb = createClient(SUPABASE_URL, SUPABASE_KEY);
+
+// ── State ──
+let currentUser = null;
+let clientiData = [];   // tutti i clienti
+let fattureData = [];   // tutte le fatture
+let f24Data = [];       // tutti gli f24
+let filtroCliente = 'tutti';
+let searchQuery = '';
+let currentAnno = new Date().getFullYear();
+let detClienteId = null;
+let detChartInstance = null;
+
+const el = id => document.getElementById(id);
+const fmt = v => '€\u00a0' + parseFloat(v||0).toLocaleString('it-IT', {minimumFractionDigits:2, maximumFractionDigits:2});
+const fmtDate = s => { if(!s) return '—'; const d=new Date(s); return d.toLocaleDateString('it-IT'); };
+const fmtNum = v => parseFloat(v||0).toLocaleString('it-IT', {minimumFractionDigits:2, maximumFractionDigits:2});
+
+// ── LOGIN ──
+document.addEventListener('keydown', e => { if(e.key==='Enter') doLogin(); });
+
+async function doLogin() {
+  const email = el('login-email').value.trim();
+  const pass = el('login-password').value;
+  const errEl = el('login-err');
+  errEl.style.display = 'none';
+  el('login-btn').textContent = 'Accesso in corso...';
+  el('login-btn').disabled = true;
+  const { data, error } = await sb.auth.signInWithPassword({ email, password: pass });
+  el('login-btn').textContent = 'Accedi al pannello';
+  el('login-btn').disabled = false;
+  if (error) { errEl.textContent = 'Credenziali non valide.'; errEl.style.display='block'; return; }
+  currentUser = data.user;
+  await initApp();
+}
+
+async function doLogout() {
+  await sb.auth.signOut();
+  location.reload();
+}
+
+window.addEventListener('load', async () => {
+  const { data } = await sb.auth.getSession();
+  if (data.session) { currentUser = data.session.user; await initApp(); }
+});
+
+// ── INIT ──
+async function initApp() {
+  el('login-page').style.display = 'none';
+  el('app').style.display = 'flex';
+  el('user-name').textContent = currentUser.email.split('@')[0];
+  el('user-avatar').textContent = currentUser.email[0].toUpperCase();
+  const d = new Date();
+  el('topbar-date').textContent = d.toLocaleDateString('it-IT',{weekday:'long',day:'2-digit',month:'long',year:'numeric'});
+  await Promise.all([loadClienti(), loadFatture(), loadF24()]);
+  renderOverview();
+  renderScadenze();
+  renderRischio();
+  renderSoglie();
+}
+
+async function loadClienti() {
+  const { data } = await sb.from('clienti').select('*').order('cognome');
+  clientiData = data || [];
+}
+async function loadFatture() {
+  const { data } = await sb.from('fatture').select('*').order('data_emissione', {ascending:false});
+  fattureData = data || [];
+}
+async function loadF24() {
+  const { data } = await sb.from('f24').select('*').order('scadenza');
+  f24Data = data || [];
+}
+
+// ── SIDEBAR / SECTION ──
+function toggleSidebar() {
+  const sb = document.getElementById('sidebar');
+  sb.classList.toggle('collapsed');
+}
+
+const sectionTitles = {
+  overview: 'Overview clienti', scadenze: 'Scadenze F24',
+  rischio: 'Fatture a rischio', soglie: 'Monitor soglie', cliente: 'Scheda cliente'
+};
+
+function showSection(id) {
+  document.querySelectorAll('.section-page').forEach(e => e.classList.remove('active'));
+  document.querySelectorAll('.sb-item').forEach(e => e.classList.remove('active'));
+  const sec = el('section-' + id); if (sec) sec.classList.add('active');
+  const nav = el('nav-' + id); if (nav) nav.classList.add('active');
+  el('topbar-title').textContent = sectionTitles[id] || id;
+}
+
+// ── RENDER OVERVIEW ──
+function renderOverview() {
+  const anno = currentAnno;
+  const fatAnno = fattureData.filter(f => f.tipo==='emessa' && new Date(f.data_emissione).getFullYear()===anno);
+  const totFat = fatAnno.reduce((s,f)=>s+parseFloat(f.importo||0),0);
+  const totDaInc = fatAnno.filter(f=>!f.pagata).reduce((s,f)=>s+parseFloat(f.importo||0),0);
+  const f24Aperti = f24Data.filter(f=>!f.pagato).length;
+  const oggi = new Date();
+  const viciniSoglia = clientiData.filter(c => {
+    const fat = fatAnno.filter(f=>f.cliente_id===c.id).reduce((s,f)=>s+parseFloat(f.importo||0),0);
+    return (fat/85000)>=0.75;
+  }).length;
+
+  el('kpi-tot-clienti').textContent = clientiData.length;
+  el('kpi-tot-fat').textContent = fmt(totFat);
+  el('kpi-tot-fat-sub').textContent = 'anno ' + anno;
+  el('kpi-tot-daincassare').textContent = fmt(totDaInc);
+  el('kpi-tot-f24').textContent = f24Aperti;
+  el('kpi-tot-soglia').textContent = viciniSoglia;
+  el('overview-sub').textContent = clientiData.length + ' clienti · anno ' + anno;
+
+  renderClientiGrid();
+}
+
+function renderClientiGrid() {
+  const anno = currentAnno;
+  const fatAnno = fattureData.filter(f => f.tipo==='emessa' && new Date(f.data_emissione).getFullYear()===anno);
+  const oggi = new Date();
+  const grid = el('clienti-grid');
+
+  let list = clientiData.filter(c => {
+    const q = searchQuery.toLowerCase();
+    if (q && !((c.nome+' '+c.cognome).toLowerCase().includes(q)) && !(c.partita_iva||'').includes(q)) return false;
+    if (filtroCliente === 'rischio') {
+      const fat = fatAnno.filter(f=>f.cliente_id===c.id && !f.pagata);
+      return fat.some(f => Math.floor((oggi-new Date(f.data_emissione))/(1000*60*60*24))>=60);
+    }
+    if (filtroCliente === 'soglia') {
+      const totFat = fatAnno.filter(f=>f.cliente_id===c.id).reduce((s,f)=>s+parseFloat(f.importo||0),0);
+      return (totFat/85000)>=0.75;
+    }
+    if (filtroCliente === 'f24') {
+      return f24Data.some(f=>f.cliente_id===c.id && !f.pagato);
+    }
+    return true;
+  });
+
+  if (list.length === 0) {
+    grid.innerHTML = '<div style="padding:3rem;text-align:center;color:var(--text-light);font-size:0.85rem;">Nessun cliente trovato</div>';
+    return;
+  }
+
+  grid.innerHTML = list.map(c => {
+    const fatCliente = fatAnno.filter(f=>f.cliente_id===c.id);
+    const totFat = fatCliente.reduce((s,f)=>s+parseFloat(f.importo||0),0);
+    const totInc = fatCliente.filter(f=>f.pagata).reduce((s,f)=>s+parseFloat(f.importo||0),0);
+    const totDaInc = totFat - totInc;
+    const pct = Math.min(100, Math.round((totFat/85000)*100));
+    const f24Ap = f24Data.filter(f=>f.cliente_id===c.id&&!f.pagato).length;
+    const aRischio = fatCliente.filter(f=>!f.pagata&&Math.floor((oggi-new Date(f.data_emissione))/(1000*60*60*24))>=60).length;
+    const barColor = pct>=90?'var(--red)':pct>=75?'var(--orange)':'var(--green)';
+    const cardClass = pct>=90||aRischio>0?'danger':pct>=75?'warning':totFat>0?'ok':'neutral';
+    const nomeCompleto = (c.nome+' '+c.cognome).trim() || c.email;
+
+    let badges = '';
+    if (aRischio>0) badges += `<span class="badge-pill badge-danger">⚠ ${aRischio} a rischio</span>`;
+    if (f24Ap>0) badges += `<span class="badge-pill badge-warn">📅 F24: ${f24Ap}</span>`;
+    if (pct>=75&&pct<90) badges += `<span class="badge-pill badge-warn">📊 Soglia ${pct}%</span>`;
+    if (pct>=90) badges += `<span class="badge-pill badge-danger">🔴 Soglia ${pct}%</span>`;
+    if (!badges) badges = '<span class="badge-pill badge-ok">✓ Regolare</span>';
+
+    return `<div class="cliente-card ${cardClass}" onclick="apriCliente('${c.id}')">
+      <div class="cc-nome">${nomeCompleto}</div>
+      <div class="cc-piva">${c.partita_iva||c.codice_fiscale||'—'}</div>
+      <div class="cc-kpi">
+        <div class="cc-kpi-item"><div class="cc-kpi-label">Fatturato</div><div class="cc-kpi-val">${fmt(totFat)}</div></div>
+        <div class="cc-kpi-item"><div class="cc-kpi-label">Da incassare</div><div class="cc-kpi-val" style="color:${totDaInc>0?'var(--orange)':'var(--green)'}">${fmt(totDaInc)}</div></div>
+      </div>
+      <div class="soglia-bar-wrap">
+        <div class="soglia-bar-track"><div class="soglia-bar-fill" style="width:${pct}%;background:${barColor};"></div></div>
+        <div class="soglia-labels"><span>Soglia ${pct}%</span><span>€85.000</span></div>
+      </div>
+      <div class="cc-badges" style="margin-top:0.6rem;">${badges}</div>
+    </div>`;
+  }).join('');
+}
+
+function filterClientiGrid(q) {
+  searchQuery = q;
+  renderClientiGrid();
+}
+function setFiltroCliente(f, btn) {
+  filtroCliente = f;
+  document.querySelectorAll('#section-overview .filter-btn').forEach(b=>b.classList.remove('active'));
+  if(btn) btn.classList.add('active');
+  renderClientiGrid();
+}
+
+// ── RENDER SCADENZE F24 ──
+function renderScadenze() {
+  const oggi = new Date();
+  const aperti = f24Data.filter(f=>!f.pagato).sort((a,b)=>new Date(a.scadenza)-new Date(b.scadenza));
+
+  const scadute = aperti.filter(f=>new Date(f.scadenza)<oggi).length;
+  const g15 = aperti.filter(f=>{ const d=Math.ceil((new Date(f.scadenza)-oggi)/(1000*60*60*24)); return d>=0&&d<=15; }).length;
+  const g30 = aperti.filter(f=>{ const d=Math.ceil((new Date(f.scadenza)-oggi)/(1000*60*60*24)); return d>15&&d<=30; }).length;
+  const totImp = aperti.reduce((s,f)=>s+parseFloat(f.importo||0),0);
+
+  el('f24-scadute').textContent = scadute;
+  el('f24-15g').textContent = g15;
+  el('f24-30g').textContent = g30;
+  el('f24-importo-tot').textContent = fmt(totImp);
+
+  const tbody = el('f24-table-body');
+  if (aperti.length===0) { tbody.innerHTML='<tr><td colspan="6" style="text-align:center;padding:2rem;color:var(--text-light);">Nessuna scadenza aperta</td></tr>'; return; }
+  tbody.innerHTML = aperti.map(f => {
+    const cliente = clientiData.find(c=>c.id===f.cliente_id);
+    const nomeC = cliente ? (cliente.nome+' '+cliente.cognome).trim() : '—';
+    const gg = Math.ceil((new Date(f.scadenza)-oggi)/(1000*60*60*24));
+    let urgColor, urgLabel;
+    if (gg<0) { urgColor='#DC2626'; urgLabel='Scaduta'; }
+    else if (gg<=15) { urgColor='#EA580C'; urgLabel=gg+'gg'; }
+    else if (gg<=30) { urgColor='#D97706'; urgLabel=gg+'gg'; }
+    else { urgColor='#6B7280'; urgLabel=gg+'gg'; }
+    return `<tr>
+      <td style="font-weight:600;color:${gg<0?'var(--red)':'var(--text)'}">${fmtDate(f.scadenza)}</td>
+      <td style="cursor:pointer;color:var(--blue);font-weight:500;" onclick="apriCliente('${f.cliente_id}')">${nomeC}</td>
+      <td>${f.tipo||'—'}</td>
+      <td class="mono" style="font-size:0.72rem;">${f.codice_tributo||'—'}</td>
+      <td class="amount">${fmt(f.importo)}</td>
+      <td><span class="rischio-badge" style="background:${urgColor}18;color:${urgColor};font-size:0.65rem;padding:0.15rem 0.5rem;border-radius:20px;font-weight:700;">${urgLabel}</span></td>
+    </tr>`;
+  }).join('');
+}
+
+// ── RENDER RISCHIO ──
+function renderRischio() {
+  const oggi = new Date();
+  const aRischio = fattureData.filter(f => {
+    if (f.tipo!=='emessa'||f.pagata) return false;
+    return Math.floor((oggi-new Date(f.data_emissione))/(1000*60*60*24))>=60;
+  }).map(f => ({ ...f, gg: Math.floor((oggi-new Date(f.data_emissione))/(1000*60*60*24)) }))
+    .sort((a,b)=>b.gg-a.gg);
+
+  el('ris-60').textContent = aRischio.filter(f=>f.gg>=60&&f.gg<90).length;
+  el('ris-90').textContent = aRischio.filter(f=>f.gg>=90&&f.gg<120).length;
+  el('ris-120').textContent = aRischio.filter(f=>f.gg>=120).length;
+  el('ris-importo').textContent = fmt(aRischio.reduce((s,f)=>s+parseFloat(f.importo||0),0));
+
+  const tbody = el('rischio-table-body');
+  if (aRischio.length===0) { tbody.innerHTML='<tr><td colspan="6" style="text-align:center;padding:2rem;color:var(--text-light);">✓ Nessuna fattura a rischio</td></tr>'; return; }
+  tbody.innerHTML = aRischio.map(f => {
+    const cliente = clientiData.find(c=>c.id===f.cliente_id);
+    const nomeC = cliente?(cliente.nome+' '+cliente.cognome).trim():'—';
+    const color = f.gg>=120?'#DC2626':f.gg>=90?'#EA580C':'#D97706';
+    return `<tr>
+      <td class="mono" style="font-size:0.75rem;">${f.numero||'—'}</td>
+      <td style="cursor:pointer;color:var(--blue);font-weight:500;" onclick="apriCliente('${f.cliente_id}')">${nomeC}</td>
+      <td style="color:var(--text-mid)">${fmtDate(f.data_emissione)}</td>
+      <td class="amount">${fmt(f.importo)}</td>
+      <td><span class="rischio-badge" style="background:${color}18;color:${color};padding:0.15rem 0.5rem;border-radius:20px;font-weight:700;font-size:0.65rem;">${f.gg} giorni</span></td>
+      <td><span style="font-size:0.65rem;padding:0.15rem 0.5rem;border-radius:20px;background:#FFF7ED;color:#9A3412;font-weight:600;">In attesa</span></td>
+    </tr>`;
+  }).join('');
+}
+
+// ── RENDER SOGLIE ──
+function renderSoglie() {
+  const anno = currentAnno;
+  const fatAnno = fattureData.filter(f=>f.tipo==='emessa'&&new Date(f.data_emissione).getFullYear()===anno);
+  const list = clientiData.map(c => {
+    const tot = fatAnno.filter(f=>f.cliente_id===c.id).reduce((s,f)=>s+parseFloat(f.importo||0),0);
+    const pct = Math.min(100,Math.round((tot/85000)*100));
+    return { c, tot, pct };
+  }).sort((a,b)=>b.pct-a.pct);
+
+  const tbody = el('soglie-table-body');
+  tbody.innerHTML = list.map(({c,tot,pct}) => {
+    const residuo = Math.max(0, 85000-tot);
+    const color = pct>=90?'var(--red)':pct>=75?'var(--orange)':'var(--green)';
+    const stato = pct>=90?'<span style="color:var(--red);font-weight:700;font-size:0.75rem;">🔴 Critico</span>':
+                  pct>=75?'<span style="color:var(--orange);font-weight:700;font-size:0.75rem;">🟠 Attenzione</span>':
+                  pct>=50?'<span style="color:var(--blue);font-weight:600;font-size:0.75rem;">🔵 Nella norma</span>':
+                  '<span style="color:var(--green);font-weight:600;font-size:0.75rem;">🟢 Ok</span>';
+    return `<tr>
+      <td style="font-weight:500;cursor:pointer;color:var(--blue);" onclick="apriCliente('${c.id}')">${(c.nome+' '+c.cognome).trim()}</td>
+      <td class="amount">${fmt(tot)}</td>
+      <td class="amount" style="color:var(--green);">${fmt(residuo)}</td>
+      <td style="min-width:160px;">
+        <div style="display:flex;align-items:center;gap:0.5rem;">
+          <div style="flex:1;height:6px;background:#F3F4F6;border-radius:3px;overflow:hidden;">
+            <div style="height:100%;width:${pct}%;background:${color};border-radius:3px;transition:width 0.8s;"></div>
+          </div>
+          <span style="font-size:0.72rem;font-weight:700;color:${color};min-width:32px;">${pct}%</span>
+        </div>
+      </td>
+      <td>${stato}</td>
+    </tr>`;
+  }).join('');
+}
+
+// ── SCHEDA CLIENTE ──
+async function apriCliente(clienteId) {
+  const c = clientiData.find(x=>x.id===clienteId);
+  if (!c) return;
+  detClienteId = clienteId;
+  const nav = el('nav-cliente');
+  if (nav) {
+    nav.style.display = 'flex';
+    const lbl = el('nav-cliente-label');
+    const nome = (c.nome+' '+c.cognome).trim();
+    if (lbl) lbl.textContent = nome.length>18?nome.slice(0,16)+'…':nome;
+  }
+
+  const anno = currentAnno;
+  const fatCliente = fattureData.filter(f=>f.cliente_id===clienteId);
+  const fatAnno = fatCliente.filter(f=>f.tipo==='emessa'&&new Date(f.data_emissione).getFullYear()===anno);
+  const totFat = fatAnno.reduce((s,f)=>s+parseFloat(f.importo||0),0);
+  const totInc = fatAnno.filter(f=>f.pagata).reduce((s,f)=>s+parseFloat(f.importo||0),0);
+  const totDaInc = totFat-totInc;
+  const pct = Math.min(100,Math.round((totFat/85000)*100));
+  const f24Cliente = f24Data.filter(f=>f.cliente_id===clienteId);
+  const f24Aperti = f24Cliente.filter(f=>!f.pagato);
+
+  el('det-cliente-nome').textContent = (c.nome+' '+c.cognome).trim()||c.email;
+  el('det-cliente-piva').textContent = 'P.IVA: '+(c.partita_iva||'—')+' · CF: '+(c.codice_fiscale||'—');
+  el('det-fatturato').textContent = fmt(totFat);
+  el('det-anno-label').textContent = fatAnno.length+' fatture '+anno;
+  el('det-incassato').textContent = fmt(totInc);
+  el('det-tasso-label').textContent = totFat>0?Math.round((totInc/totFat)*100)+'% incassato':'—';
+  el('det-daincassare').textContent = fmt(totDaInc);
+  el('det-nfat-label').textContent = fatAnno.filter(f=>!f.pagata).length+' non incassate';
+  el('det-soglia-pct').textContent = pct+'%';
+  el('det-soglia-pct').style.color = pct>=90?'var(--red)':pct>=75?'var(--orange)':'var(--green)';
+  el('det-soglia-sub').textContent = fmt(totFat)+' / €85.000';
+  const media = fatAnno.length>0?totFat/fatAnno.length:0;
+  el('det-media').textContent = fmt(media);
+  el('det-f24').textContent = f24Aperti.length;
+
+  // Velocità incasso
+  const pagate = fatCliente.filter(f=>f.pagata&&f.data_incasso&&f.data_emissione);
+  if (pagate.length>0) {
+    const gg = Math.round(pagate.reduce((s,f)=>s+Math.max(0,Math.floor((new Date(f.data_incasso)-new Date(f.data_emissione))/(1000*60*60*24))),0)/pagate.length);
+    const vel = el('det-velocita');
+    vel.textContent = gg+'gg';
+    vel.style.color = gg<=30?'var(--green)':gg<=60?'var(--orange)':'var(--red)';
+  } else { el('det-velocita').textContent='—'; }
+
+  // Alerts
+  const alertsEl = el('det-alerts');
+  let alerts = '';
+  const oggi = new Date();
+  const aRischio = fatAnno.filter(f=>!f.pagata&&Math.floor((oggi-new Date(f.data_emissione))/(1000*60*60*24))>=60).length;
+  if (pct>=90) alerts += '<div class="alert-box alert-danger">🔴 <strong>Soglia critica</strong> — Il cliente è al '+pct+'% del limite forfettario. Rischio sforamento.</div>';
+  else if (pct>=75) alerts += '<div class="alert-box alert-warning">🟠 <strong>Soglia elevata</strong> — Il cliente ha raggiunto il '+pct+'% del limite. Monitorare attentamente.</div>';
+  if (aRischio>0) alerts += '<div class="alert-box alert-warning">⚠ <strong>'+aRischio+' fattur'+( aRischio===1?'a':'e')+' a rischio</strong> non incassat'+( aRischio===1?'a':'e')+' da oltre 60 giorni.</div>';
+  if (f24Aperti.length>0) {
+    const prossima = f24Aperti[0];
+    const ggScad = Math.ceil((new Date(prossima.scadenza)-oggi)/(1000*60*60*24));
+    if (ggScad<=15) alerts += '<div class="alert-box alert-danger">📅 <strong>F24 urgente</strong> — Scadenza il '+fmtDate(prossima.scadenza)+' ('+ggScad+' giorni). Importo: '+fmt(prossima.importo)+'</div>';
+  }
+  alertsEl.innerHTML = alerts;
+
+  // Grafico
+  el('det-chart-label').textContent = fmt(totFat);
+  const datiMensili = Array(12).fill(0);
+  fatAnno.forEach(f=>{ datiMensili[new Date(f.data_emissione).getMonth()]+=parseFloat(f.importo||0); });
+  const mesi=['Gen','Feb','Mar','Apr','Mag','Giu','Lug','Ago','Set','Ott','Nov','Dic'];
+  const barColors = datiMensili.map((v,i)=>v>=(datiMensili[i-1]||0)?'#059669':'#DC2626');
+  if (typeof Chart!=='undefined') {
+    const ctx = el('det-chart');
+    if (detChartInstance) detChartInstance.destroy();
+    detChartInstance = new Chart(ctx.getContext('2d'),{
+      type:'bar',
+      data:{ labels:mesi, datasets:[
+        {type:'bar',data:datiMensili,backgroundColor:barColors.map(c=>c+'33'),borderColor:barColors,borderWidth:1.5,borderRadius:2,borderSkipped:false},
+        {type:'line',data:datiMensili,borderColor:'#b8963e',backgroundColor:'transparent',borderWidth:2,pointRadius:datiMensili.map(v=>v>0?3:0),pointBackgroundColor:'#b8963e',pointBorderColor:'#fff',pointBorderWidth:1.5,tension:0.35}
+      ]},
+      options:{responsive:true,interaction:{mode:'index',intersect:false},
+        plugins:{legend:{display:false},tooltip:{backgroundColor:'#0d1b2a',bodyColor:'#fff',padding:10,callbacks:{label:c=>' '+fmt(c.parsed.y)}}},
+        scales:{x:{grid:{display:false},ticks:{color:'#9ca3af',font:{size:10}}},y:{grid:{color:'#f5f5f5'},ticks:{color:'#9ca3af',font:{size:10},callback:v=>'€'+v.toLocaleString('it-IT')},border:{display:false}}}}
+    });
+  }
+
+  // Tabella fatture
+  const detFatBody = el('det-fatture-body');
+  el('det-fat-count').textContent = fatAnno.length+' fatture';
+  detFatBody.innerHTML = fatAnno.map(f=>{
+    const pag = f.pagata
+      ?'<span style="background:#ECFDF5;color:#065F46;padding:0.15rem 0.5rem;border-radius:20px;font-size:0.68rem;font-weight:600;">Pagata</span>'
+      :'<span style="background:#FFF7ED;color:#9A3412;padding:0.15rem 0.5rem;border-radius:20px;font-size:0.68rem;font-weight:600;">In attesa</span>';
+    const cp = f.cessionario_nome||f.cedente_nome||'—';
+    return `<tr><td class="mono" style="font-size:0.72rem;">${f.numero||'—'}</td><td style="color:var(--text-mid);font-size:0.75rem;">${fmtDate(f.data_emissione)}</td><td style="font-size:0.75rem;max-width:120px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${cp}</td><td class="amount">${fmt(f.importo)}</td><td>${pag}</td></tr>`;
+  }).join('') || '<tr><td colspan="5" style="text-align:center;padding:1.5rem;color:var(--text-light);">Nessuna fattura</td></tr>';
+
+  // Tabella F24
+  const detF24Body = el('det-f24-body');
+  el('det-f24-count').textContent = f24Cliente.length+' scadenze';
+  detF24Body.innerHTML = f24Cliente.sort((a,b)=>new Date(a.scadenza)-new Date(b.scadenza)).map(f=>{
+    const pag = f.pagato
+      ?'<span style="background:#ECFDF5;color:#065F46;padding:0.15rem 0.5rem;border-radius:20px;font-size:0.68rem;font-weight:600;">Pagato</span>'
+      :'<span style="background:#FEF2F2;color:#7F1D1D;padding:0.15rem 0.5rem;border-radius:20px;font-size:0.68rem;font-weight:600;">Aperto</span>';
+    return `<tr><td style="font-weight:500;${!f.pagato&&new Date(f.scadenza)<new Date()?'color:var(--red);':''}">${fmtDate(f.scadenza)}</td><td style="font-size:0.75rem;">${f.tipo||f.descrizione||'—'}</td><td class="amount">${fmt(f.importo)}</td><td>${pag}</td></tr>`;
+  }).join('') || '<tr><td colspan="4" style="text-align:center;padding:1.5rem;color:var(--text-light);">Nessun F24</td></tr>';
+
+  showSection('cliente');
+}
+</script>
+</body>
+</html>
