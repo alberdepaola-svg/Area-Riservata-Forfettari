@@ -1,0 +1,1491 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Importatore — Studio De Paola</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+:root{
+  --navy:#0d1b2a;--navy2:#162032;--gold:#B8963E;--gold-l:#D4AF6A;
+  --white:#fff;--bg:#F4F5F7;--text:#1a1d23;--text-mid:#6b7280;--text-light:#9ca3af;
+  --border:#e5e7eb;--green:#059669;--green-l:#ECFDF5;--red:#DC2626;--red-l:#FEF2F2;
+  --orange:#EA580C;--orange-l:#FFF7ED;--blue:#2563EB;--blue-l:#EFF6FF;
+  --violet:#7C3AED;--cyan:#0891B2;
+  --sans:'Inter',sans-serif;--mono:'DM Mono',monospace;
+  --radius:10px;--shadow:0 4px 16px rgba(0,0,0,0.08);--shadow-sm:0 1px 3px rgba(0,0,0,0.06);
+}
+html,body{font-family:var(--sans);background:var(--bg);color:var(--text);min-height:100vh;}
+
+/* ── LOGIN ── */
+#login-page{min-height:100vh;display:flex;align-items:center;justify-content:center;background:var(--navy);background-image:radial-gradient(ellipse at 20% 50%,rgba(184,150,62,0.08) 0%,transparent 60%);}
+.login-box{background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.08);border-radius:16px;padding:2.2rem;width:360px;}
+.login-logo{font-size:1.4rem;color:#fff;margin-bottom:0.3rem;font-weight:700;}
+.login-logo span{color:var(--gold-l);}
+.login-sub{font-size:0.72rem;color:rgba(255,255,255,0.3);margin-bottom:1.8rem;text-transform:uppercase;letter-spacing:0.1em;}
+.login-input{width:100%;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.1);border-radius:8px;padding:0.72rem 0.9rem;font-size:0.88rem;color:#fff;font-family:var(--sans);outline:none;margin-bottom:0.8rem;transition:border-color 0.2s;}
+.login-input:focus{border-color:rgba(184,150,62,0.5);}
+.login-input::placeholder{color:rgba(255,255,255,0.2);}
+.btn-login{width:100%;padding:0.82rem;background:var(--gold);color:var(--navy);border:none;border-radius:8px;font-size:0.85rem;font-weight:700;font-family:var(--sans);cursor:pointer;transition:opacity 0.2s;}
+.btn-login:hover{opacity:0.88;}
+.login-err{color:#F87171;font-size:0.78rem;margin-bottom:0.7rem;display:none;}
+
+/* ── APP ── */
+#app{display:none;min-height:100vh;}
+.app-topbar{background:var(--navy);padding:0 2rem;height:56px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid rgba(184,150,62,0.2);}
+.app-logo{font-size:1rem;font-weight:700;color:#fff;}
+.app-logo span{color:var(--gold-l);}
+.app-logo-sub{font-size:0.6rem;color:rgba(255,255,255,0.3);text-transform:uppercase;letter-spacing:0.12em;margin-top:1px;}
+.topbar-right{display:flex;align-items:center;gap:0.8rem;}
+.topbar-user{font-size:0.72rem;color:rgba(255,255,255,0.45);}
+.btn-logout{font-size:0.65rem;font-weight:600;color:rgba(220,38,38,0.7);background:transparent;border:1px solid rgba(220,38,38,0.3);padding:0.25rem 0.7rem;border-radius:6px;cursor:pointer;font-family:var(--sans);transition:all 0.15s;}
+.btn-logout:hover{color:var(--red);border-color:var(--red);}
+
+.app-body{max-width:1100px;margin:0 auto;padding:2rem 1.5rem 4rem;}
+
+/* ── STEP HEADER ── */
+.steps{display:flex;gap:0;margin-bottom:2rem;background:var(--white);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;box-shadow:var(--shadow-sm);}
+.step{flex:1;padding:0.9rem 1rem;display:flex;align-items:center;gap:0.6rem;font-size:0.78rem;color:var(--text-light);border-right:1px solid var(--border);transition:all 0.2s;cursor:default;}
+.step:last-child{border-right:none;}
+.step.active{color:var(--navy);font-weight:600;}
+.step.done{color:var(--green);}
+.step-num{width:22px;height:22px;border-radius:50%;background:var(--bg);border:1.5px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:0.65rem;font-weight:700;flex-shrink:0;transition:all 0.2s;}
+.step.active .step-num{background:var(--navy);border-color:var(--navy);color:#fff;}
+.step.done .step-num{background:var(--green);border-color:var(--green);color:#fff;}
+
+/* ── CARD ── */
+.card{background:var(--white);border:1px solid var(--border);border-radius:var(--radius);box-shadow:var(--shadow-sm);margin-bottom:1.2rem;overflow:hidden;}
+.card-header{background:var(--navy);padding:0.85rem 1.3rem;display:flex;align-items:center;justify-content:space-between;}
+.card-header h3{font-size:0.78rem;font-weight:600;color:#fff;text-transform:uppercase;letter-spacing:0.1em;}
+.card-header span{font-size:0.75rem;color:rgba(255,255,255,0.45);}
+.card-body{padding:1.3rem 1.5rem;}
+
+/* ── CLIENTE SELECTOR ── */
+.selector-grid{display:grid;grid-template-columns:1fr 1fr;gap:1rem;margin-bottom:1rem;}
+.form-label{font-size:0.65rem;font-weight:600;text-transform:uppercase;letter-spacing:0.1em;color:var(--text-mid);margin-bottom:0.4rem;display:block;}
+.form-select,.form-input{width:100%;padding:0.6rem 0.8rem;border:1px solid var(--border);border-radius:8px;font-size:0.85rem;font-family:var(--sans);color:var(--text);background:var(--white);outline:none;transition:border-color 0.2s;appearance:none;cursor:pointer;}
+.form-select:focus,.form-input:focus{border-color:var(--gold);}
+
+/* Custom searchable dropdown */
+.cs-wrap{position:relative;width:100%;}
+.cs-input-row{display:flex;align-items:center;border:1px solid var(--border);border-radius:8px;background:var(--white);cursor:pointer;transition:border-color 0.2s;overflow:hidden;}
+.cs-input-row:focus-within{border-color:var(--gold);}
+.cs-input{flex:1;padding:0.6rem 0.8rem;border:none;outline:none;font-size:0.85rem;font-family:var(--sans);color:var(--text);background:transparent;cursor:pointer;}
+.cs-input::placeholder{color:var(--text-light);}
+.cs-arrow{margin-right:0.7rem;color:var(--text-light);flex-shrink:0;transition:transform 0.2s;pointer-events:none;}
+.cs-wrap.open .cs-arrow{transform:rotate(180deg);}
+.cs-dropdown{position:absolute;top:calc(100% + 4px);left:0;right:0;background:var(--white);border:1px solid var(--border);border-radius:8px;box-shadow:0 8px 24px rgba(0,0,0,0.12);z-index:999;overflow:hidden;}
+.cs-list-inner{max-height:260px;overflow-y:auto;}
+.cs-item{padding:0.6rem 0.9rem;font-size:0.82rem;cursor:pointer;display:flex;align-items:center;justify-content:space-between;transition:background 0.12s;border-bottom:1px solid #f5f5f5;}
+.cs-item:last-child{border-bottom:none;}
+.cs-item:hover,.cs-item.focused{background:#F8FAFF;}
+.cs-item.selected{background:#EFF6FF;font-weight:600;}
+.cs-item-nome{color:var(--text);font-weight:500;}
+.cs-item-badge{font-size:0.6rem;font-weight:700;padding:0.12rem 0.45rem;border-radius:20px;flex-shrink:0;}
+.cs-item-piva{font-size:0.68rem;color:var(--text-light);font-family:var(--mono);margin-top:1px;}
+.cs-empty{padding:1rem;text-align:center;font-size:0.8rem;color:var(--text-light);}
+.cs-header{padding:0.5rem 0.9rem;font-size:0.6rem;font-weight:700;text-transform:uppercase;letter-spacing:0.1em;color:var(--text-light);background:var(--bg);border-bottom:1px solid var(--border);}
+.cliente-info-row{display:flex;gap:1rem;flex-wrap:wrap;}
+.cliente-chip{background:var(--bg);border:1px solid var(--border);border-radius:20px;padding:0.25rem 0.8rem;font-size:0.72rem;color:var(--text-mid);}
+.cliente-chip strong{color:var(--text);font-weight:600;}
+
+/* ── TIPO IMPORTAZIONE ── */
+.tipo-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:0.7rem;}
+.tipo-card{border:2px solid var(--border);border-radius:var(--radius);padding:1rem;cursor:pointer;transition:all 0.18s;text-align:center;background:var(--white);}
+.tipo-card:hover{border-color:var(--gold);background:#FFFDF5;}
+.tipo-card.selected{border-color:var(--navy);background:#F8FAFF;}
+.tipo-card.disabled{opacity:0.35;cursor:not-allowed;pointer-events:none;}
+.tipo-icon{font-size:1.6rem;margin-bottom:0.5rem;}
+.tipo-label{font-size:0.78rem;font-weight:600;color:var(--text);margin-bottom:0.2rem;}
+.tipo-sub{font-size:0.65rem;color:var(--text-light);}
+.tipo-badge{display:inline-block;font-size:0.55rem;font-weight:700;padding:0.1rem 0.4rem;border-radius:10px;margin-top:0.3rem;text-transform:uppercase;letter-spacing:0.06em;}
+.badge-forf{background:#FFF7ED;color:#EA580C;border:1px solid #FED7AA;}
+.badge-ord{background:#EFF6FF;color:#2563EB;border:1px solid #BFDBFE;}
+.badge-both{background:#F0FDF4;color:#059669;border:1px solid #6EE7B7;}
+
+/* ── DROP ZONE ── */
+.drop-zone{border:2px dashed var(--border);border-radius:var(--radius);padding:2.5rem;text-align:center;cursor:pointer;transition:all 0.2s;background:#fafafa;position:relative;}
+.drop-zone:hover,.drop-zone.dragover{border-color:var(--gold);background:#FFFDF5;}
+.drop-zone.has-file{border-color:var(--green);background:var(--green-l);}
+.drop-icon{font-size:2.5rem;margin-bottom:0.8rem;display:block;}
+.drop-title{font-size:0.9rem;font-weight:600;color:var(--text);margin-bottom:0.3rem;}
+.drop-sub{font-size:0.75rem;color:var(--text-light);}
+.drop-file-name{font-size:0.82rem;font-weight:600;color:var(--green);margin-top:0.5rem;}
+.drop-input{position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%;}
+.drop-or{font-size:0.72rem;color:var(--text-light);margin:0.7rem 0;}
+.btn-browse{padding:0.45rem 1rem;background:var(--navy);color:#fff;border:none;border-radius:6px;font-size:0.78rem;font-weight:600;font-family:var(--sans);cursor:pointer;}
+
+/* ── TESTO MANUALE ── */
+.textarea-wrap{position:relative;}
+.paste-area{width:100%;min-height:160px;padding:0.9rem 1rem;border:1.5px solid var(--border);border-radius:8px;font-family:var(--mono);font-size:0.72rem;color:var(--text);background:#fafafa;resize:vertical;outline:none;line-height:1.6;transition:border-color 0.2s;}
+.paste-area:focus{border-color:var(--gold);background:var(--white);}
+.textarea-toggle{font-size:0.72rem;color:var(--blue);cursor:pointer;text-decoration:underline;margin-top:0.5rem;display:inline-block;}
+
+/* ── ANTEPRIMA ── */
+.anteprima{background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:1.1rem 1.3rem;margin-top:1rem;}
+.ant-title{font-size:0.65rem;font-weight:700;text-transform:uppercase;letter-spacing:0.1em;color:var(--text-mid);margin-bottom:0.8rem;}
+.ant-kpi{display:grid;grid-template-columns:repeat(4,1fr);gap:0.6rem;margin-bottom:0.9rem;}
+.kpi-mini{background:var(--white);border:1px solid var(--border);border-radius:8px;padding:0.6rem 0.8rem;}
+.kpi-mini-label{font-size:0.58rem;font-weight:600;text-transform:uppercase;letter-spacing:0.08em;color:var(--text-mid);margin-bottom:0.2rem;}
+.kpi-mini-val{font-size:0.95rem;font-weight:700;font-family:var(--mono);}
+.ant-voce{display:flex;justify-content:space-between;align-items:center;padding:0.3rem 0.5rem;border-radius:5px;font-size:0.75rem;}
+.ant-voce:hover{background:var(--white);}
+.ant-sezione{font-weight:700;font-size:0.62rem;text-transform:uppercase;letter-spacing:0.08em;color:var(--text-mid);padding:0.5rem 0.5rem 0.2rem;margin-top:0.4rem;}
+.ant-conto{font-family:var(--mono);font-size:0.65rem;color:var(--text-light);margin-right:0.5rem;flex-shrink:0;}
+.ant-importo{font-family:var(--mono);font-weight:600;font-size:0.78rem;}
+
+/* ── BUTTONS ── */
+.btn-row{display:flex;gap:0.6rem;margin-top:1.2rem;align-items:center;flex-wrap:wrap;}
+.btn-primary{padding:0.6rem 1.4rem;background:var(--navy);color:#fff;border:none;border-radius:8px;font-size:0.82rem;font-weight:600;font-family:var(--sans);cursor:pointer;transition:opacity 0.2s;display:flex;align-items:center;gap:0.4rem;}
+.btn-primary:hover{opacity:0.85;}
+.btn-primary:disabled{opacity:0.4;cursor:not-allowed;}
+.btn-success{padding:0.6rem 1.4rem;background:var(--green);color:#fff;border:none;border-radius:8px;font-size:0.82rem;font-weight:600;font-family:var(--sans);cursor:pointer;transition:opacity 0.2s;display:none;align-items:center;gap:0.4rem;}
+.btn-success:hover{opacity:0.85;}
+.btn-ghost{padding:0.6rem 0.9rem;background:var(--white);color:var(--text-mid);border:1px solid var(--border);border-radius:8px;font-size:0.78rem;font-family:var(--sans);cursor:pointer;transition:all 0.15s;}
+.btn-ghost:hover{border-color:var(--text-mid);color:var(--text);}
+.spinner-inline{width:14px;height:14px;border:2px solid rgba(255,255,255,0.3);border-top-color:#fff;border-radius:50%;animation:spin 0.7s linear infinite;}
+@keyframes spin{to{transform:rotate(360deg);}}
+
+/* ── ALERT / LOG ── */
+.alert{padding:0.7rem 1rem;border-radius:8px;font-size:0.8rem;margin-top:0.8rem;display:none;align-items:center;gap:0.5rem;}
+.alert-ok{background:var(--green-l);border:1px solid #6EE7B7;color:#065F46;display:none;}
+.alert-err{background:var(--red-l);border:1px solid #FECACA;color:#7F1D1D;display:none;}
+.alert-info{background:var(--blue-l);border:1px solid #BFDBFE;color:#1E40AF;display:none;}
+.import-log{background:#0d1b2a;border-radius:8px;padding:0.8rem 1rem;font-family:var(--mono);font-size:0.7rem;color:#9ca3af;max-height:180px;overflow-y:auto;margin-top:0.8rem;display:none;line-height:1.7;}
+.log-ok{color:#6EE7B7;}
+.log-err{color:#F87171;}
+.log-info{color:#93C5FD;}
+.log-warn{color:#FCD34D;}
+
+/* ── STORICO ── */
+.storico-row{display:grid;grid-template-columns:auto 1fr auto auto;gap:0.8rem;align-items:center;padding:0.65rem 0;border-bottom:1px solid #f5f5f5;font-size:0.78rem;}
+.storico-row:last-child{border-bottom:none;}
+.badge-tipo{font-size:0.6rem;font-weight:700;padding:0.18rem 0.55rem;border-radius:20px;white-space:nowrap;}
+.storico-date{font-size:0.7rem;color:var(--text-light);font-family:var(--mono);}
+
+/* ── PROGRESS ── */
+.progress-wrap{margin-top:0.8rem;display:none;}
+.progress-label{font-size:0.72rem;color:var(--text-mid);margin-bottom:0.35rem;display:flex;justify-content:space-between;}
+.progress-bar{height:6px;background:var(--bg);border-radius:3px;overflow:hidden;}
+.progress-fill{height:100%;background:var(--blue);border-radius:3px;transition:width 0.3s;width:0%;}
+
+.fade-in{animation:fadeIn 0.25s ease both;}
+@keyframes fadeIn{from{opacity:0;transform:translateY(4px);}to{opacity:1;transform:none;}}
+
+/* PDF.js worker */
+</style>
+</head>
+<body>
+
+<!-- LOGIN -->
+<div id="login-page">
+  <div class="login-box">
+    <div class="login-logo">Studio <span>De Paola</span></div>
+    <div class="login-sub">Importatore dati · Accesso studio</div>
+    <div class="login-err" id="login-err"></div>
+    <input type="email" id="login-email" class="login-input" placeholder="email@studio.it" autocomplete="email"/>
+    <input type="password" id="login-password" class="login-input" placeholder="••••••••" autocomplete="current-password"/>
+    <button class="btn-login" id="btn-login" onclick="doLogin()">Accedi</button>
+  </div>
+</div>
+
+<!-- APP -->
+<div id="app">
+  <div class="app-topbar">
+    <div>
+      <div class="app-logo">Studio <span>De Paola</span></div>
+      <div class="app-logo-sub">Importatore dati unificato</div>
+    </div>
+    <div class="topbar-right">
+      <span class="topbar-user" id="topbar-user"></span>
+      <button class="btn-logout" onclick="doLogout()">Esci</button>
+    </div>
+  </div>
+
+  <div class="app-body">
+
+    <!-- STEPS -->
+    <div class="steps">
+      <div class="step active" id="step1"><div class="step-num">1</div>Cliente e tipo</div>
+      <div class="step" id="step2"><div class="step-num">2</div>Carica file</div>
+      <div class="step" id="step3"><div class="step-num">3</div>Anteprima</div>
+      <div class="step" id="step4"><div class="step-num">4</div>Importa</div>
+    </div>
+
+    <!-- ── STEP 1: CLIENTE + TIPO ── -->
+    <div id="panel-step1" class="fade-in">
+      <div class="card">
+        <div class="card-header"><h3>1 · Seleziona cliente e tipo di importazione</h3></div>
+        <div class="card-body">
+          <div class="selector-grid">
+            <div>
+              <label class="form-label">Cliente</label>
+              <!-- Custom searchable dropdown -->
+              <div class="cs-wrap" id="cs-wrap">
+                <div class="cs-input-row" onclick="toggleDropdown()">
+                  <input type="text" class="cs-input" id="cs-search" placeholder="Cerca cliente..." oninput="filterDropdown(this.value)" autocomplete="off"/>
+                  <svg class="cs-arrow" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+                </div>
+                <div class="cs-dropdown" id="cs-dropdown" style="display:none;">
+                  <div id="cs-list"></div>
+                </div>
+              </div>
+              <div id="cs-selected-info" style="display:none;margin-top:0.4rem;font-size:0.7rem;color:var(--text-mid);"></div>
+            </div>
+            <div>
+              <label class="form-label">Anno di riferimento</label>
+              <input type="number" class="form-input" id="anno-input" value="2026" min="2020" max="2030"/>
+            </div>
+          </div>
+          <div id="cliente-info-row" class="cliente-info-row" style="display:none;margin-bottom:1.2rem;">
+            <span class="cliente-chip">P.IVA: <strong id="ci-piva">—</strong></span>
+            <span class="cliente-chip">CF: <strong id="ci-cf">—</strong></span>
+            <span class="cliente-chip" id="ci-tipo-chip">Tipo: <strong id="ci-tipo">—</strong></span>
+          </div>
+
+          <label class="form-label" style="margin-bottom:0.8rem;">Tipo di importazione</label>
+          <div class="tipo-grid" id="tipo-grid">
+
+            <!-- FATTURE -->
+            <div class="tipo-card" data-tipo="fatture_xml" onclick="selTipo(this)">
+              <div class="tipo-icon">🧾</div>
+              <div class="tipo-label">Fatture XML</div>
+              <div class="tipo-sub">Fatture elettroniche</div>
+              <span class="tipo-badge badge-both">Forfettario · Ordinario</span>
+            </div>
+
+            <!-- LIQUIDAZIONE IVA -->
+            <div class="tipo-card disabled" data-tipo="iva" onclick="selTipo(this)">
+              <div class="tipo-icon">💱</div>
+              <div class="tipo-label">Liquidazione IVA</div>
+              <div class="tipo-sub">PDF Namirial</div>
+              <span class="tipo-badge badge-ord">Solo Ordinario</span>
+            </div>
+
+            <!-- BILANCIO CE+SP -->
+            <div class="tipo-card disabled" data-tipo="bilancio" onclick="selTipo(this)">
+              <div class="tipo-icon">📊</div>
+              <div class="tipo-label">Bilancio CE + SP</div>
+              <div class="tipo-sub">PDF Namirial</div>
+              <span class="tipo-badge badge-ord">Solo Ordinario</span>
+            </div>
+
+            <!-- F24 -->
+            <div class="tipo-card" data-tipo="f24" onclick="selTipo(this)">
+              <div class="tipo-icon">📅</div>
+              <div class="tipo-label">Scadenze F24</div>
+              <div class="tipo-sub">CSV o PDF Namirial</div>
+              <span class="tipo-badge badge-both">Forfettario · Ordinario</span>
+            </div>
+
+            <!-- RITENUTE -->
+            <div class="tipo-card disabled" data-tipo="ritenute" onclick="selTipo(this)">
+              <div class="tipo-icon">✂️</div>
+              <div class="tipo-label">Ritenute d'acconto</div>
+              <div class="tipo-sub">PDF o CSV Namirial</div>
+              <span class="tipo-badge badge-ord">Solo Ordinario</span>
+            </div>
+
+            <!-- CONTRIBUTI -->
+            <div class="tipo-card" data-tipo="contributi" onclick="selTipo(this)">
+              <div class="tipo-icon">🏛️</div>
+              <div class="tipo-label">Contributi INPS</div>
+              <div class="tipo-sub">Aggiornamento manuale</div>
+              <span class="tipo-badge badge-forf">Solo Forfettario</span>
+            </div>
+
+          </div>
+          <div class="btn-row">
+            <button class="btn-primary" id="btn-step1" onclick="goStep2()" disabled>Continua →</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── STEP 2: CARICA FILE ── -->
+    <div id="panel-step2" style="display:none;" class="fade-in">
+      <div class="card">
+        <div class="card-header">
+          <h3 id="step2-title">2 · Carica il file</h3>
+          <span id="step2-sub"></span>
+        </div>
+        <div class="card-body">
+          <!-- Drop zone PDF/XML -->
+          <div class="drop-zone" id="drop-zone" ondragover="onDragOver(event)" ondragleave="onDragLeave(event)" ondrop="onDrop(event)">
+            <input class="drop-input" type="file" id="file-input" accept=".pdf,.xml,.csv" onchange="onFileSelected(event)"/>
+            <span class="drop-icon">📂</span>
+            <div class="drop-title" id="drop-title">Trascina il file qui</div>
+            <div class="drop-sub" id="drop-accept">Formati accettati: PDF, XML, CSV</div>
+            <div class="drop-or">oppure</div>
+            <button class="btn-browse" onclick="el('file-input').click()">Sfoglia file</button>
+            <div class="drop-file-name" id="drop-file-name"></div>
+          </div>
+
+          <!-- Alternativa: testo manuale -->
+          <div style="margin-top:1rem;">
+            <span class="textarea-toggle" onclick="toggleManual()">✏️ Oppure incolla il testo manualmente</span>
+          </div>
+          <div id="manual-wrap" style="display:none;margin-top:0.8rem;">
+            <textarea class="paste-area" id="manual-text" placeholder="Incolla qui il testo copiato dal PDF..."></textarea>
+          </div>
+
+          <!-- Progress estrazione PDF -->
+          <div class="progress-wrap" id="progress-wrap">
+            <div class="progress-label"><span id="progress-label">Estrazione testo dal PDF...</span><span id="progress-pct">0%</span></div>
+            <div class="progress-bar"><div class="progress-fill" id="progress-fill"></div></div>
+          </div>
+
+          <div class="alert alert-err" id="step2-err"></div>
+          <div class="btn-row">
+            <button class="btn-ghost" onclick="goStep1()">← Indietro</button>
+            <button class="btn-primary" id="btn-step2" onclick="processFile()">Analizza →</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── STEP 3: ANTEPRIMA ── -->
+    <div id="panel-step3" style="display:none;" class="fade-in">
+      <div class="card">
+        <div class="card-header">
+          <h3 id="step3-title">3 · Anteprima dati estratti</h3>
+          <span id="step3-count"></span>
+        </div>
+        <div class="card-body">
+          <div id="anteprima-content"></div>
+          <div class="alert alert-err" id="step3-err"></div>
+          <div class="btn-row">
+            <button class="btn-ghost" onclick="goStep2()">← Modifica</button>
+            <button class="btn-success" id="btn-importa" onclick="eseguiImport()" style="display:flex;">✓ Importa in Supabase</button>
+            <button class="btn-ghost" onclick="goStep1()">Nuovo import</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── STEP 4: RISULTATO ── -->
+    <div id="panel-step4" style="display:none;" class="fade-in">
+      <div class="card">
+        <div class="card-header"><h3>4 · Risultato importazione</h3></div>
+        <div class="card-body">
+          <div class="alert alert-ok" id="step4-ok" style="display:flex;margin-bottom:1rem;"></div>
+          <div class="alert alert-err" id="step4-err" style="margin-bottom:1rem;"></div>
+          <div class="import-log" id="import-log" style="display:block;"></div>
+          <div class="btn-row" style="margin-top:1.2rem;">
+            <button class="btn-primary" onclick="goStep1()">+ Nuovo import</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── STORICO ── -->
+    <div class="card" id="storico-card" style="display:none;">
+      <div class="card-header"><h3>Ultime importazioni — <span id="storico-cliente-nome"></span></h3></div>
+      <div class="card-body" id="storico-body" style="padding:0.5rem 1.5rem;"></div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+// PDF.js worker
+pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+
+const SUPABASE_URL = 'https://znjhrwrwgpzmfwewdbnm.supabase.co';
+const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inpuamhyd3J3Z3B6bWZ3ZXdkYm5tIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzUxMjc0NzMsImV4cCI6MjA5MDcwMzQ3M30.5TZIf8JzQrnpsVmW_O7bEezTW3KlIsHdxc8CQJUsE-Y';
+const { createClient } = supabase;
+const sb = createClient(SUPABASE_URL, SUPABASE_KEY);
+
+// ── STATE ──
+let currentUser = null;
+let clientiList = [];
+let clienteSelezionato = null;
+let tipoSelezionato = null;
+let extractedText = '';
+let parseResult = null;
+
+const el = id => document.getElementById(id);
+const fmt = v => '€\u00a0' + parseFloat(v||0).toLocaleString('it-IT',{minimumFractionDigits:2,maximumFractionDigits:2});
+const fmtDate = s => s ? new Date(s).toLocaleDateString('it-IT') : '—';
+const parseItalianNum = s => { if(!s)return 0; return parseFloat(String(s).replace(/[.]/g,'').replace(',','.')) || 0; };
+
+// ── AUTH ──
+document.addEventListener('keydown', e => { if(e.key==='Enter') doLogin(); });
+
+async function doLogin() {
+  const email = el('login-email').value.trim();
+  const pass = el('login-password').value;
+  const errEl = el('login-err');
+  errEl.style.display = 'none';
+  el('btn-login').textContent = 'Accesso...';
+  el('btn-login').disabled = true;
+  const { data, error } = await sb.auth.signInWithPassword({ email, password: pass });
+  el('btn-login').textContent = 'Accedi';
+  el('btn-login').disabled = false;
+  if (error) { errEl.textContent = 'Credenziali non valide.'; errEl.style.display = 'block'; return; }
+  currentUser = data.user;
+  await initApp();
+}
+
+async function doLogout() { await sb.auth.signOut(); location.reload(); }
+
+window.addEventListener('load', async () => {
+  const { data } = await sb.auth.getSession();
+  if (data.session) { currentUser = data.session.user; await initApp(); }
+});
+
+async function initApp() {
+  el('login-page').style.display = 'none';
+  el('app').style.display = 'block';
+  el('topbar-user').textContent = currentUser.email;
+  await loadClienti();
+}
+
+async function loadClienti() {
+  let { data, error } = await sb.from('clienti')
+    .select('id,nome,cognome,partita_iva,codice_fiscale,tipo_cliente,email')
+    .order('cognome');
+  if (error) {
+    console.error('Errore loadClienti:', error.message);
+    // Fallback: carica solo il proprio record
+    const fb = await sb.from('clienti').select('id,nome,cognome,partita_iva,codice_fiscale,tipo_cliente,email').eq('email', currentUser.email);
+    data = fb.data || [];
+  }
+  clientiList = data || [];
+  console.log('Clienti caricati:', clientiList.length);
+  renderDropdown(clientiList);
+}
+
+// ── CUSTOM SEARCHABLE DROPDOWN ──
+function renderDropdown(list) {
+  const listEl = el('cs-list');
+  if (!listEl) return;
+  if (list.length === 0) { listEl.innerHTML = '<div class="cs-empty">Nessun cliente trovato</div>'; return; }
+  const ordinari = list.filter(c => c.tipo_cliente === 'ordinario');
+  const forfettari = list.filter(c => c.tipo_cliente !== 'ordinario');
+  let html = '<div class="cs-list-inner">';
+  if (forfettari.length > 0) {
+    html += '<div class="cs-header">Forfettari (' + forfettari.length + ')</div>';
+    forfettari.forEach(c => { html += clienteItem(c); });
+  }
+  if (ordinari.length > 0) {
+    html += '<div class="cs-header">P.IVA Ordinaria (' + ordinari.length + ')</div>';
+    ordinari.forEach(c => { html += clienteItem(c); });
+  }
+  html += '</div>';
+  listEl.innerHTML = html;
+}
+
+function clienteItem(c) {
+  const nome = ((c.nome||'') + ' ' + (c.cognome||'')).trim() || '—';
+  const isOrd = c.tipo_cliente === 'ordinario';
+  const badge = isOrd
+    ? '<span class="cs-item-badge" style="background:#EFF6FF;color:#1E40AF;">Ordinario</span>'
+    : '<span class="cs-item-badge" style="background:#FFF7ED;color:#EA580C;">Forfettario</span>';
+  return '<div class="cs-item" data-id="' + c.id + '" onclick="selezionaCliente(\'' + c.id + '\')">' +
+    '<div><div class="cs-item-nome">' + nome + '</div>' +
+    '<div class="cs-item-piva">' + (c.partita_iva||c.codice_fiscale||c.email||'—') + '</div></div>' +
+    badge + '</div>';
+}
+
+function filterDropdown(q) {
+  q = (q||'').toLowerCase().trim();
+  const filtered = q ? clientiList.filter(c => {
+    const nome = ((c.nome||'')+(c.cognome||'')).toLowerCase();
+    return nome.includes(q) || (c.partita_iva||'').includes(q);
+  }) : clientiList;
+  renderDropdown(filtered);
+  openDropdown();
+}
+
+function toggleDropdown() {
+  const dd = el('cs-dropdown');
+  if (!dd) return;
+  dd.style.display === 'none' ? openDropdown() : closeDropdown();
+}
+
+function openDropdown() {
+  const dd = el('cs-dropdown'); if(!dd) return;
+  dd.style.display = 'block';
+  el('cs-wrap').classList.add('open');
+}
+
+function closeDropdown() {
+  const dd = el('cs-dropdown'); if(!dd) return;
+  dd.style.display = 'none';
+  el('cs-wrap').classList.remove('open');
+}
+
+document.addEventListener('click', function(e) {
+  const wrap = el('cs-wrap');
+  if (wrap && !wrap.contains(e.target)) closeDropdown();
+});
+
+function selezionaCliente(id) {
+  clienteSelezionato = clientiList.find(c => c.id === id) || null;
+  closeDropdown();
+  if (!clienteSelezionato) { checkStep1(); return; }
+  const nome = ((clienteSelezionato.nome||'') + ' ' + (clienteSelezionato.cognome||'')).trim() || '—';
+  el('cs-search').value = nome;
+  document.querySelectorAll('.cs-item').forEach(item => item.classList.toggle('selected', item.dataset.id === id));
+  const infoRow = el('cliente-info-row');
+  el('ci-piva').textContent = clienteSelezionato.partita_iva || '—';
+  el('ci-cf').textContent = clienteSelezionato.codice_fiscale || '—';
+  el('ci-tipo').textContent = clienteSelezionato.tipo_cliente === 'ordinario' ? 'P.IVA Ordinaria' : 'Forfettario';
+  infoRow.style.display = 'flex';
+  aggiornaTipiDisponibili();
+  loadStorico();
+  checkStep1();
+}
+
+function onClienteChange() {} // compatibilità
+
+// ── STEP 1 ──
+
+function aggiornaTipiDisponibili() {
+  if (!clienteSelezionato) return;
+  const isOrd = clienteSelezionato.tipo_cliente === 'ordinario';
+  const isForf = !isOrd;
+
+  // iva, bilancio, ritenute solo per ordinari
+  // contributi solo per forfettari
+  document.querySelectorAll('.tipo-card').forEach(card => {
+    const tipo = card.dataset.tipo;
+    let disabled = false;
+    if (['iva','bilancio','ritenute'].includes(tipo) && isForf) disabled = true;
+    if (['contributi'].includes(tipo) && isOrd) disabled = true;
+    card.classList.toggle('disabled', disabled);
+    if (disabled && card.classList.contains('selected')) {
+      card.classList.remove('selected');
+      tipoSelezionato = null;
+    }
+  });
+  checkStep1();
+}
+
+function selTipo(card) {
+  if (card.classList.contains('disabled')) return;
+  document.querySelectorAll('.tipo-card').forEach(c => c.classList.remove('selected'));
+  card.classList.add('selected');
+  tipoSelezionato = card.dataset.tipo;
+  checkStep1();
+}
+
+function checkStep1() {
+  el('btn-step1').disabled = !(clienteSelezionato && tipoSelezionato);
+}
+
+function goStep1() {
+  showPanel('step1');
+  setStep(1);
+  parseResult = null;
+  extractedText = '';
+  el('drop-file-name').textContent = '';
+  el('drop-zone').classList.remove('has-file');
+  el('manual-text').value = '';
+  el('manual-wrap').style.display = 'none';
+  el('anteprima-content').innerHTML = '';
+  hideAlerts();
+}
+
+function goStep2() {
+  if (!clienteSelezionato || !tipoSelezionato) return;
+  showPanel('step2');
+  setStep(2);
+  // Aggiorna titolo e hint in base al tipo
+  const info = tipoInfo[tipoSelezionato] || {};
+  el('step2-title').textContent = '2 · ' + (info.title || 'Carica file');
+  el('step2-sub').textContent = info.hint || '';
+  el('file-input').accept = info.accept || '.pdf,.xml,.csv';
+  el('drop-accept').textContent = 'Formati: ' + (info.formats || 'PDF, XML, CSV');
+}
+
+const tipoInfo = {
+  fatture_xml: { title:'Carica fatture XML / Excel', hint:'File XML da SDI, Excel (.xlsx) o CSV esportato da Namirial', accept:'.xml,.xlsx,.csv', formats:'XML, Excel (.xlsx), CSV' },
+  iva: { title:'Carica liquidazione IVA', hint:'PDF esportato da Namirial — Liquidazione Periodica IVA', accept:'.pdf', formats:'PDF Namirial' },
+  bilancio: { title:'Carica bilancio CE+SP', hint:'PDF esportato da Namirial — Stato Patrimoniale e Conto Economico', accept:'.pdf', formats:'PDF Namirial' },
+  f24: { title:'Carica scadenze F24', hint:'PDF o CSV da Namirial', accept:'.pdf,.csv', formats:'PDF o CSV Namirial' },
+  ritenute: { title:'Carica ritenute', hint:'PDF o CSV da Namirial', accept:'.pdf,.csv', formats:'PDF o CSV Namirial' },
+  contributi: { title:'Aggiorna contributi INPS', hint:'Inserisci manualmente o carica il PDF del modello F24', accept:'.pdf', formats:'PDF F24 INPS' },
+};
+
+// ── FILE HANDLING ──
+function onDragOver(e) { e.preventDefault(); el('drop-zone').classList.add('dragover'); }
+function onDragLeave() { el('drop-zone').classList.remove('dragover'); }
+function onDrop(e) {
+  e.preventDefault();
+  el('drop-zone').classList.remove('dragover');
+  const file = e.dataTransfer.files[0];
+  if (file) handleFile(file);
+}
+function onFileSelected(e) {
+  const file = e.target.files[0];
+  if (file) handleFile(file);
+}
+function toggleManual() {
+  const w = el('manual-wrap');
+  w.style.display = w.style.display === 'none' ? 'block' : 'none';
+}
+
+function handleFile(file) {
+  const dz = el('drop-zone');
+  const fnEl = el('drop-file-name');
+  dz.classList.add('has-file');
+  fnEl.textContent = '📄 ' + file.name;
+  el('step2-err').style.display = 'none';
+  window._pdfRigheConX = [];
+
+  if (file.name.endsWith('.pdf')) {
+    extractPDF(file);
+  } else if (file.name.endsWith('.xml')) {
+    readAsText(file, text => { extractedText = text; });
+  } else if (file.name.endsWith('.xlsx') || file.name.endsWith('.xls')) {
+    extractExcel(file);
+  } else if (file.name.endsWith('.csv')) {
+    readAsText(file, text => { extractedText = text; });
+  }
+}
+
+function readAsText(file, cb) {
+  const reader = new FileReader();
+  reader.onload = e => cb(e.target.result);
+  reader.readAsText(file, 'UTF-8');
+}
+
+async function extractExcel(file) {
+  try {
+    const buffer = await file.arrayBuffer();
+    const wb = XLSX.read(buffer, { type: 'array', cellDates: true });
+    const ws = wb.Sheets[wb.SheetNames[0]];
+    const json = XLSX.utils.sheet_to_json(ws, { defval: '' });
+    // Salva come JSON string per processFile
+    extractedText = '__EXCEL__' + JSON.stringify(json);
+    el('drop-title').textContent = '✓ Excel estratto (' + json.length + ' righe)';
+    console.log('Excel rows:', json.length, json[0]);
+  } catch(err) {
+    showAlert('step2-err', 'Errore lettura Excel: ' + err.message);
+  }
+}
+
+async function extractPDF(file) {
+  const pw = el('progress-wrap');
+  const pf = el('progress-fill');
+  const pl = el('progress-label');
+  const pp = el('progress-pct');
+  pw.style.display = 'block';
+  pl.textContent = 'Lettura PDF...';
+  pf.style.width = '5%';
+  pp.textContent = '5%';
+
+  try {
+    const arrayBuffer = await file.arrayBuffer();
+    const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
+    const numPages = pdf.numPages;
+    let fullText = '';
+    // Per bilancio: salva righe con coordinate X per distinguere colonne
+    window._pdfRigheConX = [];
+
+    for (let i = 1; i <= numPages; i++) {
+      const page = await pdf.getPage(i);
+      const tc = await page.getTextContent();
+      const items = tc.items;
+
+      // Raggruppa per Y (riga)
+      const righeMap = {};
+      items.forEach(item => {
+        const y = Math.round(item.transform[5]);
+        const x = item.transform[4];
+        if (!righeMap[y]) righeMap[y] = [];
+        righeMap[y].push({ str: item.str, x });
+      });
+
+      // Ordina per Y decrescente (PDF ha Y dal basso)
+      Object.keys(righeMap).sort((a,b)=>b-a).forEach(y => {
+        const tokens = righeMap[y].sort((a,b)=>a.x-b.x);
+        const lineStr = tokens.map(t=>t.str).join(' ').trim();
+        if (lineStr) {
+          fullText += lineStr + '\n';
+          // Calcola punto medio della pagina per distinguere col sx/dx
+          const pageWidth = tokens.length > 0 ? Math.max(...tokens.map(t=>t.x)) : 600;
+          window._pdfRigheConX.push({
+            text: lineStr,
+            tokens,
+            pageWidth
+          });
+        }
+      });
+
+      const pct = Math.round((i / numPages) * 100);
+      pf.style.width = pct + '%';
+      pp.textContent = pct + '%';
+      pl.textContent = `Pagina ${i} di ${numPages}...`;
+    }
+
+    extractedText = fullText;
+    pw.style.display = 'none';
+    el('drop-title').textContent = '✓ PDF estratto';
+  } catch(err) {
+    pw.style.display = 'none';
+    showAlert('step2-err', 'Errore lettura PDF: ' + err.message + '. Prova a incollare il testo manualmente.');
+  }
+}
+
+// ── ANALISI ──
+async function processFile() {
+  const text = extractedText || el('manual-text').value.trim();
+  if (!text) { showAlert('step2-err', 'Carica un file o incolla il testo.'); return; }
+  el('step2-err').style.display = 'none';
+
+  try {
+    switch (tipoSelezionato) {
+      case 'fatture_xml':
+        if (text.startsWith('__EXCEL__')) parseResult = parseFattureExcel(JSON.parse(text.slice(9)));
+        else if (text.trim().startsWith('<')) parseResult = parseFattureXML(text);
+        else parseResult = parseFattureCSV(text);
+        break;
+      case 'iva':         parseResult = parseIVA(text); break;
+      case 'bilancio':    parseResult = parseBilancio(text); break;
+      case 'f24':         parseResult = parseF24(text); break;
+      case 'ritenute':    parseResult = parseRitenute(text); break;
+      case 'contributi':  parseResult = parseContributi(text); break;
+      default: throw new Error('Tipo non supportato');
+    }
+    if (!parseResult || parseResult.error) throw new Error(parseResult?.error || 'Errore parsing');
+    renderAnteprima(parseResult);
+    showPanel('step3');
+    setStep(3);
+    el('step3-title').textContent = '3 · Anteprima — ' + tipoLabel(tipoSelezionato);
+  } catch(err) {
+    showAlert('step2-err', 'Errore analisi: ' + err.message);
+  }
+}
+
+function tipoLabel(t) {
+  const map = { fatture_xml:'Fatture XML', iva:'Liquidazione IVA', bilancio:'Bilancio CE+SP', f24:'Scadenze F24', ritenute:'Ritenute', contributi:'Contributi INPS' };
+  return map[t] || t;
+}
+
+// ══════════════════════════════════════════════
+// ── PARSER IVA ──
+// ══════════════════════════════════════════════
+function parseIVA(text) {
+  const periodoM = text.match(/PERIODO\s+IMPOSTA\s*:\s*([A-ZÀÈÌÒÙ]+\s+\d{4})/i);
+  const periodo = periodoM ? periodoM[1].trim() : '';
+  const annoM = text.match(/(\d{4})/);
+  const anno = annoM ? parseInt(annoM[1]) : new Date().getFullYear();
+
+  const ivaDebitoM = text.match(/I\.V\.A\.\s+SULLE\s+VENDITE\s+([\d\.]+,\d{2})/i);
+  const ivaCreditoM = text.match(/TOTALE\s+I\.V\.A\.\s+CHE\s+SI\s+DETRAE\s+([\d\.]+,\d{2})/i)
+    || text.match(/I\.V\.A\.\s+sugli?\s+Acquisti\s*\(\s*([\d\.]+,\d{2})\s*\)/i);
+  const saldoM = text.match(/T\s*O\s*T\s*A\s*L\s*E\s+I\.\s*V\.\s*A\.\s+D\s*E\s*B\s*I\s*T\s*O\s+([\d\.]+,\d{2})/i);
+
+  const ivaDebito = ivaDebitoM ? parseItalianNum(ivaDebitoM[1]) : 0;
+  const ivaCredito = ivaCreditoM ? parseItalianNum(ivaCreditoM[1]) : 0;
+  const saldo = saldoM ? parseItalianNum(saldoM[1]) : Math.max(0, ivaDebito - ivaCredito);
+
+  if (ivaDebito === 0 && ivaCredito === 0) return { error: 'Dati IVA non trovati. Verifica il testo.' };
+
+  const mesiNomi = ['GENNAIO','FEBBRAIO','MARZO','APRILE','MAGGIO','GIUGNO','LUGLIO','AGOSTO','SETTEMBRE','OTTOBRE','NOVEMBRE','DICEMBRE'];
+  let scadenza = '', tipo = 'mensile';
+  if (periodo) {
+    const mese = mesiNomi.indexOf(periodo.split(' ')[0].toUpperCase());
+    if (mese >= 0) {
+      const yr = parseInt(periodo.split(' ')[1] || anno);
+      const ms = (mese + 1) % 12;
+      const yrFin = ms === 0 ? yr + 1 : yr;
+      scadenza = `${yrFin}-${String(ms+1).padStart(2,'0')}-16`;
+      if ([2,5,8,11].includes(mese)) tipo = 'trimestrale';
+    }
+  }
+  return { tipo_import: 'iva', periodo, anno, tipo, iva_debito: ivaDebito, iva_credito: ivaCredito, saldo, scadenza };
+}
+
+// ══════════════════════════════════════════════
+// ── PARSER BILANCIO (Namirial) ──
+// ══════════════════════════════════════════════
+function parseBilancio(text) {
+  const hasCE = /CONTO\s+ECONOMICO/i.test(text);
+  const hasSP = /STATO\s+PATRIMONIALE/i.test(text);
+  if (!hasCE && !hasSP) return { error: 'Testo non riconosciuto. Assicurati di aver copiato il bilancio Namirial completo.' };
+
+  const anno = parseInt(el('anno-input').value) || new Date().getFullYear();
+  const voci = [];
+
+  // Usa le righe con coordinate X se disponibili (PDF caricato)
+  const righeConX = window._pdfRigheConX || [];
+  const usaCoordinate = righeConX.length > 0;
+
+  if (usaCoordinate) {
+    // ── Parser con coordinate X (da PDF.js) ──
+    // Namirial SP: colonna sx = ATTIVITÀ, colonna dx = PASSIVITÀ
+    // Il punto di split è circa metà pagina
+    // CE: colonna sx = COSTI, colonna dx = RICAVI
+
+    const SKIP = /^Totale|^Utile|^Perdita|ATTIVIT[AÀ]|PASSIVIT[AÀ]|^COSTI$|^RICAVI$|Conto\s+Conto|^Euro\s|^Data\s|^Pagina|^DEPAO|STATO\s+PATRI|CONTO\s+ECON/i;
+    const NUM_RE = /\d{1,3}(?:\.\d{3})*,\d{2}/;
+    const CODE_RE = /(?<!\d)(\d{6})(?!\d)/;
+
+    let modalita = null; // 'SP' o 'CE'
+    let splitX = null;  // punto di divisione colonne
+
+    righeConX.forEach(riga => {
+      const t = riga.text.trim();
+      if (!t) return;
+
+      // Rileva sezione
+      if (/STATO\s+PATRIMONIALE/i.test(t)) { modalita = 'SP'; splitX = null; return; }
+      if (/CONTO\s+ECONOMICO/i.test(t)) { modalita = 'CE'; splitX = null; return; }
+      if (!modalita) return;
+      if (SKIP.test(t)) return;
+
+      // Calcola punto di split dalla larghezza pagina
+      // Namirial A4: split a ~49% della larghezza (calibrato sul formato reale)
+      if (splitX === null && riga.tokens.length > 0) {
+        const xs = riga.tokens.map(t=>t.x).filter(x=>x>10);
+        const maxX = Math.max(...xs);
+        // Per A4 Namirial il punto medio colonne è circa 290pt su 595pt = 48.7%
+        splitX = maxX > 400 ? maxX * 0.49 : maxX * 0.45;
+      }
+
+      // Separa i token per colonna in base alla X
+      const tokSx = riga.tokens.filter(t => t.x <= splitX);
+      const tokDx = riga.tokens.filter(t => t.x > splitX);
+
+      function parsaColonna(tokens, lato) {
+        const str = tokens.map(t=>t.str).join(' ').trim();
+        if (!str) return;
+        const codeM = str.match(CODE_RE);
+        if (!codeM) return;
+        const numM = str.match(NUM_RE);
+        if (!numM) return;
+        const imp = parseItalianNum(numM[0]);
+        if (imp === 0) return;
+        const conto = codeM[1];
+        const contoPos = str.indexOf(conto);
+        const numPos = str.lastIndexOf(numM[0]);
+        const desc = str.slice(contoPos + 7, numPos).trim();
+        if (!desc || desc.length < 2) return;
+
+        if (modalita === 'CE') {
+          const sezione = conto[0] === '9' ? 'ricavi' : 'costi';
+          if (!voci.find(v=>v.tipo==='CE'&&v.conto===conto)) {
+            voci.push({ tipo:'CE', sezione, categoria: catCE(conto,desc,sezione), voce:desc, importo:imp, conto });
+          }
+        } else {
+          const sezione = lato === 'sx' ? 'attivo' : 'passivo';
+          if (!voci.find(v=>v.tipo==='SP'&&v.conto===conto&&v.voce===desc)) {
+            voci.push({ tipo:'SP', sezione, categoria: catSP(conto,desc,sezione), voce:desc, importo:imp, conto });
+          }
+        }
+      }
+
+      parsaColonna(tokSx, 'sx');
+      parsaColonna(tokDx, 'dx');
+    });
+
+  } else {
+    // ── Fallback: parser testo (copia-incolla manuale) ──
+    // Usa la logica precedente con codice conto
+    function estraiVoci(blockText, tipoDoc) {
+      const col0 = [], col1 = [];
+      blockText.split('\n').forEach(rawLine => {
+        const line = rawLine;
+        if (!line.trim()) return;
+        if (/^Totale|^Utile|^Perdita|ATTIVIT|PASSIVIT|^COSTI$|^RICAVI$|Conto\s+Conto|^Euro\s|^Data\s|^Pagina|^DEPAO|STATO\s+PATRI|CONTO\s+ECON/i.test(line.trim())) return;
+        const allCodes = [];
+        const codeRe = /(?<!\d)(\d{6})(?!\d)\s+/g;
+        let cm;
+        while ((cm = codeRe.exec(line)) !== null) allCodes.push({ pos: cm.index, conto: cm[1], colIdx: allCodes.length });
+        if (allCodes.length === 0) return;
+        allCodes.forEach((code, i) => {
+          const segEnd = allCodes[i+1] ? allCodes[i+1].pos : line.length;
+          const seg = line.slice(code.pos, segEnd).trim();
+          const numMatch = seg.match(/\d{1,3}(?:\.\d{3})*,\d{2}/);
+          if (!numMatch) return;
+          const imp = parseItalianNum(numMatch[0]);
+          if (imp === 0) return;
+          const numPos = seg.search(/\d{1,3}(?:\.\d{3})*,\d{2}/);
+          const desc = seg.slice(code.conto.length + 1, numPos).trim();
+          if (!desc || desc.length < 2) return;
+          const item = { conto: code.conto, desc, importo: imp };
+          if (tipoDoc === 'CE') {
+            if (code.conto[0] === '9') { if (!col1.find(r=>r.conto===code.conto)) col1.push(item); }
+            else { if (!col0.find(c=>c.conto===code.conto)) col0.push(item); }
+          } else {
+            // Nel fallback usa posizione: primo = attivo, secondo = passivo
+            if (code.colIdx % 2 === 0) { if (!col0.find(a=>a.conto===code.conto&&a.desc===desc)) col0.push(item); }
+            else { if (!col1.find(a=>a.conto===code.conto&&a.desc===desc)) col1.push(item); }
+          }
+        });
+      });
+      return { col0, col1 };
+    }
+
+    if (hasCE) {
+      const ceStart = text.search(/CONTO\s+ECONOMICO/i);
+      const { col0: costi, col1: ricavi } = estraiVoci(text.slice(ceStart), 'CE');
+      costi.forEach(v => voci.push({ tipo:'CE', sezione:'costi', categoria: catCE(v.conto,v.desc,'costi'), voce:v.desc, importo:v.importo, conto:v.conto }));
+      ricavi.forEach(v => voci.push({ tipo:'CE', sezione:'ricavi', categoria: catCE(v.conto,v.desc,'ricavi'), voce:v.desc, importo:v.importo, conto:v.conto }));
+    }
+    if (hasSP) {
+      const spStart = text.search(/STATO\s+PATRIMONIALE/i);
+      const ceStart2 = text.search(/CONTO\s+ECONOMICO/i);
+      const spBlock = text.slice(spStart, hasCE && ceStart2 > spStart ? ceStart2 : undefined);
+      const { col0: attivo, col1: passivo } = estraiVoci(spBlock, 'SP');
+      attivo.forEach(v => voci.push({ tipo:'SP', sezione:'attivo', categoria: catSP(v.conto,v.desc,'attivo'), voce:v.desc, importo:v.importo, conto:v.conto }));
+      passivo.forEach(v => voci.push({ tipo:'SP', sezione:'passivo', categoria: catSP(v.conto,v.desc,'passivo'), voce:v.desc, importo:v.importo, conto:v.conto }));
+    }
+  }
+
+  // Fallback totali CE se nessuna voce trovata
+  if (!voci.find(v=>v.tipo==='CE') && hasCE) {
+    const tC = text.match(/Totale\s+Costi\s+([\d\.]+,\d{2})/i);
+    const tR = text.match(/Totale\s+Ricavi\s+([\d\.]+,\d{2})/i);
+    if (tC) voci.push({ tipo:'CE', sezione:'costi', categoria:'Costi', voce:'Totale costi', importo:parseItalianNum(tC[1]), conto:'' });
+    if (tR) voci.push({ tipo:'CE', sezione:'ricavi', categoria:'Ricavi', voce:'Totale ricavi', importo:parseItalianNum(tR[1]), conto:'' });
+  }
+
+  if (voci.length === 0) return { error: 'Nessuna voce contabile trovata. Verifica il file.' };
+  return { tipo_import:'bilancio', anno, voci, hasCE, hasSP };
+}
+
+// Classifica attivo/passivo per codice conto Namirial
+function getSPSezione(conto, desc) {
+  const n = parseInt(conto.slice(0,3));
+  const d = (desc||'').toUpperCase();
+  // 101-109: Cassa e disponibilità liquide → ATTIVO
+  if (n >= 101 && n <= 109) return 'attivo';
+  // 201-209: Anticipazioni, crediti diversi → PASSIVO (debiti verso clienti/stato)
+  // 202: Anticipazioni art.15 → PASSIVO
+  // 203: Prelievi titolare → ATTIVO (credito vs titolare)
+  if (n === 203) return 'attivo';
+  if (n >= 200 && n <= 209) return 'passivo';
+  // 210-219: Crediti vari
+  // 215: Crediti v/Stato (ritenute subite, contributi) → ATTIVO
+  if (n === 215) return 'attivo';
+  if (n >= 210 && n <= 219) return 'attivo';
+  // 216: Erario c/IVA credito → ATTIVO, debito → PASSIVO
+  if (n === 216) {
+    if (d.includes('CREDITO') || d.includes('A CREDITO')) return 'attivo';
+    return 'passivo';
+  }
+  // 501: Fornitori → PASSIVO
+  if (n >= 500 && n <= 509) return 'passivo';
+  // 508: Finanziamenti, mutui, carte credito → PASSIVO
+  if (n >= 508 && n <= 520) return 'passivo';
+  // 600-699: Conti transitori → PASSIVO
+  if (n >= 600 && n <= 699) return 'passivo';
+  // 206: Arrotondamenti → ATTIVO
+  if (n === 206) return 'attivo';
+  // Default: controlla la descrizione
+  if (d.includes('CASSA') || d.includes('BANCA') || d.includes('C/C') || d.includes('CREDITI') || d.includes('RITENUTE')) return 'attivo';
+  if (d.includes('FORNITOR') || d.includes('DEBITI') || d.includes('MUTUO') || d.includes('FINANZIAMENTO') || d.includes('TRANS.')) return 'passivo';
+  // Se il conto inizia con 1-2: attivo, 5-6: passivo
+  const primo = parseInt(conto[0]);
+  if (primo <= 2) return 'attivo';
+  return 'passivo';
+}
+
+function catCE(conto, desc, sez) {
+  const d = desc.toUpperCase();
+  if (sez==='ricavi') {
+    if (d.includes('COMPENSI')||d.includes('RICAVI PROF')||d.includes('PRESTAZIONI')) return 'Ricavi professionali';
+    return 'Altri ricavi';
+  }
+  if (d.includes('LOCAZION')||d.includes('NOLEGGIO')) return 'Locazioni e noleggi';
+  if (d.includes('INTERESSE')||d.includes('ONERI BANC')) return 'Oneri finanziari';
+  if (d.includes('PROFESSIONALI')||d.includes('CONSULENZ')) return 'Costi professionali';
+  if (d.includes('UTENZ')||d.includes('TELEF')||d.includes('COMBUST')) return 'Utenze';
+  if (d.includes('AUTO')||d.includes('VEICOL')) return 'Spese auto';
+  if (d.includes('CANCELL')||d.includes('MATERIAL')) return 'Cancelleria';
+  if (d.includes('BENI STRUMEN')||d.includes('AMMORTA')) return 'Beni strumentali';
+  return 'Altri costi';
+}
+
+function catSP(conto, desc, sez) {
+  const d = desc.toUpperCase();
+  if (sez==='attivo') {
+    if (d.includes('CASSA')||d.includes('BANCA')||d.includes('C/C')) return 'Liquidità';
+    if (d.includes('CREDITI')||d.includes('RITENUTE')||d.includes('ERARIO')) return 'Crediti';
+    if (d.includes('FORNITOR')) return 'Fornitori (attivo)';
+    return 'Altre attività';
+  }
+  if (d.includes('ANTICIPAZ')||d.includes('ART. 15')) return 'Anticipazioni';
+  if (d.includes('CONTRIBUTI')||d.includes('PREVID')) return 'Contributi previdenziali';
+  if (d.includes('ERARIO')||d.includes('IVA')) return 'Debiti verso erario';
+  if (d.includes('FORNITOR')) return 'Debiti verso fornitori';
+  if (d.includes('FINANZIAMENT')||d.includes('CARTA')) return 'Finanziamenti';
+  return 'Altre passività';
+}
+
+// ══════════════════════════════════════════════
+// ── PARSER FATTURE EXCEL (Namirial export) ──
+// ══════════════════════════════════════════════
+function parseFattureExcel(rows) {
+  if (!rows || rows.length === 0) return { error: 'File Excel vuoto.' };
+
+  // Normalizza chiavi colonne (case insensitive, trim)
+  function getVal(row, ...keys) {
+    for (const key of keys) {
+      const found = Object.keys(row).find(k => k.toLowerCase().trim().includes(key.toLowerCase()));
+      if (found && row[found] !== '') return row[found];
+    }
+    return '';
+  }
+
+  const fatture = [];
+  const annoRef = parseInt(el('anno-input').value) || new Date().getFullYear();
+
+  rows.forEach((row, idx) => {
+    // Prova a riconoscere le colonne Namirial
+    const numero = String(getVal(row, 'numero', 'num', 'n.') || (idx+1));
+    const dataRaw = getVal(row, 'data', 'date', 'emissione', 'documento');
+    const tipoDoc = String(getVal(row, 'tipo', 'type', 'td') || 'TD01');
+    const importoLordo = parseFloat(String(getVal(row, 'totale', 'importo lordo', 'lordo', 'totale documento', 'importo totale') || 0).replace(/[.]/g,'').replace(',','.')) || 0;
+    const imponibile = parseFloat(String(getVal(row, 'imponibile', 'netto', 'importo netto', 'base imponibile') || 0).replace(/[.]/g,'').replace(',','.')) || 0;
+    const iva = parseFloat(String(getVal(row, 'iva', 'imposta', 'tassa') || 0).replace(/[.]/g,'').replace(',','.')) || 0;
+    const ritenuta = parseFloat(String(getVal(row, 'ritenuta', 'ritenute') || 0).replace(/[.]/g,'').replace(',','.')) || 0;
+    const cessionario = String(getVal(row, 'cliente', 'cessionario', 'denominazione cliente', 'ragione sociale cliente', 'intestatario') || '');
+    const cedente = String(getVal(row, 'fornitore', 'cedente', 'denominazione fornitore', 'fornitore') || '');
+    const piva = String(getVal(row, 'p.iva', 'piva', 'partita iva cliente', 'cf/piva') || '');
+
+    // Determina data
+    let dataISO = '';
+    if (dataRaw instanceof Date) {
+      dataISO = dataRaw.toISOString().slice(0,10);
+    } else if (dataRaw) {
+      const s = String(dataRaw);
+      // Formato DD/MM/YYYY
+      const m = s.match(/(\d{2})[\/\-](\d{2})[\/\-](\d{4})/);
+      if (m) dataISO = `${m[3]}-${m[2]}-${m[1]}`;
+      else if (/^\d{4}-\d{2}-\d{2}/.test(s)) dataISO = s.slice(0,10);
+    }
+
+    // Skip righe vuote o senza importo
+    if (importoLordo === 0 && imponibile === 0) return;
+
+    const annoFat = dataISO ? parseInt(dataISO.slice(0,4)) : annoRef;
+    const netto = imponibile || (importoLordo - iva - ritenuta) || importoLordo;
+    const ivaCalc = iva || (importoLordo - netto - ritenuta);
+    const tipoFat = tipoDoc.includes('TD04') || tipoDoc.includes('TD08') ? 'ricevuta' : 'emessa';
+
+    fatture.push({
+      numero: numero.includes('/') ? numero : numero + '/' + annoFat,
+      data: dataISO || `${annoRef}-01-01`,
+      tipo: tipoFat,
+      importo_totale: importoLordo || netto,
+      importo_netto: netto,
+      iva: ivaCalc,
+      ritenuta,
+      cessionario_nome: cessionario,
+      cedente_nome: cedente,
+      cessionario_piva: piva,
+      anno: annoFat
+    });
+  });
+
+  if (fatture.length === 0) return { error: 'Nessuna fattura trovata. Verifica le colonne del file Excel.' };
+  return { tipo_import:'fatture_xml', fatture };
+}
+
+// ── PARSER FATTURE CSV ──
+function parseFattureCSV(text) {
+  const lines = text.split('\n').filter(l => l.trim());
+  if (lines.length < 2) return { error: 'CSV troppo corto.' };
+  const headers = lines[0].split(/[,;]/).map(h => h.trim().replace(/"/g,'').toLowerCase());
+  const fatture = [];
+  const annoRef = parseInt(el('anno-input').value) || new Date().getFullYear();
+
+  lines.slice(1).forEach(line => {
+    const cols = line.split(/[,;]/).map(c => c.trim().replace(/"/g,''));
+    const row = {};
+    headers.forEach((h,i) => { row[h] = cols[i] || ''; });
+
+    const imp = parseFloat((row['totale']||row['importo']||'0').replace(/[.]/g,'').replace(',','.')) || 0;
+    const netto = parseFloat((row['imponibile']||row['netto']||'0').replace(/[.]/g,'').replace(',','.')) || imp;
+    const iva = parseFloat((row['iva']||'0').replace(/[.]/g,'').replace(',','.')) || 0;
+    const dataRaw = row['data']||row['data emissione']||'';
+    const m = dataRaw.match(/(\d{2})[\/\-](\d{2})[\/\-](\d{4})/);
+    const dataISO = m ? `${m[3]}-${m[2]}-${m[1]}` : `${annoRef}-01-01`;
+    const annoFat = parseInt(dataISO.slice(0,4)) || annoRef;
+    if (imp === 0 && netto === 0) return;
+    fatture.push({ numero: (row['numero']||row['num']||(fatture.length+1))+'', data: dataISO, tipo:'emessa', importo_totale: imp, importo_netto: netto, iva, ritenuta:0, cessionario_nome: row['cliente']||row['cessionario']||'', anno: annoFat });
+  });
+
+  if (fatture.length === 0) return { error: 'Nessuna fattura trovata nel CSV.' };
+  return { tipo_import:'fatture_xml', fatture };
+}
+function parseFattureXML(text) {
+  try {
+    const parser = new DOMParser();
+    const xml = parser.parseFromString(text, 'text/xml');
+    if (xml.querySelector('parsererror')) throw new Error('XML non valido');
+    const fattura = {
+      numero: xml.querySelector('NumeroFattura,Numero')?.textContent || '',
+      data: xml.querySelector('Data')?.textContent || '',
+      tipo: xml.querySelector('TipoDocumento')?.textContent || 'TD01',
+      cedente_nome: xml.querySelector('DenominazioneCedente,Denominazione')?.textContent || '',
+      cedente_piva: xml.querySelector('IdFiscaleIVA IdCodice')?.textContent || '',
+      cessionario_nome: xml.querySelector('DenominazioneCessionario')?.textContent || '',
+      importo_totale: parseFloat(xml.querySelector('ImportoTotaleDocumento')?.textContent || 0),
+      iva: parseFloat(xml.querySelector('Imposta')?.textContent || 0),
+      imponibile: parseFloat(xml.querySelector('ImponibileImporto')?.textContent || 0),
+    };
+    return { tipo_import:'fatture_xml', fatture:[fattura] };
+  } catch(e) {
+    return { error: 'XML non valido: ' + e.message };
+  }
+}
+
+// ══════════════════════════════════════════════
+// ── PARSER F24 (testo PDF Namirial) ──
+// ══════════════════════════════════════════════
+function parseF24(text) {
+  const righe = [];
+  // Cerca pattern data + importo nel testo
+  const datePattern = /(\d{2}[\/\-]\d{2}[\/\-]\d{4}|\d{2}\s+\w+\s+\d{4})/g;
+  const lines = text.split('\n');
+  lines.forEach(line => {
+    const dateM = line.match(/(\d{2}\/\d{2}\/\d{4})/);
+    const impM = line.match(/(\d{1,3}(?:\.\d{3})*,\d{2})/);
+    const codM = line.match(/\b(\d{4})\b/); // codice tributo 4 cifre
+    if (dateM && impM) {
+      const parts = dateM[1].split('/');
+      const dataISO = `${parts[2]}-${parts[1]}-${parts[0]}`;
+      righe.push({
+        scadenza: dataISO,
+        importo: parseItalianNum(impM[1]),
+        codice_tributo: codM ? codM[1] : '',
+        descrizione: line.trim().slice(0,80),
+        tipo: 'F24'
+      });
+    }
+  });
+  if (righe.length === 0) {
+    // Fallback: cerca nel CSV
+    const csvLines = text.split('\n').filter(l=>l.includes(','));
+    csvLines.forEach(line => {
+      const cols = line.split(',');
+      if (cols.length >= 2) {
+        const d = cols[0].trim(), imp = cols[1].trim();
+        if (/\d{2}\/\d{2}\/\d{4}/.test(d)) {
+          const parts = d.split('/');
+          righe.push({ scadenza:`${parts[2]}-${parts[1]}-${parts[0]}`, importo:parseItalianNum(imp), descrizione:cols[2]||'F24', tipo:'F24', codice_tributo:'' });
+        }
+      }
+    });
+  }
+  if (righe.length === 0) return { error: 'Nessuna scadenza F24 trovata. Verifica il formato del file.' };
+  return { tipo_import:'f24', righe };
+}
+
+// ══════════════════════════════════════════════
+// ── PARSER RITENUTE ──
+// ══════════════════════════════════════════════
+function parseRitenute(text) {
+  const righe = [];
+  const mesiNomi = { 'gennaio':1,'febbraio':2,'marzo':3,'aprile':4,'maggio':5,'giugno':6,'luglio':7,'agosto':8,'settembre':9,'ottobre':10,'novembre':11,'dicembre':12 };
+  const anno = parseInt(el('anno-input').value) || new Date().getFullYear();
+  const lines = text.split('\n');
+  lines.forEach(line => {
+    const l = line.toLowerCase();
+    let mese = null;
+    Object.keys(mesiNomi).forEach(m => { if (l.includes(m)) mese = mesiNomi[m]; });
+    const impM = line.match(/(\d{1,3}(?:\.\d{3})*,\d{2})/g);
+    if (mese && impM && impM.length >= 1) {
+      const imponibile = parseItalianNum(impM[0]);
+      const importo = impM[1] ? parseItalianNum(impM[1]) : Math.round(imponibile * 0.2 * 100) / 100;
+      const aliquota = imponibile > 0 ? Math.round((importo/imponibile)*100) : 20;
+      const ms = (mese % 12) + 1;
+      const yrScad = ms === 1 ? anno + 1 : anno;
+      righe.push({ mese, anno, imponibile, aliquota, importo, scadenza:`${yrScad}-${String(ms).padStart(2,'0')}-16`, versata:false });
+    }
+  });
+  if (righe.length === 0) return { error: 'Nessuna ritenuta trovata. Verifica il testo.' };
+  return { tipo_import:'ritenute', righe };
+}
+
+// ══════════════════════════════════════════════
+// ── PARSER CONTRIBUTI ──
+// ══════════════════════════════════════════════
+function parseContributi(text) {
+  const impM = text.match(/(\d{1,3}(?:\.\d{3})*,\d{2})/g);
+  if (!impM) return { error: 'Nessun importo trovato.' };
+  const importo = parseItalianNum(impM[0]);
+  const anno = parseInt(el('anno-input').value) || new Date().getFullYear();
+  return { tipo_import:'contributi', importo, anno };
+}
+
+// ══════════════════════════════════════════════
+// ── ANTEPRIMA ──
+// ══════════════════════════════════════════════
+function renderAnteprima(res) {
+  const cont = el('anteprima-content');
+  const tipo = res.tipo_import;
+
+  if (tipo === 'iva') {
+    el('step3-count').textContent = 'Periodo: ' + res.periodo;
+    cont.innerHTML = `
+      <div class="anteprima fade-in">
+        <div class="ant-title">Liquidazione IVA · ${res.periodo} · ${res.tipo}</div>
+        <div class="ant-kpi">
+          <div class="kpi-mini"><div class="kpi-mini-label">IVA Vendite (debito)</div><div class="kpi-mini-val" style="color:var(--red);">${fmt(res.iva_debito)}</div></div>
+          <div class="kpi-mini"><div class="kpi-mini-label">IVA Acquisti (credito)</div><div class="kpi-mini-val" style="color:var(--green);">${fmt(res.iva_credito)}</div></div>
+          <div class="kpi-mini"><div class="kpi-mini-label">Saldo a debito</div><div class="kpi-mini-val" style="color:${res.saldo>0?'var(--red)':'var(--green)'};">${fmt(res.saldo)}</div></div>
+          <div class="kpi-mini"><div class="kpi-mini-label">Scadenza versamento</div><div class="kpi-mini-val" style="font-size:0.8rem;">${fmtDate(res.scadenza)}</div></div>
+        </div>
+      </div>`;
+  }
+
+  else if (tipo === 'bilancio') {
+    const totCosti = res.voci.filter(v=>v.tipo==='CE'&&v.sezione==='costi').reduce((s,v)=>s+v.importo,0);
+    const totRicavi = res.voci.filter(v=>v.tipo==='CE'&&v.sezione==='ricavi').reduce((s,v)=>s+v.importo,0);
+    const totAttivo = res.voci.filter(v=>v.tipo==='SP'&&v.sezione==='attivo').reduce((s,v)=>s+v.importo,0);
+    const totPassivo = res.voci.filter(v=>v.tipo==='SP'&&v.sezione==='passivo').reduce((s,v)=>s+v.importo,0);
+    el('step3-count').textContent = res.voci.length + ' voci trovate · Anno ' + res.anno;
+
+    const bySection = {};
+    res.voci.forEach(v => { const k=v.tipo+'_'+v.sezione; if(!bySection[k])bySection[k]=[]; bySection[k].push(v); });
+    const sLabels = { CE_ricavi:'CE — Ricavi', CE_costi:'CE — Costi', SP_attivo:'SP — Attività', SP_passivo:'SP — Passività' };
+
+    let html = `<div class="anteprima fade-in"><div class="ant-title">Bilancio ${res.anno}</div>
+      <div class="ant-kpi">
+        ${res.hasCE ? `<div class="kpi-mini"><div class="kpi-mini-label">Ricavi</div><div class="kpi-mini-val" style="color:var(--green);">${fmt(totRicavi)}</div></div>
+        <div class="kpi-mini"><div class="kpi-mini-label">Costi</div><div class="kpi-mini-val" style="color:var(--red);">${fmt(totCosti)}</div></div>
+        <div class="kpi-mini"><div class="kpi-mini-label">Utile/Perdita</div><div class="kpi-mini-val" style="color:${totRicavi-totCosti>=0?'var(--green)':'var(--red)'};">${fmt(totRicavi-totCosti)}</div></div>` : ''}
+        ${res.hasSP ? `<div class="kpi-mini"><div class="kpi-mini-label">Attivo</div><div class="kpi-mini-val" style="color:var(--blue);">${fmt(totAttivo)}</div></div>` : ''}
+      </div>`;
+
+    Object.keys(bySection).forEach(key => {
+      html += `<div class="ant-sezione">${sLabels[key]||key}</div>`;
+      bySection[key].slice(0,6).forEach(v => {
+        html += `<div class="ant-voce"><span class="ant-conto">${v.conto}</span><span style="flex:1;">${v.voce}</span><span class="ant-importo">${fmt(v.importo)}</span></div>`;
+      });
+      if (bySection[key].length > 6) html += `<div style="font-size:0.68rem;color:var(--text-light);padding:0.2rem 0.5rem;">... e altre ${bySection[key].length-6} voci</div>`;
+    });
+    html += '</div>';
+    cont.innerHTML = html;
+  }
+
+  else if (tipo === 'f24') {
+    el('step3-count').textContent = res.righe.length + ' scadenze trovate';
+    const totale = res.righe.reduce((s,r)=>s+r.importo,0);
+    cont.innerHTML = `<div class="anteprima fade-in">
+      <div class="ant-title">Scadenze F24 · ${res.righe.length} voci · Totale ${fmt(totale)}</div>
+      <div style="margin-top:0.5rem;">
+        ${res.righe.map(r=>`<div class="ant-voce"><span style="font-family:var(--mono);font-size:0.72rem;color:var(--text-mid);width:90px;flex-shrink:0;">${fmtDate(r.scadenza)}</span><span style="flex:1;font-size:0.75rem;">${r.descrizione.slice(0,60)}</span><span class="ant-importo">${fmt(r.importo)}</span></div>`).join('')}
+      </div></div>`;
+  }
+
+  else if (tipo === 'ritenute') {
+    el('step3-count').textContent = res.righe.length + ' mesi trovati';
+    const mN = ['','Gen','Feb','Mar','Apr','Mag','Giu','Lug','Ago','Set','Ott','Nov','Dic'];
+    cont.innerHTML = `<div class="anteprima fade-in">
+      <div class="ant-title">Ritenute d'acconto</div>
+      <div style="margin-top:0.5rem;">
+        ${res.righe.map(r=>`<div class="ant-voce"><span style="width:60px;flex-shrink:0;font-weight:600;">${mN[r.mese]} ${r.anno}</span><span style="flex:1;font-size:0.75rem;color:var(--text-mid);">Imponibile ${fmt(r.imponibile)} · Al. ${r.aliquota}%</span><span class="ant-importo" style="color:var(--violet);">${fmt(r.importo)}</span></div>`).join('')}
+      </div></div>`;
+  }
+
+  else if (tipo === 'contributi') {
+    el('step3-count').textContent = 'Anno ' + res.anno;
+    cont.innerHTML = `<div class="anteprima fade-in">
+      <div class="ant-title">Contributi INPS · Anno ${res.anno}</div>
+      <div class="ant-kpi">
+        <div class="kpi-mini"><div class="kpi-mini-label">Importo contributi</div><div class="kpi-mini-val" style="color:var(--cyan);">${fmt(res.importo)}</div></div>
+      </div></div>`;
+  }
+
+  else if (tipo === 'fatture_xml') {
+    el('step3-count').textContent = res.fatture.length + ' fattura/e';
+    const totLordo = res.fatture.reduce((s,f)=>s+(f.importo_totale||0),0);
+    const totNetto = res.fatture.reduce((s,f)=>s+(f.importo_netto||f.importo_totale||0),0);
+    const totIva = res.fatture.reduce((s,f)=>s+(f.iva||0),0);
+    const totRit = res.fatture.reduce((s,f)=>s+(f.ritenuta||0),0);
+    cont.innerHTML = `<div class="anteprima fade-in">
+      <div class="ant-title">Fatture · ${res.fatture.length} documenti</div>
+      <div class="ant-kpi">
+        <div class="kpi-mini"><div class="kpi-mini-label">Imponibile</div><div class="kpi-mini-val" style="color:var(--blue);">${fmt(totNetto)}</div></div>
+        <div class="kpi-mini"><div class="kpi-mini-label">IVA</div><div class="kpi-mini-val" style="color:var(--cyan);">${fmt(totIva)}</div></div>
+        ${totRit > 0 ? `<div class="kpi-mini"><div class="kpi-mini-label">Ritenute</div><div class="kpi-mini-val" style="color:var(--violet);">${fmt(totRit)}</div></div>` : ''}
+        <div class="kpi-mini"><div class="kpi-mini-label">Totale lordo</div><div class="kpi-mini-val">${fmt(totLordo)}</div></div>
+      </div>
+      <div style="margin-top:0.5rem;">
+        ${res.fatture.slice(0,8).map(f=>`<div class="ant-voce">
+          <span style="font-family:var(--mono);font-size:0.68rem;color:var(--text-light);width:80px;flex-shrink:0;">${f.data||'—'}</span>
+          <span style="font-size:0.72rem;font-weight:600;width:60px;flex-shrink:0;">${f.numero||'—'}</span>
+          <span style="flex:1;font-size:0.72rem;color:var(--text-mid);">${(f.cessionario_nome||f.cedente_nome||'').slice(0,30)}</span>
+          <span style="font-size:0.68rem;color:var(--cyan);margin-right:0.5rem;">IVA ${fmt(f.iva||0)}</span>
+          <span class="ant-importo">${fmt(f.importo_netto||f.importo_totale)}</span>
+        </div>`).join('')}
+        ${res.fatture.length > 8 ? `<div style="font-size:0.68rem;color:var(--text-light);padding:0.3rem 0.5rem;">... e altre ${res.fatture.length-8} fatture</div>` : ''}
+      </div></div>`;
+  }
+}
+
+// ══════════════════════════════════════════════
+// ── IMPORT IN SUPABASE ──
+// ══════════════════════════════════════════════
+async function eseguiImport() {
+  if (!parseResult || !clienteSelezionato) return;
+  showPanel('step4');
+  setStep(4);
+
+  const logEl = el('import-log');
+  logEl.style.display = 'block';
+  logEl.innerHTML = '';
+
+  const log = (msg, cls='') => { logEl.innerHTML += `<span class="${cls}">${msg}</span>\n`; logEl.scrollTop = logEl.scrollHeight; };
+  const cid = clienteSelezionato.id;
+  const tipo = parseResult.tipo_import;
+
+  try {
+    log(`<span class="log-info">▶ Inizio importazione — ${tipoLabel(tipo)}</span>`);
+    log(`<span class="log-info">  Cliente: ${((clienteSelezionato.nome||'')+' '+(clienteSelezionato.cognome||'')).trim()}</span>`);
+
+    if (tipo === 'iva') {
+      const { data: ex } = await sb.from('liquidazioni_iva').select('id').eq('cliente_id',cid).eq('periodo',parseResult.periodo).eq('anno',parseResult.anno);
+      if (ex && ex.length > 0) {
+        await sb.from('liquidazioni_iva').update({ iva_debito:parseResult.iva_debito, iva_credito:parseResult.iva_credito, tipo:parseResult.tipo, scadenza:parseResult.scadenza||null, anno:parseResult.anno }).eq('id',ex[0].id);
+        log(`✓ Liquidazione ${parseResult.periodo} aggiornata`, 'log-ok');
+      } else {
+        await sb.from('liquidazioni_iva').insert({ cliente_id:cid, periodo:parseResult.periodo, anno:parseResult.anno, tipo:parseResult.tipo, iva_debito:parseResult.iva_debito, iva_credito:parseResult.iva_credito, scadenza:parseResult.scadenza||null, versato:false });
+        log(`✓ Liquidazione ${parseResult.periodo} inserita`, 'log-ok');
+      }
+    }
+
+    else if (tipo === 'bilancio') {
+      const { voci, anno } = parseResult;
+      const tipi = [...new Set(voci.map(v=>v.tipo))];
+      for (const t of tipi) {
+        await sb.from('voci_bilancio').delete().eq('cliente_id',cid).eq('anno',anno).eq('tipo',t);
+        log(`  Cancellate voci ${t} anno ${anno}`, 'log-info');
+      }
+      const records = voci.map(v=>({ cliente_id:cid, anno, tipo:v.tipo, sezione:v.sezione, categoria:v.categoria, voce:v.voce, importo:v.importo }));
+      for (let i=0; i<records.length; i+=50) {
+        await sb.from('voci_bilancio').insert(records.slice(i,i+50));
+        log(`✓ Inserite ${Math.min(i+50,records.length)}/${records.length} voci`, 'log-ok');
+      }
+    }
+
+    else if (tipo === 'f24') {
+      let ins = 0;
+      for (const r of parseResult.righe) {
+        const { error } = await sb.from('f24').insert({ cliente_id:cid, scadenza:r.scadenza, importo:r.importo, tipo:r.tipo, descrizione:r.descrizione, codice_tributo:r.codice_tributo||null, pagato:false });
+        if (!error) ins++;
+      }
+      log(`✓ ${ins} scadenze F24 inserite`, 'log-ok');
+    }
+
+    else if (tipo === 'ritenute') {
+      let ins = 0;
+      for (const r of parseResult.righe) {
+        const { data:ex } = await sb.from('ritenute').select('id').eq('cliente_id',cid).eq('mese',r.mese).eq('anno',r.anno);
+        if (ex && ex.length>0) {
+          await sb.from('ritenute').update({ imponibile:r.imponibile, aliquota:r.aliquota, importo:r.importo, scadenza:r.scadenza }).eq('id',ex[0].id);
+        } else {
+          await sb.from('ritenute').insert({ cliente_id:cid, mese:r.mese, anno:r.anno, imponibile:r.imponibile, aliquota:r.aliquota, importo:r.importo, scadenza:r.scadenza, versata:false });
+        }
+        ins++;
+      }
+      log(`✓ ${ins} ritenute importate`, 'log-ok');
+    }
+
+    else if (tipo === 'contributi') {
+      await sb.from('clienti').update({ contributi_versati: parseResult.importo }).eq('id', cid);
+      log(`✓ Contributi INPS aggiornati: ${fmt(parseResult.importo)}`, 'log-ok');
+    }
+
+    else if (tipo === 'fatture_xml') {
+      let ins = 0, errs = 0;
+      for (const f of parseResult.fatture) {
+        const { error } = await sb.from('fatture').insert({
+          cliente_id: cid,
+          numero: f.numero,
+          data_emissione: f.data,
+          tipo: f.tipo === 'TD01' ? 'emessa' : (f.tipo === 'emessa' ? 'emessa' : 'ricevuta'),
+          importo: f.importo_totale,
+          importo_netto: f.importo_netto || f.importo_totale,
+          iva: f.iva || 0,
+          cedente_nome: f.cedente_nome || '',
+          cedente_piva: f.cedente_piva || '',
+          cessionario_nome: f.cessionario_nome || '',
+          cessionario_piva: f.cessionario_piva || '',
+          pagata: false
+        });
+        if (!error) { ins++; log(`✓ Fattura ${f.numero}`, 'log-ok'); }
+        else { errs++; log(`✗ Errore ${f.numero}: ${error.message}`, 'log-err'); }
+      }
+      log(`✓ ${ins} fatture inserite${errs>0?' · '+errs+' errori':''}`, 'log-ok');
+    }
+
+    log(`<span class="log-ok">━━ Importazione completata con successo ━━</span>`);
+    el('step4-ok').textContent = `✓ ${tipoLabel(tipo)} importato con successo per ${((clienteSelezionato.nome||'')+' '+(clienteSelezionato.cognome||'')).trim()}.`;
+    el('step4-ok').style.display = 'flex';
+    loadStorico();
+
+  } catch(err) {
+    log(`✗ Errore: ${err.message}`, 'log-err');
+    el('step4-err').textContent = 'Errore durante l\'importazione: ' + err.message;
+    el('step4-err').style.display = 'block';
+  }
+}
+
+// ── STORICO ──
+async function loadStorico() {
+  if (!clienteSelezionato) return;
+  el('storico-card').style.display = 'block';
+  el('storico-cliente-nome').textContent = ((clienteSelezionato.nome||'')+' '+(clienteSelezionato.cognome||'')).trim();
+  const cid = clienteSelezionato.id;
+
+  const [{ data:iva },{ data:bil },{ data:f24 },{ data:rit }] = await Promise.all([
+    sb.from('liquidazioni_iva').select('periodo,anno,iva_debito,created_at').eq('cliente_id',cid).order('created_at',{ascending:false}).limit(5),
+    sb.from('voci_bilancio').select('anno,tipo,created_at').eq('cliente_id',cid).order('created_at',{ascending:false}).limit(20),
+    sb.from('f24').select('scadenza,importo,created_at').eq('cliente_id',cid).order('created_at',{ascending:false}).limit(5),
+    sb.from('ritenute').select('mese,anno,importo,created_at').eq('cliente_id',cid).order('created_at',{ascending:false}).limit(5),
+  ]);
+
+  const bilMap = {};
+  (bil||[]).forEach(v=>{ const k=v.anno+'_'+v.tipo; if(!bilMap[k]){bilMap[k]={anno:v.anno,tipo:v.tipo,created_at:v.created_at};} });
+
+  const colori = { IVA:'background:#EFF6FF;color:#1E40AF;', CE:'background:#ECFDF5;color:#065F46;', SP:'background:#F5F3FF;color:#4C1D95;', F24:'background:#FEF2F2;color:#7F1D1D;', RIT:'background:#FFF7ED;color:#9A3412;' };
+
+  let html = '';
+  (iva||[]).forEach(l => { html += storico_row('IVA', l.periodo+' '+l.anno, fmt(l.iva_debito), l.created_at, colori.IVA); });
+  Object.values(bilMap).forEach(b => { html += storico_row(b.tipo, 'Bilancio '+b.anno, '', b.created_at, b.tipo==='CE'?colori.CE:colori.SP); });
+  (f24||[]).forEach(f => { html += storico_row('F24', fmtDate(f.scadenza), fmt(f.importo), f.created_at, colori.F24); });
+  (rit||[]).forEach(r => { const mN=['','Gen','Feb','Mar','Apr','Mag','Giu','Lug','Ago','Set','Ott','Nov','Dic']; html += storico_row('RIT', mN[r.mese]+' '+r.anno, fmt(r.importo), r.created_at, colori.RIT); });
+
+  el('storico-body').innerHTML = html || '<div style="padding:1rem;color:var(--text-light);font-size:0.82rem;">Nessuna importazione trovata</div>';
+}
+
+function storico_row(tipo, label, val, dateStr, style) {
+  return `<div class="storico-row">
+    <span class="badge-tipo" style="${style}">${tipo}</span>
+    <span style="font-size:0.8rem;font-weight:500;">${label}</span>
+    <span style="font-family:var(--mono);font-size:0.78rem;color:var(--text-mid);">${val}</span>
+    <span class="storico-date">${dateStr ? new Date(dateStr).toLocaleDateString('it-IT') : ''}</span>
+  </div>`;
+}
+
+// ── UI HELPERS ──
+function showPanel(name) {
+  ['step1','step2','step3','step4'].forEach(s => { el('panel-'+s).style.display = s===name?'block':'none'; });
+}
+function setStep(n) {
+  [1,2,3,4].forEach(i => {
+    const s = el('step'+i);
+    s.classList.remove('active','done');
+    if (i < n) s.classList.add('done');
+    else if (i === n) s.classList.add('active');
+  });
+}
+function showAlert(id, msg) { const e=el(id); e.textContent=msg; e.style.display='flex'; }
+function hideAlerts() { document.querySelectorAll('.alert').forEach(a=>a.style.display='none'); }
+</script>
+</body>
+</html>
